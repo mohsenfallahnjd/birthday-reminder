@@ -2,7 +2,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getFriendRelation } from "@/lib/friends";
-import { notifyUser } from "@/lib/notifications";
+import { notifyUserAsync } from "@/lib/notifications";
 import { jsonError, jsonOk, parseJson } from "@/lib/api";
 
 const addSchema = z
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
       where: { id: friendId },
       select: { name: true },
     });
-    await notifyUser({
+    notifyUserAsync({
       userId: friendId,
       type: "friend_accepted",
       title: "Friend request accepted",
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
     data: { userId: user.id, friendId, status: "PENDING" },
   });
 
-  await notifyUser({
+  notifyUserAsync({
     userId: friendId,
     type: "friend_request",
     title: "Friend request",
@@ -102,5 +102,5 @@ export async function POST(request: Request) {
     link: "/people",
   });
 
-  return jsonOk(friendship);
+  return jsonOk({ ...friendship, notified: true });
 }

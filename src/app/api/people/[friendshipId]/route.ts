@@ -1,6 +1,6 @@
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { notifyUser } from "@/lib/notifications";
+import { notifyUserAsync } from "@/lib/notifications";
 import { jsonError, jsonOk } from "@/lib/api";
 
 async function getFriendshipForUser(friendshipId: string, userId: string) {
@@ -39,7 +39,7 @@ export async function PATCH(
     data: { status: "ACCEPTED" },
   });
 
-  await notifyUser({
+  notifyUserAsync({
     userId: friendship.userId,
     type: "friend_accepted",
     title: "Friend request accepted",

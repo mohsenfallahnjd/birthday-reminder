@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { notifyUser } from "@/lib/notifications";
+import { notifyUserAsync } from "@/lib/notifications";
 import { jsonError, jsonOk, parseJson } from "@/lib/api";
 
 const schema = z.object({ friendshipId: z.string() });
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     data: { status: "ACCEPTED" },
   });
 
-  await notifyUser({
+  notifyUserAsync({
     userId: friendship.userId,
     type: "friend_accepted",
     title: "Friend request accepted",

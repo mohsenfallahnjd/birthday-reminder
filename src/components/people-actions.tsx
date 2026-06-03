@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { postFriendRequest } from "@/lib/friend-request-client";
 
 export function AddFriendByEmail() {
   const router = useRouter();
@@ -20,20 +21,17 @@ export function AddFriendByEmail() {
     setMsg("");
     setOk(false);
     try {
-      const res = await fetch("/api/people", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ email: trimmed }),
-      });
-      const data = await res.json();
-      if (res.ok) {
+      const { ok, data } = await postFriendRequest({ email: trimmed });
+      if (ok) {
         setEmail("");
         setOk(true);
-        router.refresh();
+        setMsg("");
+        void router.refresh();
       } else {
         setMsg(data.error ?? "Could not send request");
       }
+    } catch {
+      setMsg("Could not send request");
     } finally {
       setLoading(false);
     }
@@ -75,7 +73,11 @@ export function AddFriendByEmail() {
           {loading ? "Sending…" : "Add friend"}
         </Button>
       </div>
-      {ok && <p className="mt-2 text-sm text-emerald-700">Request sent.</p>}
+      {ok && (
+        <p className="mt-2 text-sm text-emerald-700">
+          Request sent. They will get an alert in Notifications (and push if enabled).
+        </p>
+      )}
       {msg && <p className="mt-2 text-sm text-red-600">{msg}</p>}
     </div>
   );

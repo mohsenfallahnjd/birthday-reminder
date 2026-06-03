@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { postFriendRequest } from "@/lib/friend-request-client";
 import { formatJalaliBirthday } from "@/lib/jalali";
 
 type SearchUser = {
@@ -54,18 +55,26 @@ export function FriendSearch() {
     setActionId(userId);
     setMsg("");
     try {
-      const res = await apiFetch("/api/people", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        router.refresh();
-        await search(query);
+      const { ok, data } = await postFriendRequest({ userId });
+      if (ok) {
+        setResults((prev) =>
+          prev.map((u) =>
+            u.id === userId
+              ? {
+                  ...u,
+                  relation: "pending_sent" as const,
+                  friendshipId: data.id ?? u.friendshipId,
+                }
+              : u,
+          ),
+        );
+        void router.refresh();
+        void search(query);
       } else {
         setMsg(data.error ?? "Could not send request");
       }
+    } catch {
+      setMsg("Could not send request");
     } finally {
       setActionId(null);
     }
@@ -76,8 +85,15 @@ export function FriendSearch() {
     try {
       const res = await apiFetch(`/api/people/${friendshipId}`, { method: "PATCH" });
       if (res.ok) {
-        router.refresh();
-        await search(query);
+        setResults((prev) =>
+          prev.map((u) =>
+            u.friendshipId === friendshipId
+              ? { ...u, relation: "friends" as const }
+              : u,
+          ),
+        );
+        void router.refresh();
+        void search(query);
       }
     } finally {
       setActionId(null);
@@ -89,8 +105,15 @@ export function FriendSearch() {
     try {
       const res = await apiFetch(`/api/people/${friendshipId}`, { method: "DELETE" });
       if (res.ok) {
-        router.refresh();
-        await search(query);
+        setResults((prev) =>
+          prev.map((u) =>
+            u.friendshipId === friendshipId
+              ? { ...u, relation: "none" as const, friendshipId: null }
+              : u,
+          ),
+        );
+        void router.refresh();
+        void search(query);
       }
     } finally {
       setActionId(null);

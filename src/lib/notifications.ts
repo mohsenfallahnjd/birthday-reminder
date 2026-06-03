@@ -19,6 +19,15 @@ export async function notifyUser(params: {
   return notification;
 }
 
+/** Create in-app + push notification without blocking the caller. */
+export function notifyUserAsync(
+  params: Parameters<typeof notifyUser>[0],
+) {
+  void notifyUser(params).catch((err) => {
+    console.error("[notifyUser]", params.type, err);
+  });
+}
+
 export async function notifyMany(
   userIds: string[],
   params: Omit<Parameters<typeof notifyUser>[0], "userId">,
