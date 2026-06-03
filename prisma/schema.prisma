@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  avatarUrl    String?
+  birthMonth   Int?
+  birthDay     Int?
+  birthYear    Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ownedGroups   Group[]        @relation("GroupOwner")
+  memberships   GroupMember[]
+  friendshipsA  Friendship[]   @relation("UserA")
+  friendshipsB  Friendship[]   @relation("UserB")
+  reminders     Reminder[]     @relation("ReminderOwner")
+  remindersFor  Reminder[]     @relation("ReminderTarget")
+  notifications Notification[]
+  wishlistItems WishlistItem[]
+  payments      Payment[]
+  adminCeremonies Ceremony[]   @relation("CeremonyAdmin")
+  birthdayCeremonies Ceremony[] @relation("BirthdayPerson")
+}
+
+model Group {
+  id         String   @id @default(cuid())
+  name       String
+  inviteCode String   @unique @default(cuid())
+  ownerId    String
+  owner      User     @relation("GroupOwner", fields: [ownerId], references: [id])
+  members    GroupMember[]
+  ceremonies Ceremony[]
+  reminders  Reminder[]
+  createdAt  DateTime @default(now())
+}
+
+model GroupMember {
+  id       String    @id @default(cuid())
+  groupId  String
+  userId   String
+  role     GroupRole @default(MEMBER)
+  group    Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt DateTime  @default(now())
+
+  @@unique([groupId, userId])
+}
+
+enum GroupRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model Friendship {
+  id        String           @id @default(cuid())
+  userId    String
+  friendId  String
+  status    FriendshipStatus @default(PENDING)
+  user      User             @relation("UserA", fields: [userId], references: [id], onDelete: Cascade)
+  friend    User             @relation("UserB", fields: [friendId], references: [id], onDelete: Cascade)
+  createdAt DateTime         @default(now())
+
+  @@unique([userId, friendId])
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+}
+
+model Reminder {
+  id           String  @id @default(cuid())
+  ownerId      String
+  targetUserId String
+  groupId      String?
+  daysBefore   Int     @default(1)
+  owner        User    @relation("ReminderOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  target       User    @relation("ReminderTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+  group        Group?  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, targetUserId, groupId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  link      String?
+  read      Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Ceremony {
+  id             String   @id @default(cuid())
+  title          String
+  birthdayUserId String
+  groupId        String?
+  adminUserId    String?
+  cardNumber     String?
+  cardHolder     String?
+  year           Int      @default(1404)
+  active         Boolean  @default(true)
+  birthdayUser   User     @relation("BirthdayPerson", fields: [birthdayUserId], references: [id])
+  admin          User?    @relation("CeremonyAdmin", fields: [adminUserId], references: [id])
+  group          Group?   @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  wishlistItems  WishlistItem[]
+  payments       Payment[]
+  createdAt      DateTime @default(now())
+}
+
+model WishlistItem {
+  id           String   @id @default(cuid())
+  ceremonyId   String?
+  userId       String
+  title        String
+  link         String?
+  cost         Int
+  allowCheapIn Boolean  @default(false)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ceremony     Ceremony? @relation(fields: [ceremonyId], references: [id], onDelete: Cascade)
+  payments     Payment[]
+  createdAt    DateTime @default(now())
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  ceremonyId     String
+  payerId        String
+  wishlistItemId String?
+  amount         Int
+  proofUrl       String?
+  note           String?
+  status         PaymentStatus @default(PENDING)
+  reviewedAt     DateTime?
+  ceremony       Ceremony      @relation(fields: [ceremonyId], references: [id], onDelete: Cascade)
+  payer          User          @relation(fields: [payerId], references: [id])
+  wishlistItem   WishlistItem? @relation(fields: [wishlistItemId], references: [id])
+  createdAt      DateTime      @default(now())
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
