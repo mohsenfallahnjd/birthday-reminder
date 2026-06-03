@@ -1,5 +1,5 @@
 import { Link } from "@/components/link";
-import { PartyColorBar } from "@/components/party-color-bar";
+import { PartyCard } from "@/components/party-card";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { daysUntilJalaliBirthday, formatJalaliBirthday } from "@/lib/jalali";
@@ -81,7 +81,14 @@ export default async function DashboardPage() {
       id: true,
       title: true,
       color: true,
+      birthdayUserId: true,
       birthdayUser: { select: { name: true } },
+      group: { select: { name: true } },
+      members: {
+        where: { userId: user.id },
+        select: { role: true },
+        take: 1,
+      },
     },
     take: 5,
     orderBy: { createdAt: "desc" },
@@ -138,21 +145,50 @@ export default async function DashboardPage() {
       </section>
 
       <section>
-        <h2 className="text-sm font-medium text-foreground">Active parties</h2>
+        <div className="flex items-baseline justify-between gap-4">
+          <div>
+            <h2 className="text-sm font-medium text-foreground">Active parties</h2>
+            <p className="mt-0.5 text-xs text-muted">Tap a party to open gifts and payments</p>
+          </div>
+          <Link href="/groups" className="text-sm text-muted hover:text-foreground no-underline">
+            Groups →
+          </Link>
+        </div>
         {ceremonies.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">None yet.</p>
+          <p className="mt-3 rounded-xl border border-dashed border-border bg-white px-4 py-8 text-center text-sm text-muted">
+            No parties yet. Create one from a{" "}
+            <Link href="/groups" className="font-medium text-foreground">
+              group
+            </Link>{" "}
+            or invite friends on{" "}
+            <Link href="/people" className="font-medium text-foreground">
+              People
+            </Link>
+            .
+          </p>
         ) : (
-          <ul className="mt-3 divide-y divide-border border-t border-border">
-            {ceremonies.map((c) => (
-              <li key={c.id} className="py-3 text-sm">
-                <PartyColorBar color={c.color} className="rounded-lg px-3 py-2">
-                  <Link href={`/ceremonies/${c.id}`} className="no-underline hover:underline font-medium">
-                    {c.title}
-                  </Link>
-                  <span className="text-muted"> · {c.birthdayUser.name}</span>
-                </PartyColorBar>
-              </li>
-            ))}
+          <ul className="mt-4 flex flex-col gap-3">
+            {ceremonies.map((c) => {
+              const myMember = c.members[0];
+              const isYourBirthday = c.birthdayUserId === user.id;
+              const memberRole =
+                myMember?.role ??
+                (c.group && !myMember ? ("GROUP" as const) : null);
+
+              return (
+                <li key={c.id}>
+                  <PartyCard
+                    id={c.id}
+                    title={c.title}
+                    color={c.color}
+                    holderName={c.birthdayUser.name}
+                    groupName={c.group?.name}
+                    memberRole={memberRole}
+                    isYourBirthday={isYourBirthday}
+                  />
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

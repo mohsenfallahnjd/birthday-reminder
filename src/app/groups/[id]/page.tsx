@@ -3,7 +3,7 @@ import { ReminderButton } from "@/components/reminder-button";
 import { ShareInviteCode } from "@/components/share-invite-code";
 import { Link } from "@/components/link";
 import { requireUser } from "@/lib/auth";
-import { PartyColorBar } from "@/components/party-color-bar";
+import { PartyCard } from "@/components/party-card";
 import { getAcceptedFriends } from "@/lib/ceremony-roles";
 import { db } from "@/lib/db";
 import { formatJalaliBirthday } from "@/lib/jalali";
@@ -36,7 +36,13 @@ export default async function GroupDetailPage({
           id: true,
           title: true,
           color: true,
+          birthdayUserId: true,
           birthdayUser: { select: { name: true } },
+          members: {
+            where: { userId: user.id },
+            select: { role: true },
+            take: 1,
+          },
         },
         orderBy: { createdAt: "desc" },
       },
@@ -96,15 +102,18 @@ export default async function GroupDetailPage({
       {group.ceremonies.length > 0 && (
         <section>
           <h2 className="text-sm font-medium text-foreground">Parties</h2>
-          <ul className="mt-3 divide-y divide-border border-t border-border">
+          <ul className="mt-4 flex flex-col gap-3">
             {group.ceremonies.map((c) => (
-              <li key={c.id} className="py-2">
-                <PartyColorBar color={c.color} className="px-3 py-2">
-                  <Link href={`/ceremonies/${c.id}`} className="text-sm font-medium no-underline hover:underline">
-                    {c.title}
-                  </Link>
-                  <span className="text-sm text-muted"> · {c.birthdayUser.name}</span>
-                </PartyColorBar>
+              <li key={c.id}>
+                <PartyCard
+                  id={c.id}
+                  title={c.title}
+                  color={c.color}
+                  holderName={c.birthdayUser.name}
+                  groupName={group.name}
+                  memberRole={c.members[0]?.role ?? null}
+                  isYourBirthday={c.birthdayUserId === user.id}
+                />
               </li>
             ))}
           </ul>
