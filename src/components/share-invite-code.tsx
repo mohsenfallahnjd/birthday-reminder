@@ -102,7 +102,19 @@ export function ShareInviteCode({
   }
 
   return (
-    <div className="rounded-lg border border-border bg-white p-4">
+    <div
+      className="overflow-hidden rounded-2xl border border-white/80 bg-white/90 p-4 shadow-sm sm:p-5"
+      style={{
+        boxShadow: "0 1px 0 #4f46e518, 0 8px 24px -12px #4f46e533",
+      }}
+    >
+      <div
+        className="-mx-4 -mt-4 mb-4 h-1 sm:-mx-5 sm:-mt-5"
+        style={{
+          background: "linear-gradient(90deg, #4f46e5, #4f46e555, #4f46e5)",
+        }}
+        aria-hidden
+      />
       <div className="flex items-start gap-2">
         <Icon name="users" size={18} className="mt-0.5 text-foreground" />
         <div className="min-w-0 flex-1">

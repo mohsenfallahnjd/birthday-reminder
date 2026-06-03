@@ -1,6 +1,6 @@
 import { CreateGroupForm, JoinGroupForm } from "@/components/group-actions";
-import { ShareInviteCode } from "@/components/share-invite-code";
-import { Link } from "@/components/link";
+import { AppSection, EmptyState, PageHeader } from "@/components/app-section";
+import { GroupCard } from "@/components/group-card";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
@@ -29,44 +29,37 @@ export default async function GroupsPage({
   });
 
   return (
-    <div className="page-wide space-y-10">
-      <header>
-        <h1 className="page-title">Groups</h1>
-        <p className="page-desc">Create or join with an invite code.</p>
-      </header>
+    <div className="page-wide space-y-8">
+      <PageHeader title="Groups" description="Create or join with an invite code." />
 
-      <section className="space-y-4">
-        <h2 className="text-sm font-medium text-foreground">New group</h2>
+      <AppSection title="New group" description="Start a shared space for parties">
         <CreateGroupForm />
-      </section>
+      </AppSection>
 
-      <section className="space-y-4">
-        <h2 className="text-sm font-medium text-foreground">Join group</h2>
+      <AppSection title="Join group" description="Paste a code from a friend">
         <JoinGroupForm initialCode={inviteCode} />
-      </section>
+      </AppSection>
 
-      {groups.length > 0 && (
-        <section>
-          <h2 className="text-sm font-medium text-foreground">Your groups</h2>
-          <ul className="mt-3 divide-y divide-border border-t border-border">
+      {groups.length > 0 ? (
+        <AppSection title="Your groups" description={`${groups.length} group${groups.length === 1 ? "" : "s"}`} unboxed>
+          <ul className="flex flex-col gap-3">
             {groups.map((g) => (
-              <li key={g.id} className="space-y-2 py-4 text-sm">
-                <div>
-                  <Link href={`/groups/${g.id}`} className="font-medium no-underline hover:underline">
-                    {g.name}
-                  </Link>
-                  <span className="text-muted"> · {g._count.members} members</span>
-                </div>
-                <ShareInviteCode
+              <li key={g.id}>
+                <GroupCard
+                  id={g.id}
+                  name={g.name}
+                  memberCount={g._count.members}
                   inviteCode={g.inviteCode}
-                  groupName={g.name}
                   appOrigin={process.env.NEXT_PUBLIC_APP_URL}
-                  compact
                 />
               </li>
             ))}
           </ul>
-        </section>
+        </AppSection>
+      ) : (
+        <AppSection title="Your groups">
+          <EmptyState>No groups yet — create one or join with a code above.</EmptyState>
+        </AppSection>
       )}
     </div>
   );

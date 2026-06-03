@@ -1,8 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { useRouter } from "@/lib/navigation";
 import { useMemo, useState } from "react";
+import { FormSection, personInitials } from "@/components/app-section";
 import { AdminPicker } from "@/components/admin-picker";
 import { FriendGuestPicker } from "@/components/friend-guest-picker";
 import { Icon } from "@/components/icon";
@@ -12,42 +12,6 @@ import { Input, Label } from "@/components/ui/input";
 import { randomPartyColor } from "@/lib/ceremony-roles";
 
 type Member = { id: string; name: string };
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
-}
-
-function FormSection({
-  step,
-  title,
-  description,
-  children,
-}: {
-  step: number;
-  title: string;
-  description?: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="rounded-xl border border-border bg-white/80 p-4 sm:p-5">
-      <div className="mb-4 flex gap-3">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted-subtle text-xs font-semibold text-foreground">
-          {step}
-        </span>
-        <div>
-          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-          {description && <p className="mt-0.5 text-xs text-muted">{description}</p>}
-        </div>
-      </div>
-      {children}
-    </section>
-  );
-}
 
 export function CeremonySetup({
   groupId,
@@ -169,7 +133,7 @@ export function CeremonySetup({
                 className="flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold text-white"
                 style={{ backgroundColor: partyColor }}
               >
-                {initials(holderName)}
+                {personInitials(holderName)}
               </span>
               <span className="text-sm text-muted">
                 Birthday · <span className="font-medium text-foreground">{holderName}</span>
@@ -225,7 +189,7 @@ export function CeremonySetup({
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
                     style={{ backgroundColor: selected ? partyColor : "#a1a1aa" }}
                   >
-                    {initials(m.name)}
+                    {personInitials(m.name)}
                   </span>
                   <span className="font-medium text-foreground">{m.name}</span>
                   {selected && (
@@ -243,7 +207,7 @@ export function CeremonySetup({
               className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white"
               style={{ backgroundColor: partyColor }}
             >
-              {initials(members[0].name)}
+              {personInitials(members[0].name)}
             </span>
             <div>
               <p className="font-medium text-foreground">{members[0].name}</p>

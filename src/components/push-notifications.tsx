@@ -145,13 +145,10 @@ export function PushNotifications() {
   }
 
   return (
-    <div className="space-y-3 border-t border-border pt-8">
-      <div>
-        <h3 className="text-sm font-medium text-foreground">Push notifications</h3>
-        <p className="mt-1 text-sm text-muted">
-          Get birthday reminders and party updates on this device. Install as PWA for best results.
-        </p>
-      </div>
+    <div className="rounded-xl border border-border bg-white/80 p-4 shadow-sm space-y-3 sm:p-5">
+      <p className="text-sm text-muted">
+        Get birthday reminders and party updates on this device. Install as PWA for best results.
+      </p>
 
       {status === "denied" && (
         <p className="text-sm text-amber-700">

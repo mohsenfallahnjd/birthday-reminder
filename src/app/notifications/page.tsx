@@ -1,3 +1,4 @@
+import { AppSection, PageHeader } from "@/components/app-section";
 import { NotificationsList } from "@/components/notifications-list";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -14,15 +15,16 @@ export default async function NotificationsPage() {
   });
 
   return (
-    <div className="page">
-      <h1 className="page-title">Notifications</h1>
-      <p className="page-desc mb-8">Recent activity.</p>
-      <NotificationsList
-        items={notifications.map((n) => ({
-          ...n,
-          createdAt: n.createdAt.toISOString(),
-        }))}
-      />
+    <div className="page space-y-8">
+      <PageHeader title="Notifications" description="Recent activity and invites" />
+      <AppSection title="Inbox" unboxed>
+        <NotificationsList
+          items={notifications.map((n) => ({
+            ...n,
+            createdAt: n.createdAt.toISOString(),
+          }))}
+        />
+      </AppSection>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { MoneyInput, getAmountFromInput } from "@/components/money-input";
+import { AppList, AppListItem, EmptyState } from "@/components/app-section";
 import { formatAmountInputString } from "@/lib/money";
 import { formatMoney } from "@/lib/utils";
 
@@ -77,7 +78,7 @@ function WishlistItemForm({
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-border bg-muted-subtle/50 p-4">
+    <div className="space-y-3 rounded-xl border border-border bg-muted-subtle/40 p-4">
       <div>
         <Label>Title</Label>
         <Input value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -227,15 +228,15 @@ export function WishlistManager({
   }
 
   if (!canEdit && displayItems.length === 0) {
-    return <p className="text-sm text-muted">No wishlist items yet.</p>;
+    return <EmptyState>No wishlist items yet.</EmptyState>;
   }
 
   return (
     <div className="space-y-6">
       {displayItems.length > 0 ? (
-        <ul className="divide-y divide-border border-t border-border">
+        <AppList>
           {displayItems.map((item) => (
-            <li key={item.id} className="py-4">
+            <AppListItem key={item.id}>
               {editingId === item.id && canEdit ? (
                 <WishlistItemForm
                   initial={itemToFormState(item)}
@@ -300,15 +301,15 @@ export function WishlistManager({
                   )}
                 </div>
               )}
-            </li>
+            </AppListItem>
           ))}
-        </ul>
+        </AppList>
       ) : (
-        <p className="text-sm text-muted">No items yet.</p>
+        <EmptyState>No items yet.</EmptyState>
       )}
 
       {canEdit && (
-        <div className="border-t border-border pt-6">
+        <div className="rounded-xl border border-border bg-white/80 p-4 pt-5 shadow-sm">
           {showAdd ? (
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-foreground">Add item</h3>

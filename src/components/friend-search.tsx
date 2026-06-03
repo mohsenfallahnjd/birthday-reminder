@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Input, Label } from "@/components/ui/input";
 import { postFriendRequest } from "@/lib/friend-request-client";
+import { AppList, AppListItem } from "@/components/app-section";
 import { formatJalaliBirthday } from "@/lib/jalali";
 
 type SearchUser = {
@@ -237,11 +238,11 @@ export function FriendSearch() {
       )}
 
       {results.length > 0 && (
-        <ul className="divide-y divide-border rounded-lg border border-border bg-white">
+        <AppList>
           {results.map((user) => (
-            <li
+            <AppListItem
               key={user.id}
-              className="flex flex-col gap-3 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0">
                 <p className="font-medium text-foreground">{user.name}</p>
@@ -253,9 +254,9 @@ export function FriendSearch() {
                 )}
               </div>
               <div className="shrink-0">{actionButton(user)}</div>
-            </li>
+            </AppListItem>
           ))}
-        </ul>
+        </AppList>
       )}
     </div>
   );

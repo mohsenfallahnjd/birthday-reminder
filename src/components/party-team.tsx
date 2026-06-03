@@ -93,7 +93,7 @@ export function PartyTeam({
   }
 
   return (
-    <div className="rounded-lg border border-border bg-white p-4 space-y-4">
+    <div className="rounded-xl border border-border bg-white/80 p-4 shadow-sm space-y-4 sm:p-5">
       <div>
         <h2 className="text-sm font-medium text-foreground">Party team</h2>
         <p className="mt-0.5 text-xs text-muted">

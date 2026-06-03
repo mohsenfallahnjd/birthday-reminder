@@ -1,5 +1,16 @@
 import { Link } from "@/components/link";
+import {
+  AppList,
+  AppListItem,
+  AppSection,
+  DaysBadge,
+  EmptyState,
+  InfoBanner,
+  PageHeader,
+  PersonRow,
+} from "@/components/app-section";
 import { PartyCard } from "@/components/party-card";
+import { Icon } from "@/components/icon";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { daysUntilJalaliBirthday, formatJalaliBirthday } from "@/lib/jalali";
@@ -97,65 +108,70 @@ export default async function DashboardPage() {
   const wishlistCount = await db.wishlistItem.count({ where: { userId: user.id } });
 
   return (
-    <div className="page-wide space-y-10">
-      <header>
-        <h1 className="page-title">Hi, {user.name}</h1>
-        <p className="page-desc">Upcoming birthdays and active parties</p>
-      </header>
+    <div className="page-wide space-y-8">
+      <PageHeader title={`Hi, ${user.name}`} description="Upcoming birthdays and active parties" />
 
       {!user.birthMonth && (
-        <p className="text-sm text-muted border border-border rounded-lg px-4 py-3 bg-white">
-          <Link href="/profile">Add your Jalali birthday</Link> so friends get reminders.
-        </p>
+        <InfoBanner>
+          <Link href="/profile" className="font-medium text-foreground">
+            Add your Jalali birthday
+          </Link>{" "}
+          <span className="text-muted">so friends get reminders.</span>
+        </InfoBanner>
       )}
 
-      <section>
-        <div className="flex items-baseline justify-between gap-4">
-          <h2 className="text-sm font-medium text-foreground">Wishlist</h2>
-          <Link href="/wishlist" className="text-sm text-muted hover:text-foreground no-underline">
-            Manage →
-          </Link>
-        </div>
-        <p className="mt-1 text-sm text-muted">
-          {wishlistCount === 0
-            ? "No items yet."
-            : `${wishlistCount} item${wishlistCount === 1 ? "" : "s"}.`}
-        </p>
-      </section>
-
-      <section>
-        <h2 className="text-sm font-medium text-foreground">Upcoming birthdays</h2>
-        {upcoming.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">No upcoming birthdays.</p>
-        ) : (
-          <ul className="mt-3 divide-y divide-border border-t border-border">
-            {upcoming.slice(0, 8).map((u) => (
-              <li key={u.id} className="flex items-center justify-between py-3 text-sm">
-                <div>
-                  <span className="font-medium text-foreground">{u.name}</span>
-                  <span className="ml-2 text-muted">{u.date}</span>
-                </div>
-                <span className="tabular-nums text-muted">
-                  {u.days === 0 ? "Today" : `${u.days}d`}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section>
-        <div className="flex items-baseline justify-between gap-4">
-          <div>
-            <h2 className="text-sm font-medium text-foreground">Active parties</h2>
-            <p className="mt-0.5 text-xs text-muted">Tap a party to open gifts and payments</p>
+      <AppSection
+        title="Wishlist"
+        description="Gift ideas friends can contribute toward"
+        action={{ href: "/wishlist", label: "Manage →" }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#db2777]/15 text-[#db2777]">
+            <Icon name="gift" size={22} className="text-current" />
           </div>
-          <Link href="/groups" className="text-sm text-muted hover:text-foreground no-underline">
-            Groups →
-          </Link>
+          <p className="text-sm text-foreground">
+            {wishlistCount === 0 ? (
+              <span className="text-muted">No items yet — add your first gift idea.</span>
+            ) : (
+              <>
+                <span className="font-semibold tabular-nums">{wishlistCount}</span>
+                <span className="text-muted">
+                  {" "}
+                  item{wishlistCount === 1 ? "" : "s"} on your list
+                </span>
+              </>
+            )}
+          </p>
         </div>
+      </AppSection>
+
+      <AppSection title="Upcoming birthdays" description="From friends and groups">
+        {upcoming.length === 0 ? (
+          <EmptyState>No upcoming birthdays in the next year.</EmptyState>
+        ) : (
+          <AppList>
+            {upcoming.slice(0, 8).map((u) => (
+              <AppListItem key={u.id}>
+                <PersonRow
+                  name={u.name}
+                  subtitle={u.date}
+                  accentColor={u.days <= 7 ? "#e11d48" : "#0891b2"}
+                  trailing={<DaysBadge days={u.days} />}
+                />
+              </AppListItem>
+            ))}
+          </AppList>
+        )}
+      </AppSection>
+
+      <AppSection
+        title="Active parties"
+        description="Tap a party to open gifts and payments"
+        action={{ href: "/groups", label: "Groups →" }}
+        unboxed
+      >
         {ceremonies.length === 0 ? (
-          <p className="mt-3 rounded-xl border border-dashed border-border bg-white px-4 py-8 text-center text-sm text-muted">
+          <EmptyState>
             No parties yet. Create one from a{" "}
             <Link href="/groups" className="font-medium text-foreground">
               group
@@ -165,15 +181,14 @@ export default async function DashboardPage() {
               People
             </Link>
             .
-          </p>
+          </EmptyState>
         ) : (
-          <ul className="mt-4 flex flex-col gap-3">
+          <ul className="flex flex-col gap-3">
             {ceremonies.map((c) => {
               const myMember = c.members[0];
               const isYourBirthday = c.birthdayUserId === user.id;
               const memberRole =
-                myMember?.role ??
-                (c.group && !myMember ? ("GROUP" as const) : null);
+                myMember?.role ?? (c.group && !myMember ? ("GROUP" as const) : null);
 
               return (
                 <li key={c.id}>
@@ -191,7 +206,7 @@ export default async function DashboardPage() {
             })}
           </ul>
         )}
-      </section>
+      </AppSection>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { AppSection } from "@/components/app-section";
 import { CeremonyDetail } from "@/components/ceremony-detail";
 import { PartyHeader } from "@/components/party-header";
 import { PartyTeam } from "@/components/party-team";
@@ -77,7 +78,7 @@ export default async function CeremonyPage({
   });
 
   return (
-    <div className="page">
+    <div className="page space-y-8">
       <PartyHeader
         ceremonyId={ceremony.id}
         title={ceremony.title}
@@ -93,16 +94,16 @@ export default async function CeremonyPage({
       />
 
       {ceremony.group && (
-        <div className="mb-8">
+        <AppSection title="Group invite" description="Share so others can join" unboxed>
           <ShareInviteCode
             inviteCode={ceremony.group.inviteCode}
             groupName={ceremony.group.name}
             appOrigin={process.env.NEXT_PUBLIC_APP_URL}
           />
-        </div>
+        </AppSection>
       )}
 
-      <div className="mb-8">
+      <AppSection title="Party team" description="Holder, admins, and guests" unboxed>
         <PartyTeam
           ceremonyId={ceremony.id}
           members={teamMembers}
@@ -112,8 +113,9 @@ export default async function CeremonyPage({
           currentUserId={user.id}
           canManage={canManageTeam}
         />
-      </div>
+      </AppSection>
 
+      <AppSection title="Gifts & payments" unboxed>
       <CeremonyDetail
         ceremony={{ ...ceremony, wishlistItems }}
         currentUserId={user.id}
@@ -121,6 +123,7 @@ export default async function CeremonyPage({
         isBirthdayPerson={isBirthdayPerson}
         canEditWishlist={canEditWishlist}
       />
+      </AppSection>
     </div>
   );
 }

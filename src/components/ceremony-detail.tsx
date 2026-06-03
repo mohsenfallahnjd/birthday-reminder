@@ -84,7 +84,7 @@ export function CeremonyDetail({
   return (
     <div className="space-y-6">
       {partyItems.length > 0 && funding.target > 0 && (
-        <div className="rounded-lg border border-border bg-white p-4">
+        <div className="rounded-xl border border-border bg-white/80 p-4 shadow-sm sm:p-5">
           <p className="text-sm font-medium text-foreground">Party gift progress</p>
           <p className="mt-0.5 text-xs text-muted">Approved contributions toward wishlist totals</p>
           <MoneyProgress
@@ -97,7 +97,7 @@ export function CeremonyDetail({
       )}
 
       {canEditWishlist && (
-        <div className="rounded-lg border border-border bg-muted-subtle p-4 text-sm">
+        <div className="rounded-xl border border-border shadow-sm bg-muted-subtle p-4 text-sm">
           <p className="font-medium text-foreground">
             {isBirthdayPerson ? "You are the birthday holder" : "You are a party admin"}
           </p>
@@ -113,7 +113,7 @@ export function CeremonyDetail({
         </div>
       )}
       {isAdmin && !isBirthdayPerson && (
-        <div className="rounded-lg border border-border bg-muted-subtle p-4 text-sm">
+        <div className="rounded-xl border border-border shadow-sm bg-muted-subtle p-4 text-sm">
           <p className="font-medium text-foreground">Treasurer (admin)</p>
           <p className="mt-1 text-muted">
             Approve payments and set the shared card under the Treasurer tab.
@@ -141,7 +141,7 @@ export function CeremonyDetail({
       </div>
 
       {ceremony.cardNumber && tab === "pay" && (
-        <div className="rounded-lg border border-border px-4 py-3 text-sm text-muted">
+        <div className="rounded-xl border border-border shadow-sm px-4 py-3 text-sm text-muted">
           <p>
             Card <span className="font-mono text-foreground">{ceremony.cardNumber}</span>
           </p>
@@ -156,7 +156,7 @@ export function CeremonyDetail({
               {partyItems.map((item) => {
                 const approved = approvedTotal(item);
                 return (
-                  <li key={item.id} className="rounded-lg border border-border p-4">
+                  <li key={item.id} className="rounded-xl border border-border shadow-sm p-4">
                     <p className="font-bold">{item.title}</p>
                     {item.link && (
                       <a

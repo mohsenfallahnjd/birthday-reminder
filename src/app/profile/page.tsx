@@ -1,3 +1,4 @@
+import { AppSection, PageHeader } from "@/components/app-section";
 import { ProfileForm } from "@/components/profile-form";
 import { PushNotifications } from "@/components/push-notifications";
 import { requireUser } from "@/lib/auth";
@@ -8,18 +9,21 @@ export default async function ProfilePage() {
   if (!user) redirect("/login");
 
   return (
-    <div className="page">
-      <h1 className="page-title">Profile</h1>
-      <p className="page-desc mb-8">Name and Jalali birthday.</p>
-      <ProfileForm
-        initial={{
-          name: user.name,
-          birthMonth: user.birthMonth,
-          birthDay: user.birthDay,
-          birthYear: user.birthYear,
-        }}
-      />
-      <PushNotifications />
+    <div className="page space-y-8">
+      <PageHeader title="Profile" description="Name and Jalali birthday." />
+      <AppSection title="Your details" description="Visible to friends in groups">
+        <ProfileForm
+          initial={{
+            name: user.name,
+            birthMonth: user.birthMonth,
+            birthDay: user.birthDay,
+            birthYear: user.birthYear,
+          }}
+        />
+      </AppSection>
+      <AppSection title="Notifications" description="Push alerts on this device" unboxed>
+        <PushNotifications />
+      </AppSection>
     </div>
   );
 }

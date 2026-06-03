@@ -1,3 +1,4 @@
+import { AppSection, PageHeader } from "@/components/app-section";
 import { WishlistManager } from "@/components/wishlist-manager";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -19,12 +20,14 @@ export default async function WishlistPage() {
   });
 
   return (
-    <div className="page">
-      <h1 className="page-title">Wishlist</h1>
-      <p className="page-desc mb-8">
-        Add, edit, or remove gift ideas. Prices use comma formatting (e.g. 1,500,000 Toman).
-      </p>
-      <WishlistManager items={items} ceremonies={ceremonies} />
+    <div className="page space-y-8">
+      <PageHeader
+        title="Wishlist"
+        description="Add, edit, or remove gift ideas. Prices use comma formatting (e.g. 1,500,000 Toman)."
+      />
+      <AppSection title="Your items" description="Linked to parties or general wishlist" unboxed>
+        <WishlistManager items={items} ceremonies={ceremonies} />
+      </AppSection>
     </div>
   );
 }

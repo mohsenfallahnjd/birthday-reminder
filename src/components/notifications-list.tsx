@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "@/lib/navigation";
+import { AppList, AppListItem, EmptyState } from "@/components/app-section";
 import { Link } from "@/components/link";
 import { Button } from "@/components/ui/button";
 
@@ -33,7 +34,7 @@ export function NotificationsList({ items }: { items: Notification[] }) {
   }
 
   if (items.length === 0) {
-    return <p className="text-sm text-muted">No notifications.</p>;
+    return <EmptyState>No notifications yet.</EmptyState>;
   }
 
   return (
@@ -50,19 +51,19 @@ export function NotificationsList({ items }: { items: Notification[] }) {
           Mark all read
         </Button>
       )}
-      <ul className="divide-y divide-border border-t border-border">
+      <AppList>
         {items.map((n) => (
-          <li key={n.id} className={`py-4 text-sm ${n.read ? "opacity-60" : ""}`}>
+          <AppListItem key={n.id} className={n.read ? "opacity-70" : undefined}>
             <p className="font-medium text-foreground">{n.title}</p>
             <p className="mt-0.5 text-muted">{n.body}</p>
             {n.link && (
-              <Link href={n.link} className="mt-2 inline-block text-sm no-underline hover:underline">
-                Open
+              <Link href={n.link} className="mt-2 inline-block text-sm font-medium no-underline hover:underline">
+                Open →
               </Link>
             )}
-          </li>
+          </AppListItem>
         ))}
-      </ul>
+      </AppList>
     </div>
   );
 }

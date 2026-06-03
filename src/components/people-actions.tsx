@@ -37,7 +37,7 @@ export function AddFriendByEmail() {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-white p-4">
+    <div className="rounded-xl border border-border/80 bg-muted-subtle/30 p-4">
       <div className="flex items-center gap-2">
         <Icon name="heart" size={16} className="text-foreground" />
         <Label htmlFor="add-friend-email" className="text-sm font-medium text-foreground">

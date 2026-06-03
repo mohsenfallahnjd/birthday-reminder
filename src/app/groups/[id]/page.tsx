@@ -2,8 +2,15 @@ import { CeremonySetup } from "@/components/ceremony-setup";
 import { DeleteGroupButton } from "@/components/group-actions";
 import { ReminderButton } from "@/components/reminder-button";
 import { ShareInviteCode } from "@/components/share-invite-code";
-import { requireUser } from "@/lib/auth";
+import {
+  AppList,
+  AppListItem,
+  AppSection,
+  PageHeader,
+  PersonRow,
+} from "@/components/app-section";
 import { PartyCard } from "@/components/party-card";
+import { requireUser } from "@/lib/auth";
 import { getAcceptedFriends } from "@/lib/ceremony-roles";
 import { db } from "@/lib/db";
 import { formatJalaliBirthday } from "@/lib/jalali";
@@ -67,53 +74,55 @@ export default async function GroupDetailPage({
   const appOrigin = process.env.NEXT_PUBLIC_APP_URL;
 
   return (
-    <div className="page-wide space-y-10">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="page-title">{group.name}</h1>
-          <p className="page-desc">Share the party code so friends can join this group.</p>
-        </div>
-        {isOwner && (
-          <span className="shrink-0 rounded-full bg-muted-subtle px-2.5 py-1 text-xs font-medium text-muted">
-            You own this group
-          </span>
-        )}
-      </header>
-
-      <ShareInviteCode
-        inviteCode={group.inviteCode}
-        groupName={group.name}
-        appOrigin={appOrigin}
+    <div className="page-wide space-y-8">
+      <PageHeader
+        title={group.name}
+        description="Share the party code so friends can join this group."
+        badge={
+          isOwner ? (
+            <span className="shrink-0 rounded-full bg-muted-subtle px-2.5 py-1 text-xs font-medium text-muted">
+              You own this group
+            </span>
+          ) : undefined
+        }
       />
 
-      <section>
-        <h2 className="text-sm font-medium text-foreground">Members</h2>
-        <ul className="mt-3 divide-y divide-border border-t border-border">
-          {members.map((m) => (
-            <li key={m.id} className="flex flex-col gap-2 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <span className="font-medium">{m.name}</span>
-                {m.birthMonth && m.birthDay && (
-                  <span className="ml-2 text-muted">
-                    {formatJalaliBirthday(m.birthMonth, m.birthDay)}
-                  </span>
-                )}
-              </div>
-              {m.id !== user.id && m.birthMonth && (
-                <ReminderButton targetUserId={m.id} groupId={group.id} />
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
+      <AppSection title="Invite friends" description="Share code or link to join" unboxed>
+        <ShareInviteCode
+          inviteCode={group.inviteCode}
+          groupName={group.name}
+          appOrigin={appOrigin}
+        />
+      </AppSection>
 
-      <section className="space-y-4 border-t border-border pt-10">
-        <div>
-          <h2 className="text-sm font-medium text-foreground">New party</h2>
-          <p className="mt-0.5 text-xs text-muted">
-            Set color, birthday holder, admins, and friends — preview updates as you go.
-          </p>
-        </div>
+      <AppSection title="Members" description={`${members.length} people in this group`}>
+        <AppList>
+          {members.map((m) => (
+            <AppListItem key={m.id}>
+              <PersonRow
+                name={m.name}
+                subtitle={
+                  m.birthMonth && m.birthDay
+                    ? formatJalaliBirthday(m.birthMonth, m.birthDay)
+                    : undefined
+                }
+                accentColor="#4f46e5"
+                trailing={
+                  m.id !== user.id && m.birthMonth ? (
+                    <ReminderButton targetUserId={m.id} groupId={group.id} />
+                  ) : undefined
+                }
+              />
+            </AppListItem>
+          ))}
+        </AppList>
+      </AppSection>
+
+      <AppSection
+        title="New party"
+        description="Set color, birthday holder, admins, and friends"
+        unboxed
+      >
         <CeremonySetup
           groupId={group.id}
           members={members}
@@ -121,12 +130,11 @@ export default async function GroupDetailPage({
           currentUserId={user.id}
           includeGroupMembers
         />
-      </section>
+      </AppSection>
 
       {groupDetails.ceremonies.length > 0 && (
-        <section>
-          <h2 className="text-sm font-medium text-foreground">Parties</h2>
-          <ul className="mt-4 flex flex-col gap-3">
+        <AppSection title="Parties" description="Open a party for gifts and payments" unboxed>
+          <ul className="flex flex-col gap-3">
             {groupDetails.ceremonies.map((c) => (
               <li key={c.id}>
                 <PartyCard
@@ -141,17 +149,17 @@ export default async function GroupDetailPage({
               </li>
             ))}
           </ul>
-        </section>
+        </AppSection>
       )}
 
       {isOwner && (
-        <section className="border-t border-border pt-10">
+        <AppSection title="Danger zone" description="Permanent actions" unboxed>
           <DeleteGroupButton
             groupId={group.id}
             groupName={group.name}
             partyCount={groupDetails.ceremonies.length}
           />
-        </section>
+        </AppSection>
       )}
     </div>
   );
