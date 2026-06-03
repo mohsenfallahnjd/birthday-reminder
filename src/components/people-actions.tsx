@@ -32,9 +32,14 @@ export function AddFriendForm() {
   return (
     <div className="space-y-2">
       <Label>Friend&apos;s email</Label>
-      <div className="flex gap-2">
-        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <Button onClick={add} disabled={loading}>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="min-h-11"
+        />
+        <Button onClick={add} disabled={loading} className="shrink-0 sm:min-w-[5rem]">
           Invite
         </Button>
       </div>

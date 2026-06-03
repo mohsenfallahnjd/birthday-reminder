@@ -45,7 +45,7 @@ export default async function PeoplePage() {
           <h2 className="text-sm font-medium text-foreground">Pending</h2>
           <ul className="mt-3 divide-y divide-border border-t border-border">
             {pending.map(({ friendship, other }) => (
-              <li key={friendship.id} className="flex items-center justify-between py-3 text-sm">
+              <li key={friendship.id} className="flex flex-col gap-2 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                 <span>{other.name}</span>
                 <AcceptFriendButton friendshipId={friendship.id} />
               </li>
@@ -61,7 +61,7 @@ export default async function PeoplePage() {
         ) : (
           <ul className="mt-3 divide-y divide-border border-t border-border">
             {accepted.map(({ other }) => (
-              <li key={other.id} className="flex items-center justify-between py-3 text-sm">
+              <li key={other.id} className="flex flex-col gap-2 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <span className="font-medium">{other.name}</span>
                   {other.birthMonth && other.birthDay && (

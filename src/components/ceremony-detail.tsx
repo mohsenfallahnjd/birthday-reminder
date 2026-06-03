@@ -77,7 +77,8 @@ export function CeremonyDetail({
         </div>
       )}
 
-      <div className="inline-flex gap-1 rounded-md border border-border bg-muted-subtle p-1">
+      <div className="-mx-1 flex max-w-full overflow-x-auto pb-1">
+        <div className="inline-flex shrink-0 gap-1 rounded-md border border-border bg-muted-subtle p-1">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -92,6 +93,7 @@ export function CeremonyDetail({
             {t.label}
           </button>
         ))}
+        </div>
       </div>
 
       {ceremony.cardNumber && tab === "pay" && (

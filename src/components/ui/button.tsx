@@ -16,9 +16,9 @@ const buttonVariants = cva(
         success: "bg-emerald-600 text-white hover:bg-emerald-700",
       },
       size: {
-        sm: "h-8 px-3 text-xs",
-        md: "h-9 px-4",
-        lg: "h-10 px-5",
+        sm: "h-10 px-3 text-xs md:h-8",
+        md: "h-11 px-4 md:h-9",
+        lg: "h-12 px-5 md:h-10",
       },
     },
     defaultVariants: { variant: "primary", size: "md" },

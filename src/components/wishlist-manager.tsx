@@ -235,8 +235,8 @@ export function WishlistManager({
                   onSave={(data) => saveEdit(item.id, data)}
                 />
               ) : (
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0 text-sm">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                  <div className="min-w-0 flex-1 text-sm">
                     <p className="font-medium text-foreground">{item.title}</p>
                     {item.link && (
                       <a
@@ -262,10 +262,11 @@ export function WishlistManager({
                     </div>
                   </div>
                   {canEdit && (
-                    <div className="flex shrink-0 gap-2">
+                    <div className="flex w-full gap-2 sm:w-auto sm:shrink-0">
                       <Button
                         size="sm"
                         variant="outline"
+                        className="flex-1 sm:flex-none"
                         onClick={() => {
                           setShowAdd(false);
                           setEditingId(item.id);
@@ -276,7 +277,7 @@ export function WishlistManager({
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-red-600 hover:text-red-700"
+                        className="flex-1 text-red-600 hover:text-red-700 sm:flex-none"
                         disabled={deletingId === item.id}
                         onClick={() => deleteItem(item.id)}
                       >

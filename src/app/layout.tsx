@@ -38,7 +38,7 @@ export const viewport: Viewport = {
   themeColor: "#18181b",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -48,9 +48,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" dir="ltr" className={`${geistSans.variable} ${geistMono.variable} h-full`}>
-      <body className="min-h-full flex flex-col bg-background text-foreground antialiased">
+      <body className="flex min-h-dvh flex-col bg-background text-foreground antialiased">
         <Nav />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 min-w-0">{children}</main>
         <PwaInstallHint />
       </body>
     </html>

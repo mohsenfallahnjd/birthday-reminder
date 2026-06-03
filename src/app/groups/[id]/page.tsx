@@ -52,7 +52,7 @@ export default async function GroupDetailPage({
         <h2 className="text-sm font-medium text-foreground">Members</h2>
         <ul className="mt-3 divide-y divide-border border-t border-border">
           {members.map((m) => (
-            <li key={m.id} className="flex items-center justify-between py-3 text-sm">
+            <li key={m.id} className="flex flex-col gap-2 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <span className="font-medium">{m.name}</span>
                 {m.birthMonth && m.birthDay && (

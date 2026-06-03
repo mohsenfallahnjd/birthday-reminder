@@ -26,13 +26,14 @@ export function CreateGroupForm() {
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-col gap-2 sm:flex-row">
       <Input
         placeholder="Group name, e.g. College friends"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        className="min-h-11"
       />
-      <Button onClick={create} disabled={loading}>
+      <Button onClick={create} disabled={loading} className="shrink-0 sm:min-w-[8rem]">
         Create group
       </Button>
     </div>
@@ -65,9 +66,13 @@ export function JoinGroupForm() {
   return (
     <div className="space-y-2">
       <Label>Group invite code</Label>
-      <div className="flex gap-2">
-        <Input value={code} onChange={(e) => setCode(e.target.value)} className="font-mono" />
-        <Button variant="outline" onClick={join} disabled={loading}>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Input
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          className="min-h-11 font-mono"
+        />
+        <Button variant="outline" onClick={join} disabled={loading} className="shrink-0 sm:min-w-[5rem]">
           Join
         </Button>
       </div>
