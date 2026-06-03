@@ -10,12 +10,14 @@ export async function GET(request: Request) {
   const q = new URL(request.url).searchParams.get("q")?.trim() ?? "";
   if (q.length < 2) return jsonOk([]);
 
+  const qLower = q.toLowerCase();
   const users = await db.user.findMany({
     where: {
       id: { not: user.id },
       OR: [
         { name: { contains: q, mode: "insensitive" } },
         { email: { contains: q, mode: "insensitive" } },
+        ...(q.includes("@") ? [{ email: qLower }] : []),
       ],
     },
     select: {

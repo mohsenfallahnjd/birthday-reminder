@@ -1,6 +1,7 @@
 import { FriendSearch } from "@/components/friend-search";
 import {
   AcceptFriendButton,
+  AddFriendByEmail,
   CancelRequestButton,
   RemoveFriendButton,
 } from "@/components/people-actions";
@@ -46,9 +47,12 @@ export default async function PeoplePage() {
         </p>
       </header>
 
-      <section>
-        <h2 className="text-sm font-medium text-foreground mb-4">Find people</h2>
-        <FriendSearch />
+      <section className="space-y-6">
+        <AddFriendByEmail />
+        <div>
+          <h2 className="text-sm font-medium text-foreground mb-4">Find people</h2>
+          <FriendSearch />
+        </div>
       </section>
 
       {pendingIncoming.length > 0 && (
