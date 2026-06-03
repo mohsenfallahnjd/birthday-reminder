@@ -55,7 +55,7 @@ export function FriendGuestPicker({
           {allSelected ? "Clear all" : "Select all"}
         </button>
       </div>
-      <ul className="max-h-48 space-y-1 overflow-y-auto rounded-md border border-border bg-white p-2">
+      <ul className="max-h-48 space-y-1 overflow-y-auto rounded-xl border border-border bg-muted-subtle/30 p-2">
         {invitees.map((f) => (
           <li key={f.id}>
             <label className="flex min-h-10 cursor-pointer items-center gap-3 rounded px-2 text-sm hover:bg-muted-subtle">

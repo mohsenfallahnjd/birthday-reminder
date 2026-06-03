@@ -1,15 +1,53 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useRouter } from "@/lib/navigation";
 import { useMemo, useState } from "react";
 import { AdminPicker } from "@/components/admin-picker";
 import { FriendGuestPicker } from "@/components/friend-guest-picker";
-import { PartyColorBar } from "@/components/party-color-bar";
+import { Icon } from "@/components/icon";
+import { PartyColorPicker } from "@/components/party-color-picker";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
-import { PARTY_COLORS, randomPartyColor } from "@/lib/ceremony-roles";
+import { randomPartyColor } from "@/lib/ceremony-roles";
 
 type Member = { id: string; name: string };
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+}
+
+function FormSection({
+  step,
+  title,
+  description,
+  children,
+}: {
+  step: number;
+  title: string;
+  description?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-xl border border-border bg-white/80 p-4 sm:p-5">
+      <div className="mb-4 flex gap-3">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted-subtle text-xs font-semibold text-foreground">
+          {step}
+        </span>
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+          {description && <p className="mt-0.5 text-xs text-muted">{description}</p>}
+        </div>
+      </div>
+      {children}
+    </section>
+  );
+}
 
 export function CeremonySetup({
   groupId,
@@ -31,9 +69,10 @@ export function CeremonySetup({
   const [birthdayUserId, setBirthdayUserId] = useState(
     defaultBirthdayUserId ?? members[0]?.id ?? "",
   );
-  const [partyColor, setPartyColor] = useState(randomPartyColor());
+  const [partyColor, setPartyColor] = useState<string>(randomPartyColor());
   const [cardNumber, setCardNumber] = useState("");
   const [cardHolder, setCardHolder] = useState("");
+  const [showPayment, setShowPayment] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -52,6 +91,11 @@ export function CeremonySetup({
 
   const [guestIds, setGuestIds] = useState<string[]>(defaultGuestIds);
   const [adminIds, setAdminIds] = useState<string[]>([currentUserId]);
+
+  const holderName =
+    members.find((m) => m.id === birthdayUserId)?.name ??
+    friends.find((f) => f.id === birthdayUserId)?.name ??
+    "—";
 
   function onBirthdayChange(id: string) {
     setBirthdayUserId(id);
@@ -87,101 +131,223 @@ export function CeremonySetup({
   }
 
   return (
-    <div className="mt-4 space-y-4">
-      <PartyColorBar color={partyColor} className="p-3">
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-          <p className="text-xs font-medium text-foreground">Party color</p>
-          <div className="flex flex-wrap gap-1.5">
-            {PARTY_COLORS.map((c) => (
-              <button
-                key={c}
-                type="button"
-                title="Pick color"
-                className="h-6 w-6 rounded-full border-2 border-white shadow-sm ring-1 ring-border"
-                style={{
-                  backgroundColor: c,
-                  outline: partyColor === c ? `2px solid ${c}` : undefined,
-                  outlineOffset: 2,
-                }}
-                onClick={() => setPartyColor(c)}
-              />
-            ))}
-            <button
-              type="button"
-              className="text-xs text-muted hover:text-foreground px-1"
-              onClick={() => setPartyColor(randomPartyColor())}
-            >
-              Random
-            </button>
+    <div className="space-y-5">
+      {/* Live preview */}
+      <div
+        className="relative overflow-hidden rounded-2xl border border-white/80 shadow-sm"
+        style={{
+          background: `linear-gradient(145deg, ${partyColor}18 0%, #ffffff 50%, ${partyColor}10 100%)`,
+          boxShadow: `0 1px 0 ${partyColor}22, 0 10px 32px -14px ${partyColor}55`,
+        }}
+      >
+        <div
+          className="absolute -right-8 -top-10 h-28 w-28 rounded-full opacity-30 blur-2xl"
+          style={{ backgroundColor: partyColor }}
+          aria-hidden
+        />
+        <div
+          className="h-1.5 w-full"
+          style={{
+            background: `linear-gradient(90deg, ${partyColor}, ${partyColor}55, ${partyColor})`,
+          }}
+          aria-hidden
+        />
+        <div className="relative flex items-center gap-4 p-5">
+          <div
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+            style={{ backgroundColor: `${partyColor}22`, color: partyColor }}
+          >
+            <Icon name="party" size={24} className="text-current" strokeWidth={1.75} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted">Preview</p>
+            <p className="truncate text-lg font-semibold text-foreground">
+              {title.trim() || "Birthday party"}
+            </p>
+            <div className="mt-2 flex items-center gap-2">
+              <span
+                className="flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold text-white"
+                style={{ backgroundColor: partyColor }}
+              >
+                {initials(holderName)}
+              </span>
+              <span className="text-sm text-muted">
+                Birthday · <span className="font-medium text-foreground">{holderName}</span>
+              </span>
+            </div>
           </div>
         </div>
-      </PartyColorBar>
-
-      <div>
-        <Label>Party title</Label>
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} className="min-h-11" />
       </div>
-      {members.length > 1 && (
-        <div>
-          <Label>Birthday holder</Label>
+
+      <FormSection
+        step={1}
+        title="Look & name"
+        description="Pick a color and title — each party gets its own style."
+      >
+        <div className="space-y-4">
+          <div>
+            <Label className="mb-2 block">Party color</Label>
+            <PartyColorPicker value={partyColor} onChange={setPartyColor} />
+          </div>
+          <div>
+            <Label>Party title</Label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="mt-1.5 min-h-11 bg-white"
+              placeholder="e.g. Sarah's 30th"
+            />
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection
+        step={2}
+        title="Birthday holder"
+        description="Who is this party for? They can manage their wishlist."
+      >
+        {members.length > 1 ? (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {members.map((m) => {
+              const selected = birthdayUserId === m.id;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => onBirthdayChange(m.id)}
+                  className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm transition-all ${
+                    selected
+                      ? "border-foreground/20 bg-muted-subtle ring-2 ring-foreground/10"
+                      : "border-border bg-white hover:border-foreground/15"
+                  }`}
+                >
+                  <span
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                    style={{ backgroundColor: selected ? partyColor : "#a1a1aa" }}
+                  >
+                    {initials(m.name)}
+                  </span>
+                  <span className="font-medium text-foreground">{m.name}</span>
+                  {selected && (
+                    <span className="ml-auto shrink-0" style={{ color: partyColor }}>
+                      <Icon name="cake" size={18} className="text-current" />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        ) : members.length === 1 ? (
+          <div className="flex items-center gap-3 rounded-xl border border-border bg-muted-subtle/50 px-4 py-3">
+            <span
+              className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white"
+              style={{ backgroundColor: partyColor }}
+            >
+              {initials(members[0].name)}
+            </span>
+            <div>
+              <p className="font-medium text-foreground">{members[0].name}</p>
+              <p className="text-xs text-muted">Birthday holder for this party</p>
+            </div>
+          </div>
+        ) : (
           <select
             className="min-h-11 w-full rounded-md border border-border bg-white px-3 text-sm"
             value={birthdayUserId}
             onChange={(e) => onBirthdayChange(e.target.value)}
           >
-            {members.map((m) => (
+            {adminCandidates.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.name}
               </option>
             ))}
           </select>
+        )}
+      </FormSection>
+
+      <FormSection
+        step={3}
+        title="Team"
+        description="Admins run payments; friends join as guests."
+      >
+        <div className="space-y-5">
+          <AdminPicker
+            people={adminCandidates}
+            birthdayUserId={birthdayUserId}
+            currentUserId={currentUserId}
+            selectedIds={adminIds}
+            onChange={setAdminIds}
+          />
+          <FriendGuestPicker
+            friends={friends}
+            birthdayUserId={birthdayUserId}
+            currentUserId={currentUserId}
+            selectedIds={guestIds}
+            onChange={setGuestIds}
+          />
+          {includeGroupMembers && groupId && (
+            <p className="flex items-start gap-2 rounded-lg bg-muted-subtle/80 px-3 py-2.5 text-xs text-muted">
+              <Icon name="users" size={14} className="mt-0.5 shrink-0" />
+              Group members are invited automatically. Share the group code for anyone else.
+            </p>
+          )}
         </div>
-      )}
+      </FormSection>
 
-      <AdminPicker
-        people={adminCandidates}
-        birthdayUserId={birthdayUserId}
-        currentUserId={currentUserId}
-        selectedIds={adminIds}
-        onChange={setAdminIds}
-      />
+      <FormSection
+        step={4}
+        title="Payment (optional)"
+        description="Admins can add or change the card later."
+      >
+        <button
+          type="button"
+          className="mb-3 text-sm font-medium text-muted hover:text-foreground"
+          onClick={() => setShowPayment((v) => !v)}
+        >
+          {showPayment ? "Hide card fields" : "Add treasurer card now"}
+        </button>
+        {showPayment && (
+          <div className="space-y-3">
+            <div>
+              <Label>Card number</Label>
+              <Input
+                value={cardNumber}
+                onChange={(e) => setCardNumber(e.target.value)}
+                className="mt-1.5 min-h-11 bg-white font-mono"
+                placeholder="6037…"
+              />
+            </div>
+            <div>
+              <Label>Cardholder name</Label>
+              <Input
+                value={cardHolder}
+                onChange={(e) => setCardHolder(e.target.value)}
+                className="mt-1.5 min-h-11 bg-white"
+              />
+            </div>
+          </div>
+        )}
+        {!showPayment && (
+          <p className="text-xs text-muted">Skip for now — set up when the party is live.</p>
+        )}
+      </FormSection>
 
-      <FriendGuestPicker
-        friends={friends}
-        birthdayUserId={birthdayUserId}
-        currentUserId={currentUserId}
-        selectedIds={guestIds}
-        onChange={setGuestIds}
-      />
-
-      {includeGroupMembers && groupId && (
-        <p className="text-xs text-muted">
-          Group members are also invited automatically (share the group code for anyone else).
+      {error && (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+          {error}
         </p>
       )}
 
-      <div>
-        <Label>Treasurer card number (admins can edit later)</Label>
-        <Input
-          value={cardNumber}
-          onChange={(e) => setCardNumber(e.target.value)}
-          className="font-mono min-h-11"
-          placeholder="6037..."
-        />
-      </div>
-      <div>
-        <Label>Cardholder name</Label>
-        <Input value={cardHolder} onChange={(e) => setCardHolder(e.target.value)} className="min-h-11" />
-      </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
       <Button
         type="button"
+        variant="primary"
         onClick={create}
         loading={loading}
-        loadingText="Creating…"
-        disabled={!birthdayUserId || adminIds.length === 0}
-        className="min-h-11"
+        loadingText="Creating party…"
+        disabled={!birthdayUserId || adminIds.length === 0 || !title.trim()}
+        className="min-h-12 w-full text-base"
       >
+        <Icon name="party" size={18} className="mr-2 text-white" />
         Create party
       </Button>
     </div>

@@ -1,7 +1,7 @@
 import { CeremonySetup } from "@/components/ceremony-setup";
+import { DeleteGroupButton } from "@/components/group-actions";
 import { ReminderButton } from "@/components/reminder-button";
 import { ShareInviteCode } from "@/components/share-invite-code";
-import { Link } from "@/components/link";
 import { requireUser } from "@/lib/auth";
 import { PartyCard } from "@/components/party-card";
 import { getAcceptedFriends } from "@/lib/ceremony-roles";
@@ -24,6 +24,17 @@ export default async function GroupDetailPage({
   if (!member) notFound();
 
   const group = await db.group.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      inviteCode: true,
+      ownerId: true,
+    },
+  });
+  if (!group) notFound();
+
+  const groupDetails = await db.group.findUnique({
     where: { id },
     include: {
       members: {
@@ -48,17 +59,25 @@ export default async function GroupDetailPage({
       },
     },
   });
-  if (!group) notFound();
+  if (!groupDetails) notFound();
 
-  const members = group.members.map((m) => m.user);
+  const isOwner = group.ownerId === user.id;
+  const members = groupDetails.members.map((m) => m.user);
   const friends = await getAcceptedFriends(user.id);
   const appOrigin = process.env.NEXT_PUBLIC_APP_URL;
 
   return (
     <div className="page-wide space-y-10">
-      <header>
-        <h1 className="page-title">{group.name}</h1>
-        <p className="page-desc">Share the party code so friends can join this group.</p>
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="page-title">{group.name}</h1>
+          <p className="page-desc">Share the party code so friends can join this group.</p>
+        </div>
+        {isOwner && (
+          <span className="shrink-0 rounded-full bg-muted-subtle px-2.5 py-1 text-xs font-medium text-muted">
+            You own this group
+          </span>
+        )}
       </header>
 
       <ShareInviteCode
@@ -89,7 +108,12 @@ export default async function GroupDetailPage({
       </section>
 
       <section className="space-y-4 border-t border-border pt-10">
-        <h2 className="text-sm font-medium text-foreground">New party</h2>
+        <div>
+          <h2 className="text-sm font-medium text-foreground">New party</h2>
+          <p className="mt-0.5 text-xs text-muted">
+            Set color, birthday holder, admins, and friends — preview updates as you go.
+          </p>
+        </div>
         <CeremonySetup
           groupId={group.id}
           members={members}
@@ -99,11 +123,11 @@ export default async function GroupDetailPage({
         />
       </section>
 
-      {group.ceremonies.length > 0 && (
+      {groupDetails.ceremonies.length > 0 && (
         <section>
           <h2 className="text-sm font-medium text-foreground">Parties</h2>
           <ul className="mt-4 flex flex-col gap-3">
-            {group.ceremonies.map((c) => (
+            {groupDetails.ceremonies.map((c) => (
               <li key={c.id}>
                 <PartyCard
                   id={c.id}
@@ -117,6 +141,16 @@ export default async function GroupDetailPage({
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {isOwner && (
+        <section className="border-t border-border pt-10">
+          <DeleteGroupButton
+            groupId={group.id}
+            groupName={group.name}
+            partyCount={groupDetails.ceremonies.length}
+          />
         </section>
       )}
     </div>

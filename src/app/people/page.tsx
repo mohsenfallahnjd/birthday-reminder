@@ -136,7 +136,12 @@ export default async function PeoplePage() {
 
       {accepted.length > 0 && (
         <section className="space-y-4 border-t border-border pt-10">
-          <h2 className="text-sm font-medium text-foreground">Party without a group</h2>
+          <div>
+            <h2 className="text-sm font-medium text-foreground">Party without a group</h2>
+            <p className="mt-0.5 text-xs text-muted">
+              Create a standalone party for a friend — pick color, holder, and who helps run it.
+            </p>
+          </div>
           <CeremonySetup
             members={accepted.map((x) => x.other)}
             friends={allFriends}
