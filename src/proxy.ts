@@ -27,7 +27,8 @@ export async function proxy(request: NextRequest) {
   const token = request.cookies.get(COOKIE)?.value;
   if (!token) {
     const login = new URL("/login", request.url);
-    login.searchParams.set("next", pathname);
+    const next = `${pathname}${request.nextUrl.search}`;
+    login.searchParams.set("next", next);
     return NextResponse.redirect(login);
   }
 

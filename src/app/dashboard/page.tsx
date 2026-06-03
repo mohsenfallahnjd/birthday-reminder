@@ -72,6 +72,7 @@ export default async function DashboardPage() {
         { birthdayUserId: user.id },
         { adminUserId: user.id },
         { group: { members: { some: { userId: user.id } } } },
+        { guests: { some: { userId: user.id } } },
       ],
       active: true,
     },

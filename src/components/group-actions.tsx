@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 
@@ -18,10 +18,11 @@ export function CreateGroupForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
     });
+    const data = await res.json();
     setLoading(false);
-    if (res.ok) {
+    if (res.ok && data.id) {
       setName("");
-      router.refresh();
+      router.push(`/groups/${data.id}`);
     }
   }
 
@@ -40,19 +41,25 @@ export function CreateGroupForm() {
   );
 }
 
-export function JoinGroupForm() {
+export function JoinGroupForm({ initialCode = "" }: { initialCode?: string }) {
   const router = useRouter();
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(initialCode);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (initialCode) setCode(initialCode);
+  }, [initialCode]);
+
   async function join() {
+    const trimmed = code.trim();
+    if (!trimmed) return;
     setLoading(true);
     setMsg("");
     const res = await fetch("/api/groups/join", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ inviteCode: code }),
+      body: JSON.stringify({ inviteCode: trimmed }),
     });
     const data = await res.json();
     setLoading(false);
@@ -65,14 +72,24 @@ export function JoinGroupForm() {
 
   return (
     <div className="space-y-2">
-      <Label>Group invite code</Label>
+      <Label>Party / group code</Label>
+      {initialCode && (
+        <p className="text-xs text-muted">Code from your invite link is filled in below.</p>
+      )}
       <div className="flex flex-col gap-2 sm:flex-row">
         <Input
           value={code}
           onChange={(e) => setCode(e.target.value)}
+          placeholder="Paste code here"
           className="min-h-11 font-mono"
         />
-        <Button variant="outline" onClick={join} disabled={loading} className="shrink-0 sm:min-w-[5rem]">
+        <Button
+          type="button"
+          variant="primary"
+          onClick={join}
+          disabled={loading || !code.trim()}
+          className="shrink-0 min-h-11 sm:min-w-[5rem]"
+        >
           Join
         </Button>
       </div>

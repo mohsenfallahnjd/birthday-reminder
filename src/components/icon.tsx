@@ -3,10 +3,12 @@ import {
   Bell,
   Cake,
   Calendar,
+  Copy,
   CreditCard,
   Gift,
   Heart,
   PartyPopper,
+  Share2,
   Sparkles,
   Users,
   Wallet,
@@ -24,6 +26,8 @@ export const icons = {
   heart: Heart,
   wallet: Wallet,
   card: CreditCard,
+  copy: Copy,
+  share: Share2,
 } as const;
 
 export type IconName = keyof typeof icons;

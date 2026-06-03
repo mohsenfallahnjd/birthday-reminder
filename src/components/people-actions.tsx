@@ -16,14 +16,14 @@ export function AddFriendByEmail() {
 
   async function add() {
     const trimmed = email.trim().toLowerCase();
-    if (!trimmed) return;
+    if (!trimmed || loading) return;
     setLoading(true);
     setMsg("");
     setOk(false);
     try {
       const { ok, data } = await postFriendRequest({ email: trimmed });
+      setLoading(false);
       if (ok) {
-        setEmail("");
         setOk(true);
         setMsg("");
         void router.refresh();
@@ -31,9 +31,8 @@ export function AddFriendByEmail() {
         setMsg(data.error ?? "Could not send request");
       }
     } catch {
-      setMsg("Could not send request");
-    } finally {
       setLoading(false);
+      setMsg("Could not send request");
     }
   }
 
@@ -66,11 +65,12 @@ export function AddFriendByEmail() {
         <Button
           type="button"
           variant="primary"
-          disabled={loading || !email.trim()}
+          disabled={loading}
+          aria-busy={loading}
           onClick={add}
           className="shrink-0 min-h-11 sm:min-w-[7rem]"
         >
-          {loading ? "Sending…" : "Add friend"}
+          Add friend
         </Button>
       </div>
       {ok && (

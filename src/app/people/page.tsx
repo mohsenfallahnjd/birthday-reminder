@@ -8,6 +8,7 @@ import {
 import { CeremonySetup } from "@/components/ceremony-setup";
 import { ReminderButton } from "@/components/reminder-button";
 import { requireUser } from "@/lib/auth";
+import { getAcceptedFriends } from "@/lib/ceremony-guests";
 import { db } from "@/lib/db";
 import { formatJalaliBirthday } from "@/lib/jalali";
 import { redirect } from "next/navigation";
@@ -37,6 +38,8 @@ export default async function PeoplePage() {
   const pendingOutgoing = list.filter(
     (x) => x.friendship.status === "PENDING" && x.friendship.userId === user.id,
   );
+
+  const allFriends = await getAcceptedFriends(user.id);
 
   return (
     <div className="page-wide space-y-10">
@@ -134,7 +137,11 @@ export default async function PeoplePage() {
       {accepted.length > 0 && (
         <section className="space-y-4 border-t border-border pt-10">
           <h2 className="text-sm font-medium text-foreground">Party without a group</h2>
-          <CeremonySetup members={accepted.map((x) => x.other)} />
+          <CeremonySetup
+            members={accepted.map((x) => x.other)}
+            friends={allFriends}
+            currentUserId={user.id}
+          />
         </section>
       )}
     </div>

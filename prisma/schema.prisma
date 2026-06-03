@@ -30,6 +30,7 @@ model User {
   payments      Payment[]
   adminCeremonies Ceremony[]   @relation("CeremonyAdmin")
   birthdayCeremonies Ceremony[] @relation("BirthdayPerson")
+  ceremonyGuests CeremonyGuest[]
   pushSubscriptions PushSubscription[]
 }
 
@@ -132,9 +133,23 @@ model Ceremony {
   birthdayUser   User     @relation("BirthdayPerson", fields: [birthdayUserId], references: [id])
   admin          User?    @relation("CeremonyAdmin", fields: [adminUserId], references: [id])
   group          Group?   @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  guests         CeremonyGuest[]
   wishlistItems  WishlistItem[]
   payments       Payment[]
   createdAt      DateTime @default(now())
+}
+
+model CeremonyGuest {
+  id          String   @id @default(cuid())
+  ceremonyId  String
+  userId      String
+  invitedById String?
+  ceremony    Ceremony @relation(fields: [ceremonyId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([ceremonyId, userId])
+  @@index([userId])
 }
 
 model WishlistItem {

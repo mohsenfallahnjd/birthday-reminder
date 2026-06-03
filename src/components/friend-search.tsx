@@ -52,10 +52,12 @@ export function FriendSearch() {
   }, [query, search]);
 
   async function sendRequest(userId: string) {
+    if (actionId) return;
     setActionId(userId);
     setMsg("");
     try {
       const { ok, data } = await postFriendRequest({ userId });
+      setActionId(null);
       if (ok) {
         setResults((prev) =>
           prev.map((u) =>
@@ -69,14 +71,12 @@ export function FriendSearch() {
           ),
         );
         void router.refresh();
-        void search(query);
       } else {
         setMsg(data.error ?? "Could not send request");
       }
     } catch {
-      setMsg("Could not send request");
-    } finally {
       setActionId(null);
+      setMsg("Could not send request");
     }
   }
 
@@ -121,7 +121,9 @@ export function FriendSearch() {
   }
 
   function actionButton(user: SearchUser) {
-    const busy = actionId === user.id || actionId === user.friendshipId;
+    const sending = actionId === user.id;
+    const busy =
+      sending || (actionId !== null && actionId === user.friendshipId);
 
     switch (user.relation) {
       case "friends":
@@ -184,11 +186,12 @@ export function FriendSearch() {
             type="button"
             size="sm"
             variant="primary"
-            disabled={busy}
+            disabled={sending}
+            aria-busy={sending}
             onClick={() => sendRequest(user.id)}
             className="min-h-11 min-w-[6.5rem]"
           >
-            {busy ? "Sending…" : "Add friend"}
+            Add friend
           </Button>
         );
     }
