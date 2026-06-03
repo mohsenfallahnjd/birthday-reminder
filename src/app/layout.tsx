@@ -39,6 +39,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  userScalable: false,
+  maximumScale: 1,
+  minimumScale: 1,
 };
 
 export default function RootLayout({
@@ -47,7 +50,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" dir="ltr" className={`${geistSans.variable} ${geistMono.variable} h-full`}>
+    <html
+      lang="en"
+      dir="ltr"
+      className={`${geistSans.variable} ${geistMono.variable} h-full`}
+    >
       <body className="flex min-h-dvh flex-col bg-background text-foreground antialiased">
         <Nav />
         <main className="flex-1 min-w-0">{children}</main>
