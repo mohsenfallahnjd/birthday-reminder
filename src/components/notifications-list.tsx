@@ -25,24 +25,25 @@ export function NotificationsList({ items }: { items: Notification[] }) {
     router.refresh();
   }
 
+  if (items.length === 0) {
+    return <p className="text-sm text-muted">No notifications.</p>;
+  }
+
   return (
     <div className="space-y-4">
       {items.some((n) => !n.read) && (
         <Button variant="outline" size="sm" onClick={markAll}>
-          همه را خواندم
+          Mark all read
         </Button>
       )}
-      <ul className="space-y-3">
+      <ul className="divide-y divide-border border-t border-border">
         {items.map((n) => (
-          <li
-            key={n.id}
-            className={`rounded-2xl p-4 ${n.read ? "bg-white/50" : "bg-white shadow-md border-l-4 border-party-pink"}`}
-          >
-            <p className="font-bold">{n.title}</p>
-            <p className="text-sm text-party-ink/70 mt-1">{n.body}</p>
+          <li key={n.id} className={`py-4 text-sm ${n.read ? "opacity-60" : ""}`}>
+            <p className="font-medium text-foreground">{n.title}</p>
+            <p className="mt-0.5 text-muted">{n.body}</p>
             {n.link && (
-              <Link href={n.link} className="mt-2 inline-block text-sm">
-                مشاهده
+              <Link href={n.link} className="mt-2 inline-block text-sm no-underline hover:underline">
+                Open
               </Link>
             )}
           </li>

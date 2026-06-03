@@ -1,12 +1,7 @@
 import { Link } from "@/components/link";
-import { Icon } from "@/components/icon";
-import { Card, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import {
-  daysUntilJalaliBirthday,
-  formatJalaliBirthday,
-} from "@/lib/jalali";
+import { daysUntilJalaliBirthday, formatJalaliBirthday } from "@/lib/jalali";
 import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
@@ -85,95 +80,73 @@ export default async function DashboardPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  const notifications = await db.notification.findMany({
-    where: { userId: user.id, read: false },
-    take: 3,
-    orderBy: { createdAt: "desc" },
-  });
+  const wishlistCount = await db.wishlistItem.count({ where: { userId: user.id } });
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-party-ink">
-          سلام {user.name}! <span className="inline-block animate-bounce">🎉</span>
-        </h1>
-        <p className="text-party-ink/60 mt-1">تولدهای نزدیک و جشن‌های فعال</p>
-      </div>
+    <div className="page-wide space-y-10">
+      <header>
+        <h1 className="page-title">Hi, {user.name}</h1>
+        <p className="page-desc">Upcoming birthdays and active parties</p>
+      </header>
 
       {!user.birthMonth && (
-        <Card className="border-party-yellow/50 bg-party-yellow/10">
-          <p className="text-sm">
-            تاریخ تولد شمسی خود را ثبت کنید تا دوستان یادآور بگیرند.{" "}
-            <Link href="/profile">تکمیل پروفایل</Link>
-          </p>
-        </Card>
+        <p className="text-sm text-muted border border-border rounded-lg px-4 py-3 bg-white">
+          <Link href="/profile">Add your Jalali birthday</Link> so friends get reminders.
+        </p>
       )}
 
-      <Card>
-        <CardTitle>
-          <Icon name="cake" />
-          تولدهای نزدیک
-        </CardTitle>
+      <section>
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="text-sm font-medium text-foreground">Wishlist</h2>
+          <Link href="/wishlist" className="text-sm text-muted hover:text-foreground no-underline">
+            Manage →
+          </Link>
+        </div>
+        <p className="mt-1 text-sm text-muted">
+          {wishlistCount === 0
+            ? "No items yet."
+            : `${wishlistCount} item${wishlistCount === 1 ? "" : "s"}.`}
+        </p>
+      </section>
+
+      <section>
+        <h2 className="text-sm font-medium text-foreground">Upcoming birthdays</h2>
         {upcoming.length === 0 ? (
-          <p className="mt-4 text-sm text-party-ink/50">هنوز تولدی نزدیک نیست. دوستان یا گروه اضافه کنید.</p>
+          <p className="mt-2 text-sm text-muted">No upcoming birthdays.</p>
         ) : (
-          <ul className="mt-4 space-y-3">
+          <ul className="mt-3 divide-y divide-border border-t border-border">
             {upcoming.slice(0, 8).map((u) => (
-              <li
-                key={u.id}
-                className="flex items-center justify-between rounded-2xl bg-party-cream/50 px-4 py-3"
-              >
+              <li key={u.id} className="flex items-center justify-between py-3 text-sm">
                 <div>
-                  <p className="font-semibold">{u.name}</p>
-                  <p className="text-xs text-party-ink/50">{u.date}</p>
+                  <span className="font-medium text-foreground">{u.name}</span>
+                  <span className="ml-2 text-muted">{u.date}</span>
                 </div>
-                <span className="rounded-full bg-party-pink/20 px-3 py-1 text-sm font-bold text-party-fuchsia">
-                  {u.days === 0 ? "امروز!" : `${u.days} روز`}
+                <span className="tabular-nums text-muted">
+                  {u.days === 0 ? "Today" : `${u.days}d`}
                 </span>
               </li>
             ))}
           </ul>
         )}
-      </Card>
+      </section>
 
-      <Card>
-        <CardTitle>
-          <Icon name="gift" />
-          جشن‌های فعال
-        </CardTitle>
+      <section>
+        <h2 className="text-sm font-medium text-foreground">Active parties</h2>
         {ceremonies.length === 0 ? (
-          <p className="mt-4 text-sm text-party-ink/50">از صفحه گروه یا دوستان جشن بسازید.</p>
+          <p className="mt-2 text-sm text-muted">None yet.</p>
         ) : (
-          <ul className="mt-4 space-y-2">
+          <ul className="mt-3 divide-y divide-border border-t border-border">
             {ceremonies.map((c) => (
-              <li key={c.id}>
-                <Link href={`/ceremonies/${c.id}`} className="block rounded-xl px-3 py-2 hover:bg-party-cream">
-                  {c.title} — {c.birthdayUser.name}
+              <li key={c.id} className="py-3 text-sm">
+                <Link href={`/ceremonies/${c.id}`} className="no-underline hover:underline">
+                  {c.title}
                 </Link>
+                <span className="text-muted"> · {c.birthdayUser.name}</span>
               </li>
             ))}
           </ul>
         )}
-      </Card>
-
-      {notifications.length > 0 && (
-        <Card>
-          <CardTitle>
-            <Icon name="bell" />
-            اعلان‌های جدید
-          </CardTitle>
-          <ul className="mt-4 space-y-2">
-            {notifications.map((n) => (
-              <li key={n.id} className="text-sm">
-                <strong>{n.title}</strong> — {n.body}
-              </li>
-            ))}
-          </ul>
-          <Link href="/notifications" className="mt-4 inline-block text-sm">
-            همه اعلان‌ها
-          </Link>
-        </Card>
-      )}
+      </section>
     </div>
   );
 }

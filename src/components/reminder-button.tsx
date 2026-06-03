@@ -23,7 +23,7 @@ export function ReminderButton({
 
   return (
     <Button size="sm" variant="outline" onClick={setReminder} disabled={done}>
-      {done ? "یادآور فعال" : "یادآور ۳ روز قبل"}
+      {done ? "Reminder on" : "Remind 3 days before"}
     </Button>
   );
 }

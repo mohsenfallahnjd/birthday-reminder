@@ -9,6 +9,7 @@ const secret = new TextEncoder().encode(
 const protectedPaths = [
   "/dashboard",
   "/profile",
+  "/wishlist",
   "/groups",
   "/people",
   "/notifications",
@@ -44,6 +45,7 @@ export const config = {
     "/dashboard",
     "/dashboard/:path*",
     "/profile",
+    "/wishlist",
     "/groups",
     "/groups/:path*",
     "/people",

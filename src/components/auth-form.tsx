@@ -34,7 +34,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error ?? "خطا رخ داد");
+      setError(data.error ?? "Something went wrong");
       return;
     }
 
@@ -46,30 +46,30 @@ export function AuthForm({ mode }: { mode: Mode }) {
     <form onSubmit={onSubmit} className="space-y-4">
       {mode === "register" && (
         <div>
-          <Label htmlFor="name">نام</Label>
-          <Input id="name" name="name" required placeholder="مثلاً محسن" />
+          <Label htmlFor="name">Name</Label>
+          <Input id="name" name="name" required placeholder="Alex" />
         </div>
       )}
       <div>
-        <Label htmlFor="email">ایمیل</Label>
-        <Input id="email" name="email" type="email" required dir="ltr" className="text-left" />
+        <Label htmlFor="email">Email</Label>
+        <Input id="email" name="email" type="email" required />
       </div>
       <div>
-        <Label htmlFor="password">رمز عبور</Label>
-        <Input id="password" name="password" type="password" required minLength={6} dir="ltr" className="text-left" />
+        <Label htmlFor="password">Password</Label>
+        <Input id="password" name="password" type="password" required minLength={6} />
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? "صبر کنید..." : mode === "login" ? "ورود" : "ثبت‌نام"}
+        {loading ? "Please wait…" : mode === "login" ? "Log in" : "Sign up"}
       </Button>
-      <p className="text-center text-sm text-party-ink/60">
+      <p className="text-center text-sm text-muted">
         {mode === "login" ? (
           <>
-            حساب ندارید؟ <Link href="/register">ثبت‌نام</Link>
+            No account? <Link href="/register">Sign up</Link>
           </>
         ) : (
           <>
-            قبلاً ثبت‌نام کردید؟ <Link href="/login">ورود</Link>
+            Already registered? <Link href="/login">Log in</Link>
           </>
         )}
       </p>

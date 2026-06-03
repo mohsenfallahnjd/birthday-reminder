@@ -12,12 +12,12 @@ const schema = z.object({
 export async function POST(request: Request) {
   const body = await parseJson<unknown>(request);
   const parsed = schema.safeParse(body);
-  if (!parsed.success) return jsonError("اطلاعات نامعتبر است");
+  if (!parsed.success) return jsonError("Invalid input");
 
   const existing = await db.user.findUnique({
     where: { email: parsed.data.email.toLowerCase() },
   });
-  if (existing) return jsonError("این ایمیل قبلاً ثبت شده", 409);
+  if (existing) return jsonError("Email already registered", 409);
 
   const user = await db.user.create({
     data: {

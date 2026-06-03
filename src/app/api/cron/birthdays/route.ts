@@ -36,8 +36,8 @@ export async function GET(request: Request) {
     await notifyUser({
       userId: r.ownerId,
       type: "birthday_reminder",
-      title: "تولد نزدیک است!",
-      body: `تا ${r.daysBefore} روز دیگر تولد ${name} است. وقت هدیه و جشن است!`,
+      title: "Birthday coming up!",
+      body: `${name}'s birthday is in ${r.daysBefore} day(s). Time to plan a gift!`,
       link: r.groupId ? `/groups/${r.groupId}` : "/people",
     });
     sent++;

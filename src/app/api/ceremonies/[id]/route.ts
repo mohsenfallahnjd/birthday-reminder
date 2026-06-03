@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await requireUser();
-  if (!user) return jsonError("لطفاً وارد شوید", 401);
+  if (!user) return jsonError("Please sign in", 401);
 
   const { id } = await params;
   const ceremony = await db.ceremony.findUnique({
@@ -31,7 +31,7 @@ export async function GET(
     },
   });
 
-  if (!ceremony) return jsonError("جشن یافت نشد", 404);
+  if (!ceremony) return jsonError("Party not found", 404);
   return jsonOk(ceremony);
 }
 
@@ -47,19 +47,19 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await requireUser();
-  if (!user) return jsonError("لطفاً وارد شوید", 401);
+  if (!user) return jsonError("Please sign in", 401);
 
   const { id } = await params;
   const ceremony = await db.ceremony.findUnique({ where: { id } });
-  if (!ceremony) return jsonError("جشن یافت نشد", 404);
+  if (!ceremony) return jsonError("Party not found", 404);
 
   const isAdmin =
     ceremony.adminUserId === user.id || ceremony.birthdayUserId === user.id;
-  if (!isAdmin) return jsonError("فقط ادمین جشن می‌تواند ویرایش کند", 403);
+  if (!isAdmin) return jsonError("Only party admin can edit", 403);
 
   const body = await parseJson<unknown>(request);
   const parsed = patchSchema.safeParse(body);
-  if (!parsed.success) return jsonError("اطلاعات نامعتبر");
+  if (!parsed.success) return jsonError("Invalid input");
 
   const updated = await db.ceremony.update({
     where: { id },

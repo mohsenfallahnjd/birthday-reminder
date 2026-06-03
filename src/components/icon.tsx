@@ -32,14 +32,16 @@ type IconProps = {
   name: IconName;
   className?: string;
   size?: number;
+  strokeWidth?: number;
 };
 
-export function Icon({ name, className, size = 20 }: IconProps) {
+export function Icon({ name, className, size = 18, strokeWidth = 1.5 }: IconProps) {
   const Lucide: LucideIcon = icons[name];
   return (
     <Lucide
-      className={cn("shrink-0 text-party-fuchsia", className)}
+      className={cn("shrink-0 text-muted", className)}
       size={size}
+      strokeWidth={strokeWidth}
       aria-hidden
     />
   );

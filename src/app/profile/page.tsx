@@ -1,6 +1,5 @@
 import { ProfileForm } from "@/components/profile-form";
-import { Card, CardTitle } from "@/components/ui/card";
-import { Icon } from "@/components/icon";
+import { PushNotifications } from "@/components/push-notifications";
 import { requireUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
@@ -9,21 +8,18 @@ export default async function ProfilePage() {
   if (!user) redirect("/login");
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-10">
-      <Card>
-        <CardTitle className="mb-6">
-          <Icon name="calendar" />
-          پروفایل و تاریخ تولد شمسی
-        </CardTitle>
-        <ProfileForm
-          initial={{
-            name: user.name,
-            birthMonth: user.birthMonth,
-            birthDay: user.birthDay,
-            birthYear: user.birthYear,
-          }}
-        />
-      </Card>
+    <div className="page">
+      <h1 className="page-title">Profile</h1>
+      <p className="page-desc mb-8">Name and Jalali birthday.</p>
+      <ProfileForm
+        initial={{
+          name: user.name,
+          birthMonth: user.birthMonth,
+          birthDay: user.birthDay,
+          birthYear: user.birthYear,
+        }}
+      />
+      <PushNotifications />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { jsonError, jsonOk, parseJson } from "@/lib/api";
 
 export async function GET() {
   const user = await requireUser();
-  if (!user) return jsonError("لطفاً وارد شوید", 401);
+  if (!user) return jsonError("Please sign in", 401);
 
   const notifications = await db.notification.findMany({
     where: { userId: user.id },
@@ -23,11 +23,11 @@ const markSchema = z.object({
 
 export async function PATCH(request: Request) {
   const user = await requireUser();
-  if (!user) return jsonError("لطفاً وارد شوید", 401);
+  if (!user) return jsonError("Please sign in", 401);
 
   const body = await parseJson<unknown>(request);
   const parsed = markSchema.safeParse(body);
-  if (!parsed.success) return jsonError("درخواست نامعتبر");
+  if (!parsed.success) return jsonError("Invalid request");
 
   if (parsed.data.markAll) {
     await db.notification.updateMany({

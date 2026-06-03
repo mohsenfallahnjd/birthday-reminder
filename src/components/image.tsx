@@ -3,13 +3,13 @@ import type { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 
 type AppImageProps = ComponentProps<typeof NextImage> & {
-  frame?: "none" | "party" | "avatar";
+  frame?: "none" | "rounded" | "avatar";
 };
 
 const frames = {
   none: "",
-  party: "rounded-2xl ring-4 ring-party-yellow/60 shadow-xl shadow-party-pink/20",
-  avatar: "rounded-full ring-4 ring-party-pink/40",
+  rounded: "rounded-lg border border-border",
+  avatar: "rounded-full border border-border",
 };
 
 export function Image({ className, frame = "none", alt, ...props }: AppImageProps) {

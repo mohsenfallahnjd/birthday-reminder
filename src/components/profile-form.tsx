@@ -5,6 +5,7 @@ import { useState } from "react";
 import { PersianDatePicker } from "@/components/persian-date-picker";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { Link } from "@/components/link";
 
 type Props = {
   initial: {
@@ -41,27 +42,34 @@ export function ProfileForm({ initial }: Props) {
     });
     setLoading(false);
     if (res.ok) {
-      setMsg("ذخیره شد!");
+      setMsg("Saved!");
       router.refresh();
     } else {
       const d = await res.json();
-      setMsg(d.error ?? "خطا");
+      setMsg(d.error ?? "Error");
     }
   }
 
   return (
     <div className="space-y-4">
       <div>
-        <Label>نام نمایشی</Label>
+        <Label>Display name</Label>
         <Input value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <div>
-        <Label>تاریخ تولد (شمسی)</Label>
-        <PersianDatePicker value={birth} onChange={setBirth} onlyMonthDay={false} />
+        <Label>Birthday (Jalali / Shamsi)</Label>
+        <PersianDatePicker value={birth} onChange={setBirth} showYear />
       </div>
+      <p className="text-sm text-muted">
+        Manage gifts you want on{" "}
+        <Link href="/wishlist" className="text-foreground font-medium">
+          your wishlist
+        </Link>
+        .
+      </p>
       {msg && <p className="text-sm text-emerald-600">{msg}</p>}
       <Button onClick={save} disabled={loading} className="w-full">
-        ذخیره پروفایل
+        Save profile
       </Button>
     </div>
   );

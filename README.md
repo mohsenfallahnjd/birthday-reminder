@@ -1,60 +1,56 @@
-# جشن تولد — Birthday Reminder
+# Birthday
 
-وب‌اپ یادآوری تولد شمسی، گروه‌ها، لیست آرزو و جمع‌آوری هدیه گروهی با تأیید ادمین مالی.
+Web app for Jalali birthday reminders, friend groups, wishlists, and pooled gifts.
 
-## ویژگی‌ها
+## Features
 
-- تقویم شمسی (Persian date picker) برای ثبت تولد
-- گروه با کد دعوت + افزودن دوستان با ایمیل
-- یادآور تولد با اعلان درون‌برنامه‌ای (کرون روزانه روی Vercel)
-- جشن تولد: لیست آرزو (عنوان، لینک، قیمت، cheap-in)
-- پرداخت دلخواه + آپلود رسید (Vercel Blob)
-- ادمین مالی: شماره کارت، تأیید/رد پرداخت، اعلان به بدهکاران
+- Jalali date picker · Groups · Wishlists · Treasurer payments
+- **PWA** — install to home screen, custom app icon
+- **Web Push** — device notifications for birthdays, parties, payments
 
-## Tech stack
-
-- **Bun** — package manager & runtime
-- **Biome** — lint & format
-- **Next.js 16** — App Router
-- **Prisma** + PostgreSQL (Neon on Vercel)
-- **Vercel** — deploy + Blob + Cron
-
-## شروع محلی
+## Local setup
 
 ```bash
 bun install
 cp .env.example .env
-# DATABASE_URL و AUTH_SECRET را پر کنید
+bun run vapid   # copy keys into .env
 bun run db:push
 bun run dev
 ```
 
-## Deploy on Vercel
+### Environment
 
-1. پروژه را به Vercel وصل کنید.
-2. **Neon Postgres** (یا Postgres دیگر) اضافه کنید → `DATABASE_URL`
-3. `AUTH_SECRET` — رشته تصادفی طولانی
-4. `BLOB_READ_WRITE_TOKEN` — از Storage → Blob برای رسید پرداخت
-5. `CRON_SECRET` — اختیاری برای امنیت `/api/cron/birthdays`
-6. `NEXT_PUBLIC_APP_URL` — مثلاً `https://your-app.vercel.app`
-7. Deploy — `postinstall` اجرای `prisma generate` را انجام می‌دهد.
+| Variable | Purpose |
+|----------|---------|
+| `DATABASE_URL` | Neon / Postgres |
+| `AUTH_SECRET` | Session JWT |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Web Push (public) |
+| `VAPID_PRIVATE_KEY` | Web Push (secret) |
+| `VAPID_SUBJECT` | `mailto:you@example.com` |
+| `BLOB_READ_WRITE_TOKEN` | Payment proof uploads |
+| `CRON_SECRET` | Birthday cron auth |
+
+### Enable push on a device
+
+1. Open the app over **HTTPS** (or `localhost` for dev).
+2. Go to **Profile** → **Enable push notifications**.
+3. Accept the browser permission.
+4. Optional: use **Install** banner to add PWA to home screen.
+
+Push is sent automatically whenever an in-app notification is created (birthday cron, friend requests, payments, etc.).
+
+## Deploy (Vercel)
+
+Add all env vars above. Push requires VAPID keys on the server and HTTPS in production.
 
 ```bash
 bun run build
 ```
 
-## اسکریپت‌ها
+## Scripts
 
-| دستور | توضیح |
-|--------|--------|
-| `bun run dev` | سرور توسعه |
-| `bun run build` | build تولید |
-| `bun run lint` | Biome check |
-| `bun run db:push` | sync schema به DB |
-
-## ساختار components
-
-- `@/components/link` — لینک با استایل جشن
-- `@/components/image` — تصویر با قاب party/avatar
-- `@/components/icon` — آیکون‌های lucide (cake, gift, party, …)
-- `@/components/persian-date-picker` — انتخاب تاریخ شمسی
+| Command | Description |
+|---------|-------------|
+| `bun run dev` | Dev server |
+| `bun run vapid` | Generate VAPID key pair |
+| `bun run db:push` | Sync database schema |

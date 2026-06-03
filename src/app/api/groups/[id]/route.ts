@@ -7,13 +7,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await requireUser();
-  if (!user) return jsonError("لطفاً وارد شوید", 401);
+  if (!user) return jsonError("Please sign in", 401);
 
   const { id } = await params;
   const member = await db.groupMember.findUnique({
     where: { groupId_userId: { groupId: id, userId: user.id } },
   });
-  if (!member) return jsonError("دسترسی ندارید", 403);
+  if (!member) return jsonError("Access denied", 403);
 
   const group = await db.group.findUnique({
     where: { id },
@@ -43,6 +43,6 @@ export async function GET(
     },
   });
 
-  if (!group) return jsonError("گروه یافت نشد", 404);
+  if (!group) return jsonError("Group not found", 404);
   return jsonOk(group);
 }

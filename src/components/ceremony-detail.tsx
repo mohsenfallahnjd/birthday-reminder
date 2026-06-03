@@ -2,10 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { WishlistManager } from "@/components/wishlist-manager";
 import { Button } from "@/components/ui/button";
+import { MoneyInput, getAmountFromInput } from "@/components/money-input";
 import { Input, Label, Textarea } from "@/components/ui/input";
-import { formatToman } from "@/lib/utils";
-import { Icon } from "@/components/icon";
+import { formatMoney } from "@/lib/utils";
+import { Link } from "@/components/link";
 
 type WishlistItem = {
   id: string;
@@ -13,6 +15,7 @@ type WishlistItem = {
   link: string | null;
   cost: number;
   allowCheapIn: boolean;
+  ceremonyId: string | null;
   payments: { amount: number; status: string; payer: { name: string } }[];
 };
 
@@ -41,143 +44,127 @@ export function CeremonyDetail({
   ceremony,
   currentUserId,
   isAdmin,
+  isBirthdayPerson,
 }: {
   ceremony: Ceremony;
   currentUserId: string;
   isAdmin: boolean;
+  isBirthdayPerson: boolean;
 }) {
   const router = useRouter();
-  const [tab, setTab] = useState<"wishlist" | "pay" | "admin">("wishlist");
+  const defaultTab = isBirthdayPerson ? "wishlist" : "pay";
+  const [tab, setTab] = useState<"wishlist" | "pay" | "admin">(defaultTab);
+
+  const partyItems = ceremony.wishlistItems.filter(
+    (i) => i.ceremonyId === ceremony.id || i.ceremonyId === null,
+  );
+
+  const tabs = [
+    { id: "wishlist" as const, label: "Wishlist" },
+    { id: "pay" as const, label: "Contribute" },
+    ...(isAdmin ? [{ id: "admin" as const, label: "Treasurer" }] : []),
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-2">
-        {(["wishlist", "pay", ...(isAdmin ? ["admin"] : [])] as const).map((t) => (
+      {isBirthdayPerson && (
+        <div className="rounded-lg border border-border bg-muted-subtle p-4 text-sm">
+          <p className="font-medium text-foreground">You are the birthday person</p>
+          <p className="mt-1 text-muted">
+            Add items under <strong>Wishlist</strong>, or pre-fill on{" "}
+            <Link href="/wishlist">My wishlist</Link> and attach them to this party.
+          </p>
+        </div>
+      )}
+
+      <div className="inline-flex gap-1 rounded-md border border-border bg-muted-subtle p-1">
+        {tabs.map((t) => (
           <button
-            key={t}
+            key={t.id}
             type="button"
-            onClick={() => setTab(t)}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-              tab === t
-                ? "bg-gradient-to-r from-party-pink to-party-fuchsia text-white"
-                : "bg-white/80 text-party-ink/70"
+            onClick={() => setTab(t.id)}
+            className={`rounded px-3 py-1.5 text-sm transition-colors ${
+              tab === t.id
+                ? "bg-white text-foreground shadow-sm"
+                : "text-muted hover:text-foreground"
             }`}
           >
-            {t === "wishlist" ? "لیست آرزو" : t === "pay" ? "پرداخت" : "ادمین مالی"}
+            {t.label}
           </button>
         ))}
       </div>
 
-      {ceremony.cardNumber && (
-        <div className="rounded-2xl border border-party-yellow/40 bg-party-yellow/15 p-4 text-sm">
-          <Icon name="card" className="mb-2" />
+      {ceremony.cardNumber && tab === "pay" && (
+        <div className="rounded-lg border border-border px-4 py-3 text-sm text-muted">
           <p>
-            کارت: <span dir="ltr" className="font-mono font-bold">{ceremony.cardNumber}</span>
+            Card <span className="font-mono text-foreground">{ceremony.cardNumber}</span>
           </p>
-          {ceremony.cardHolder && <p>به نام: {ceremony.cardHolder}</p>}
+          {ceremony.cardHolder && <p>Account name: {ceremony.cardHolder}</p>}
         </div>
       )}
 
       {tab === "wishlist" && (
-        <WishlistSection
-          ceremonyId={ceremony.id}
-          items={ceremony.wishlistItems}
-          canEdit={ceremony.birthdayUser.id === currentUserId}
-        />
+        <div className="space-y-4">
+          {partyItems.length > 0 && (
+            <ul className="space-y-3">
+              {partyItems.map((item) => {
+                const approved = item.payments
+                  .filter((p) => p.status === "APPROVED")
+                  .reduce((s, p) => s + p.amount, 0);
+                return (
+                  <li key={item.id} className="rounded-lg border border-border p-4">
+                    <p className="font-bold">{item.title}</p>
+                    {item.link && (
+                      <a
+                        href={item.link}
+                        className="text-sm text-foreground underline"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        View link
+                      </a>
+                    )}
+                    <p className="mt-1 text-sm">{formatMoney(item.cost)}</p>
+                    {item.allowCheapIn && (
+                      <span className="mt-2 inline-block rounded-full bg-muted-subtle px-2 py-0.5 text-xs">
+                        Pay what you can
+                      </span>
+                    )}
+                    <p className="mt-2 text-xs text-muted">
+                      Collected (approved): {formatMoney(approved)} / {formatMoney(item.cost)}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {isBirthdayPerson ? (
+            <WishlistManager
+              items={partyItems}
+              ceremonyId={ceremony.id}
+              ceremonies={[{ id: ceremony.id, title: ceremony.title }]}
+              canEdit
+            />
+          ) : partyItems.length === 0 ? (
+            <p className="text-sm text-muted">No wishlist items for this party yet.</p>
+          ) : null}
+        </div>
       )}
+
       {tab === "pay" && (
         <PaymentSection
           ceremonyId={ceremony.id}
-          items={ceremony.wishlistItems}
+          items={partyItems}
           payments={ceremony.payments.filter((p) => p.payer.id === currentUserId)}
         />
       )}
+
       {tab === "admin" && isAdmin && (
         <AdminSection
           ceremonyId={ceremony.id}
           payments={ceremony.payments}
           onUpdate={() => router.refresh()}
         />
-      )}
-    </div>
-  );
-}
-
-function WishlistSection({
-  ceremonyId,
-  items,
-  canEdit,
-}: {
-  ceremonyId: string;
-  items: WishlistItem[];
-  canEdit: boolean;
-}) {
-  const router = useRouter();
-  const [title, setTitle] = useState("");
-  const [link, setLink] = useState("");
-  const [cost, setCost] = useState("");
-  const [cheapIn, setCheapIn] = useState(false);
-
-  async function addItem() {
-    await fetch("/api/wishlist", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title,
-        link: link || undefined,
-        cost: Number(cost),
-        allowCheapIn: cheapIn,
-        ceremonyId,
-      }),
-    });
-    setTitle("");
-    setLink("");
-    setCost("");
-    router.refresh();
-  }
-
-  return (
-    <div className="space-y-4">
-      {items.map((item) => {
-        const approved = item.payments
-          .filter((p) => p.status === "APPROVED")
-          .reduce((s, p) => s + p.amount, 0);
-        return (
-          <div key={item.id} className="rounded-2xl bg-white/80 p-4 shadow-md">
-            <p className="font-bold">{item.title}</p>
-            {item.link && (
-              <a href={item.link} className="text-sm text-party-fuchsia underline" target="_blank" rel="noreferrer">
-                لینک کالا
-              </a>
-            )}
-            <p className="mt-1 text-sm">{formatToman(item.cost)}</p>
-            {item.allowCheapIn && (
-              <span className="mt-2 inline-block rounded-full bg-party-yellow/30 px-2 py-0.5 text-xs">
-                cheap-in مجاز — هر مبلغی OK
-              </span>
-            )}
-            <p className="mt-2 text-xs text-party-ink/50">
-              جمع تأییدشده: {formatToman(approved)} از {formatToman(item.cost)}
-            </p>
-          </div>
-        );
-      })}
-
-      {canEdit && (
-        <div className="rounded-2xl border-2 border-dashed border-party-pink/30 p-4 space-y-3">
-          <p className="font-semibold flex items-center gap-2">
-            <Icon name="gift" />
-            افزودن به لیست آرزو
-          </p>
-          <Input placeholder="عنوان هدیه" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <Input placeholder="لینک (اختیاری)" value={link} onChange={(e) => setLink(e.target.value)} dir="ltr" className="text-left" />
-          <Input placeholder="قیمت (تومان)" type="number" value={cost} onChange={(e) => setCost(e.target.value)} />
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={cheapIn} onChange={(e) => setCheapIn(e.target.checked)} />
-            cheap-in — دوستان هر مبلغی که توانستند بدهند
-          </label>
-          <Button onClick={addItem}>افزودن</Button>
-        </div>
       )}
     </div>
   );
@@ -198,6 +185,7 @@ function PaymentSection({
   const [note, setNote] = useState("");
   const [proofUrl, setProofUrl] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
 
   async function uploadProof(file: File) {
     setUploading(true);
@@ -207,43 +195,60 @@ function PaymentSection({
     const data = await res.json();
     setUploading(false);
     if (res.ok) setProofUrl(data.url);
+    else setError(data.error ?? "Upload failed");
   }
 
   async function submitPayment() {
-    await fetch(`/api/ceremonies/${ceremonyId}/payments`, {
+    setError("");
+    const parsedAmount = getAmountFromInput(amount);
+    if (!parsedAmount) {
+      setError("Enter a valid amount.");
+      return;
+    }
+
+    const res = await fetch(`/api/ceremonies/${ceremonyId}/payments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        amount: Number(amount),
+        amount: parsedAmount,
         wishlistItemId: wishlistItemId || undefined,
         proofUrl: proofUrl || undefined,
         note: note || undefined,
       }),
     });
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error ?? "Could not submit payment");
+      return;
+    }
     setAmount("");
     router.refresh();
   }
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-party-ink/60">
-        هر مبلغی که می‌توانی واریز کن و رسید آپلود کن. ادمین تأیید می‌کند.
+      <p className="text-sm text-muted">
+        Transfer any amount you can, then upload proof. The treasurer will approve it.
       </p>
 
-      <div className="space-y-3 rounded-2xl bg-white/80 p-4">
+      <div className="space-y-3 border-t border-border pt-6">
         <div>
-          <Label>مبلغ (تومان)</Label>
-          <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          <Label>Amount (Toman)</Label>
+          <MoneyInput
+            value={amount}
+            onValueChange={setAmount}
+            placeholder="500,000"
+          />
         </div>
         {items.length > 0 && (
           <div>
-            <Label>برای کدام آیتم؟ (اختیاری)</Label>
+            <Label>For which item? (optional)</Label>
             <select
-              className="w-full rounded-xl border-2 border-party-pink/20 bg-white px-4 py-3"
+              className="h-9 w-full rounded-md border border-border bg-white px-3 text-sm"
               value={wishlistItemId}
               onChange={(e) => setWishlistItemId(e.target.value)}
             >
-              <option value="">عمومی / cheap-in</option>
+              <option value="">General / pay what you can</option>
               {items.map((i) => (
                 <option key={i.id} value={i.id}>
                   {i.title}
@@ -253,7 +258,7 @@ function PaymentSection({
           </div>
         )}
         <div>
-          <Label>رسید پرداخت</Label>
+          <Label>Payment proof (screenshot)</Label>
           <input
             type="file"
             accept="image/*"
@@ -262,28 +267,26 @@ function PaymentSection({
               if (f) uploadProof(f);
             }}
           />
-          {uploading && <p className="text-xs">در حال آپلود...</p>}
-          {proofUrl && <p className="text-xs text-emerald-600">رسید آپلود شد</p>}
+          {uploading && <p className="text-xs">Uploading…</p>}
+          {proofUrl && <p className="text-xs text-emerald-600">Proof uploaded</p>}
         </div>
         <div>
-          <Label>یادداشت</Label>
+          <Label>Note</Label>
           <Textarea value={note} onChange={(e) => setNote(e.target.value)} />
         </div>
-        <Button onClick={submitPayment} className="w-full">
-          <Icon name="wallet" size={18} />
-          ثبت پرداخت
-        </Button>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <Button onClick={submitPayment}>Submit payment</Button>
       </div>
 
       <div>
-        <p className="font-semibold mb-2">پرداخت‌های شما</p>
+        <p className="text-sm font-medium text-foreground mb-2">Your payments</p>
         {payments.length === 0 ? (
-          <p className="text-sm text-party-ink/50">هنوز پرداختی ثبت نکرده‌اید.</p>
+          <p className="text-sm text-muted">No payments submitted yet.</p>
         ) : (
-          <ul className="space-y-2">
+          <ul className="divide-y divide-border border-t border-border">
             {payments.map((p) => (
-              <li key={p.id} className="rounded-xl bg-party-cream/50 px-3 py-2 text-sm">
-                {formatToman(p.amount)} —{" "}
+              <li key={p.id} className="py-2 text-sm">
+                {formatMoney(p.amount)} —{" "}
                 <span
                   className={
                     p.status === "APPROVED"
@@ -293,7 +296,11 @@ function PaymentSection({
                         : "text-amber-600"
                   }
                 >
-                  {p.status === "APPROVED" ? "تأیید" : p.status === "REJECTED" ? "رد" : "در انتظار"}
+                  {p.status === "APPROVED"
+                    ? "Approved"
+                    : p.status === "REJECTED"
+                      ? "Rejected"
+                      : "Pending"}
                 </span>
               </li>
             ))}
@@ -335,51 +342,66 @@ function AdminSection({
   }
 
   async function notifyUnpaid() {
-    const res = await fetch(`/api/ceremonies/${ceremonyId}/notify-unpaid`, { method: "POST" });
+    const res = await fetch(`/api/ceremonies/${ceremonyId}/notify-unpaid`, {
+      method: "POST",
+    });
     const data = await res.json();
-    alert(`${data.notified ?? 0} نفر اعلان گرفتند`);
+    alert(`Notified ${data.notified ?? 0} people`);
   }
 
-  const payerIds = new Set(
+  const approvedCount = new Set(
     payments.filter((p) => p.status === "APPROVED").map((p) => p.payer.id),
-  );
+  ).size;
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-white/80 p-4 space-y-3">
-        <p className="font-semibold">تنظیم کارت</p>
-        <Input placeholder="شماره کارت" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} dir="ltr" className="text-left" />
-        <Input placeholder="نام صاحب کارت" value={cardHolder} onChange={(e) => setCardHolder(e.target.value)} />
+      <div className="space-y-3 border-t border-border pt-6">
+        <p className="text-sm font-medium text-foreground">Treasurer card</p>
+        <Input
+          placeholder="Card number"
+          value={cardNumber}
+          onChange={(e) => setCardNumber(e.target.value)}
+        />
+        <Input
+          placeholder="Account holder name"
+          value={cardHolder}
+          onChange={(e) => setCardHolder(e.target.value)}
+        />
         <Button variant="outline" onClick={saveCard}>
-          ذخیره کارت
+          Save card
         </Button>
       </div>
 
-      <Button variant="party" onClick={notifyUnpaid}>
-        اعلان به کسانی که نپرداختند
+      <Button onClick={notifyUnpaid}>
+        Notify people who have not paid
       </Button>
 
       <div>
-        <p className="font-semibold mb-2">تأیید پرداخت‌ها</p>
-        <ul className="space-y-3">
+        <p className="text-sm font-medium text-foreground mb-2">Payments</p>
+        <ul className="divide-y divide-border border-t border-border">
           {payments.map((p) => (
-            <li key={p.id} className="rounded-2xl border border-party-pink/10 bg-white p-4">
+            <li key={p.id} className="py-4 text-sm">
               <p className="font-medium">{p.payer.name}</p>
-              <p>{formatToman(p.amount)}</p>
+              <p>{formatMoney(p.amount)}</p>
               {p.proofUrl && (
-                <a href={p.proofUrl} target="_blank" rel="noreferrer" className="text-sm text-party-fuchsia">
-                  مشاهده رسید
+                <a
+                  href={p.proofUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-foreground"
+                >
+                  View proof
                 </a>
               )}
-              {p.note && <p className="text-xs text-party-ink/50">{p.note}</p>}
-              <p className="text-sm mt-1">وضعیت: {p.status}</p>
+              {p.note && <p className="text-xs text-muted">{p.note}</p>}
+              <p className="text-sm mt-1">Status: {p.status}</p>
               {p.status === "PENDING" && (
                 <div className="mt-2 flex gap-2">
                   <Button size="sm" variant="success" onClick={() => review(p.id, "APPROVED")}>
-                    تأیید
+                    Approve
                   </Button>
                   <Button size="sm" variant="danger" onClick={() => review(p.id, "REJECTED")}>
-                    رد
+                    Reject
                   </Button>
                 </div>
               )}
@@ -388,9 +410,9 @@ function AdminSection({
         </ul>
       </div>
 
-      <div>
-        <p className="font-semibold">پرداخت‌کنندگان تأییدشده ({payerIds.size})</p>
-      </div>
+      <p className="text-sm text-muted">
+        Approved payers: {approvedCount}
+      </p>
     </div>
   );
 }

@@ -1,18 +1,44 @@
-import type { Metadata } from "next";
-import { Vazirmatn } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 import { Nav } from "@/components/nav";
+import { PwaInstallHint } from "@/components/pwa-install";
 import "./globals.css";
 
-const vazir = Vazirmatn({
-  subsets: ["arabic"],
-  variable: "--font-vazir",
-  display: "swap",
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "جشن تولد | یادآور تولد و هدیه گروهی",
-  description:
-    "یادآوری تولد شمسی، گروه دوستان، لیست آرزو و جمع‌آوری هدیه با تأیید ادمین مالی",
+  title: "Birthday",
+  description: "Jalali birthday reminders, wishlists, and group gifts.",
+  applicationName: "Birthday",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.svg",
+    apple: [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Birthday",
+  },
+  formatDetection: { telephone: false },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#18181b",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -21,10 +47,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fa" dir="rtl" className={`${vazir.variable} h-full`}>
-      <body className="party-bg min-h-full flex flex-col antialiased">
+    <html lang="en" dir="ltr" className={`${geistSans.variable} ${geistMono.variable} h-full`}>
+      <body className="min-h-full flex flex-col bg-background text-foreground antialiased">
         <Nav />
         <main className="flex-1">{children}</main>
+        <PwaInstallHint />
       </body>
     </html>
   );

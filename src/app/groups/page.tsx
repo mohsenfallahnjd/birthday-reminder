@@ -1,7 +1,5 @@
 import { CreateGroupForm, JoinGroupForm } from "@/components/group-actions";
 import { Link } from "@/components/link";
-import { Icon } from "@/components/icon";
-import { Card, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
@@ -19,34 +17,37 @@ export default async function GroupsPage() {
   });
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 space-y-6">
-      <h1 className="text-2xl font-bold flex items-center gap-2">
-        <Icon name="users" />
-        گروه‌ها
-      </h1>
+    <div className="page-wide space-y-10">
+      <header>
+        <h1 className="page-title">Groups</h1>
+        <p className="page-desc">Create or join with an invite code.</p>
+      </header>
 
-      <Card>
-        <CardTitle className="mb-4">گروه جدید</CardTitle>
+      <section className="space-y-4">
+        <h2 className="text-sm font-medium text-foreground">New group</h2>
         <CreateGroupForm />
-      </Card>
+      </section>
 
-      <Card>
-        <CardTitle className="mb-4">پیوستن با کد دعوت</CardTitle>
+      <section className="space-y-4">
+        <h2 className="text-sm font-medium text-foreground">Join group</h2>
         <JoinGroupForm />
-      </Card>
+      </section>
 
-      <div className="space-y-3">
-        {groups.map((g) => (
-          <Link
-            key={g.id}
-            href={`/groups/${g.id}`}
-            className="block rounded-3xl border border-white/70 bg-white/80 p-5 shadow-md hover:shadow-lg transition-shadow"
-          >
-            <p className="font-bold">{g.name}</p>
-            <p className="text-sm text-party-ink/50 mt-1">{g._count.members} عضو</p>
-          </Link>
-        ))}
-      </div>
+      {groups.length > 0 && (
+        <section>
+          <h2 className="text-sm font-medium text-foreground">Your groups</h2>
+          <ul className="mt-3 divide-y divide-border border-t border-border">
+            {groups.map((g) => (
+              <li key={g.id} className="py-3 text-sm">
+                <Link href={`/groups/${g.id}`} className="font-medium no-underline hover:underline">
+                  {g.name}
+                </Link>
+                <span className="text-muted"> · {g._count.members} members</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

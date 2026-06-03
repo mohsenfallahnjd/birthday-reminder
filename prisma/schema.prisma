@@ -30,6 +30,21 @@ model User {
   payments      Payment[]
   adminCeremonies Ceremony[]   @relation("CeremonyAdmin")
   birthdayCeremonies Ceremony[] @relation("BirthdayPerson")
+  pushSubscriptions PushSubscription[]
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Group {

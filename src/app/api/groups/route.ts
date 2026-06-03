@@ -7,7 +7,7 @@ const createSchema = z.object({ name: z.string().min(2) });
 
 export async function GET() {
   const user = await requireUser();
-  if (!user) return jsonError("لطفاً وارد شوید", 401);
+  if (!user) return jsonError("Please sign in", 401);
 
   const groups = await db.group.findMany({
     where: {
@@ -25,11 +25,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const user = await requireUser();
-  if (!user) return jsonError("لطفاً وارد شوید", 401);
+  if (!user) return jsonError("Please sign in", 401);
 
   const body = await parseJson<unknown>(request);
   const parsed = createSchema.safeParse(body);
-  if (!parsed.success) return jsonError("نام گروه نامعتبر");
+  if (!parsed.success) return jsonError("Invalid group name");
 
   const group = await db.group.create({
     data: {

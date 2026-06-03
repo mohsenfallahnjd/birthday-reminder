@@ -11,15 +11,15 @@ const schema = z.object({
 export async function POST(request: Request) {
   const body = await parseJson<unknown>(request);
   const parsed = schema.safeParse(body);
-  if (!parsed.success) return jsonError("ایمیل یا رمز عبور نامعتبر");
+  if (!parsed.success) return jsonError("Invalid email or password");
 
   const user = await db.user.findUnique({
     where: { email: parsed.data.email.toLowerCase() },
   });
-  if (!user) return jsonError("کاربر یافت نشد", 401);
+  if (!user) return jsonError("User not found", 401);
 
   const valid = await verifyPassword(parsed.data.password, user.passwordHash);
-  if (!valid) return jsonError("رمز عبور اشتباه است", 401);
+  if (!valid) return jsonError("Wrong password", 401);
 
   await createSession({ id: user.id, email: user.email, name: user.name });
   return jsonOk({ id: user.id });

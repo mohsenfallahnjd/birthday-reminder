@@ -1,8 +1,6 @@
 import { AddFriendForm, AcceptFriendButton } from "@/components/people-actions";
 import { CeremonySetup } from "@/components/ceremony-setup";
 import { ReminderButton } from "@/components/reminder-button";
-import { Icon } from "@/components/icon";
-import { Card, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatJalaliBirthday } from "@/lib/jalali";
@@ -31,55 +29,59 @@ export default async function PeoplePage() {
   );
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 space-y-6">
-      <h1 className="text-2xl font-bold flex items-center gap-2">
-        <Icon name="heart" />
-        دوستان و تولدها
-      </h1>
+    <div className="page-wide space-y-10">
+      <header>
+        <h1 className="page-title">Friends</h1>
+        <p className="page-desc">Invite by email and set birthday reminders.</p>
+      </header>
 
-      <Card>
-        <CardTitle className="mb-4">افزودن با ایمیل</CardTitle>
+      <section className="space-y-4">
+        <h2 className="text-sm font-medium text-foreground">Add friend</h2>
         <AddFriendForm />
-      </Card>
+      </section>
 
       {pending.length > 0 && (
-        <Card>
-          <CardTitle>درخواست‌های در انتظار</CardTitle>
-          <ul className="mt-4 space-y-2">
+        <section>
+          <h2 className="text-sm font-medium text-foreground">Pending</h2>
+          <ul className="mt-3 divide-y divide-border border-t border-border">
             {pending.map(({ friendship, other }) => (
-              <li key={friendship.id} className="flex items-center justify-between">
+              <li key={friendship.id} className="flex items-center justify-between py-3 text-sm">
                 <span>{other.name}</span>
                 <AcceptFriendButton friendshipId={friendship.id} />
               </li>
             ))}
           </ul>
-        </Card>
+        </section>
       )}
 
-      <Card>
-        <CardTitle>دوستان شما</CardTitle>
-        <ul className="mt-4 space-y-3">
-          {accepted.map(({ other }) => (
-            <li key={other.id} className="flex items-center justify-between rounded-xl bg-party-cream/40 px-4 py-2">
-              <div>
-                <p className="font-medium">{other.name}</p>
-                {other.birthMonth && other.birthDay && (
-                  <p className="text-xs text-party-ink/50">
-                    {formatJalaliBirthday(other.birthMonth, other.birthDay)}
-                  </p>
-                )}
-              </div>
-              <ReminderButton targetUserId={other.id} />
-            </li>
-          ))}
-        </ul>
-      </Card>
+      <section>
+        <h2 className="text-sm font-medium text-foreground">Friends</h2>
+        {accepted.length === 0 ? (
+          <p className="mt-2 text-sm text-muted">No friends yet.</p>
+        ) : (
+          <ul className="mt-3 divide-y divide-border border-t border-border">
+            {accepted.map(({ other }) => (
+              <li key={other.id} className="flex items-center justify-between py-3 text-sm">
+                <div>
+                  <span className="font-medium">{other.name}</span>
+                  {other.birthMonth && other.birthDay && (
+                    <span className="ml-2 text-muted">
+                      {formatJalaliBirthday(other.birthMonth, other.birthDay)}
+                    </span>
+                  )}
+                </div>
+                <ReminderButton targetUserId={other.id} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {accepted.length > 0 && (
-        <Card>
-          <CardTitle>جشن تولد (بدون گروه)</CardTitle>
+        <section className="space-y-4 border-t border-border pt-10">
+          <h2 className="text-sm font-medium text-foreground">Party without a group</h2>
           <CeremonySetup members={accepted.map((x) => x.other)} />
-        </Card>
+        </section>
       )}
     </div>
   );

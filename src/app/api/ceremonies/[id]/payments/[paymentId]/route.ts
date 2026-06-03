@@ -13,17 +13,17 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string; paymentId: string }> },
 ) {
   const user = await requireUser();
-  if (!user) return jsonError("لطفاً وارد شوید", 401);
+  if (!user) return jsonError("Please sign in", 401);
 
   const { id: ceremonyId, paymentId } = await params;
   const ceremony = await db.ceremony.findUnique({ where: { id: ceremonyId } });
   if (!ceremony || ceremony.adminUserId !== user.id) {
-    return jsonError("فقط ادمین مالی می‌تواند تأیید کند", 403);
+    return jsonError("Only treasurer can approve", 403);
   }
 
   const body = await parseJson<unknown>(request);
   const parsed = schema.safeParse(body);
-  if (!parsed.success) return jsonError("وضعیت نامعتبر");
+  if (!parsed.success) return jsonError("Invalid status");
 
   const payment = await db.payment.update({
     where: { id: paymentId },
@@ -36,11 +36,11 @@ export async function PATCH(
   await notifyUser({
     userId: payment.payerId,
     type: "payment_review",
-    title: parsed.data.status === "APPROVED" ? "پرداخت تأیید شد" : "پرداخت رد شد",
+    title: parsed.data.status === "APPROVED" ? "Payment approved" : "Payment rejected",
     body:
       parsed.data.status === "APPROVED"
-        ? "پرداخت شما توسط ادمین جشن تأیید شد. ممنون از مشارکتتان!"
-        : "پرداخت شما تأیید نشد. با ادمین تماس بگیرید.",
+        ? "Your payment was approved. Thank you!"
+        : "Your payment was rejected. Contact the treasurer.",
     link: `/ceremonies/${ceremonyId}`,
   });
 

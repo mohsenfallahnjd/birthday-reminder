@@ -5,6 +5,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatToman(amount: number) {
-  return new Intl.NumberFormat("fa-IR").format(amount) + " تومان";
+import { formatAmount } from "@/lib/money";
+
+export function formatMoney(amount: number) {
+  return `${formatAmount(amount)} Toman`;
 }

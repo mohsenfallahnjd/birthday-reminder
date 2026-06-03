@@ -28,12 +28,12 @@ export function CreateGroupForm() {
   return (
     <div className="flex gap-2">
       <Input
-        placeholder="نام گروه، مثلاً همکلاسی‌ها"
+        placeholder="Group name, e.g. College friends"
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
       <Button onClick={create} disabled={loading}>
-        ساخت گروه
+        Create group
       </Button>
     </div>
   );
@@ -64,11 +64,11 @@ export function JoinGroupForm() {
 
   return (
     <div className="space-y-2">
-      <Label>کد دعوت گروه</Label>
+      <Label>Group invite code</Label>
       <div className="flex gap-2">
-        <Input value={code} onChange={(e) => setCode(e.target.value)} dir="ltr" className="text-left" />
+        <Input value={code} onChange={(e) => setCode(e.target.value)} className="font-mono" />
         <Button variant="outline" onClick={join} disabled={loading}>
-          پیوستن
+          Join
         </Button>
       </div>
       {msg && <p className="text-sm text-red-600">{msg}</p>}

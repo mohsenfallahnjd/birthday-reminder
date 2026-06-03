@@ -1,6 +1,4 @@
 import { NotificationsList } from "@/components/notifications-list";
-import { Icon } from "@/components/icon";
-import { Card, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
@@ -16,19 +14,15 @@ export default async function NotificationsPage() {
   });
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
-      <Card>
-        <CardTitle className="mb-6">
-          <Icon name="bell" />
-          اعلان‌ها
-        </CardTitle>
-        <NotificationsList
-          items={notifications.map((n) => ({
-            ...n,
-            createdAt: n.createdAt.toISOString(),
-          }))}
-        />
-      </Card>
+    <div className="page">
+      <h1 className="page-title">Notifications</h1>
+      <p className="page-desc mb-8">Recent activity.</p>
+      <NotificationsList
+        items={notifications.map((n) => ({
+          ...n,
+          createdAt: n.createdAt.toISOString(),
+        }))}
+      />
     </div>
   );
 }

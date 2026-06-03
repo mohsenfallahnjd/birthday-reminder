@@ -5,7 +5,7 @@ import { jsonError, jsonOk, parseJson } from "@/lib/api";
 
 const schema = z.object({
   title: z.string().min(1),
-  link: z.string().url().optional().or(z.literal("")),
+  link: z.string().optional(),
   cost: z.number().positive(),
   allowCheapIn: z.boolean().default(false),
   ceremonyId: z.string().optional(),
@@ -13,11 +13,11 @@ const schema = z.object({
 
 export async function POST(request: Request) {
   const user = await requireUser();
-  if (!user) return jsonError("لطفاً وارد شوید", 401);
+  if (!user) return jsonError("Please sign in", 401);
 
   const body = await parseJson<unknown>(request);
   const parsed = schema.safeParse(body);
-  if (!parsed.success) return jsonError("اطلاعات لیست آرزو نامعتبر");
+  if (!parsed.success) return jsonError("Invalid wishlist item");
 
   const item = await db.wishlistItem.create({
     data: {
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   const user = await requireUser();
-  if (!user) return jsonError("لطفاً وارد شوید", 401);
+  if (!user) return jsonError("Please sign in", 401);
 
   const url = new URL(request.url);
   const ceremonyId = url.searchParams.get("ceremonyId");

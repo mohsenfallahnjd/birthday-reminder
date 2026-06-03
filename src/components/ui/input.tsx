@@ -5,7 +5,7 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   return (
     <input
       className={cn(
-        "w-full rounded-xl border-2 border-party-pink/20 bg-white px-4 py-3 text-party-ink placeholder:text-party-ink/40 focus:border-party-fuchsia focus:outline-none focus:ring-2 focus:ring-party-pink/30",
+        "h-9 w-full rounded-md border border-border bg-white px-3 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0",
         className,
       )}
       {...props}
@@ -19,7 +19,7 @@ export function Label({
 }: React.LabelHTMLAttributes<HTMLLabelElement>) {
   return (
     <label
-      className={cn("mb-1.5 block text-sm font-medium text-party-ink/80", className)}
+      className={cn("mb-1.5 block text-xs font-medium text-muted", className)}
       {...props}
     />
   );
@@ -32,7 +32,7 @@ export function Textarea({
   return (
     <textarea
       className={cn(
-        "w-full rounded-xl border-2 border-party-pink/20 bg-white px-4 py-3 text-party-ink placeholder:text-party-ink/40 focus:border-party-fuchsia focus:outline-none focus:ring-2 focus:ring-party-pink/30 min-h-[100px]",
+        "min-h-[88px] w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ring",
         className,
       )}
       {...props}

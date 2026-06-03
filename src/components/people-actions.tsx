@@ -31,11 +31,11 @@ export function AddFriendForm() {
 
   return (
     <div className="space-y-2">
-      <Label>ایمیل دوست</Label>
+      <Label>Friend&apos;s email</Label>
       <div className="flex gap-2">
-        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" className="text-left" />
+        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         <Button onClick={add} disabled={loading}>
-          دعوت
+          Invite
         </Button>
       </div>
       {msg && <p className="text-sm text-red-600">{msg}</p>}
@@ -57,7 +57,7 @@ export function AcceptFriendButton({ friendshipId }: { friendshipId: string }) {
         router.refresh();
       }}
     >
-      قبول دوستی
+      Accept
     </Button>
   );
 }

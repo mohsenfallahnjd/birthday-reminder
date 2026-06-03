@@ -1,5 +1,4 @@
 import { Link } from "@/components/link";
-import { Icon } from "@/components/icon";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -13,40 +12,44 @@ export async function Nav() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-party-pink/10 bg-white/70 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link href={session ? "/dashboard" : "/"} variant="default" className="flex items-center gap-2 text-lg font-bold">
-          <Icon name="party" size={24} />
-          <span className="bg-gradient-to-r from-party-pink to-party-fuchsia bg-clip-text text-transparent">
-            جشن تولد
-          </span>
+    <header className="sticky top-0 z-50 border-b border-border bg-white/80 backdrop-blur-sm">
+      <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
+        <Link
+          href={session ? "/dashboard" : "/"}
+          className="text-sm font-semibold tracking-tight text-foreground no-underline hover:no-underline"
+        >
+          Birthday
         </Link>
 
-        <nav className="flex items-center gap-4">
+        <nav className="flex items-center gap-5">
           {session ? (
             <>
-              <Link href="/dashboard" variant="nav">داشبورد</Link>
-              <Link href="/groups" variant="nav">گروه‌ها</Link>
-              <Link href="/people" variant="nav">دوستان</Link>
+              <Link href="/dashboard" variant="nav">Dashboard</Link>
+              <Link href="/wishlist" variant="nav">Wishlist</Link>
+              <Link href="/groups" variant="nav">Groups</Link>
+              <Link href="/people" variant="nav">Friends</Link>
               <Link href="/notifications" variant="nav" className="relative">
-                <Icon name="bell" size={18} />
+                Alerts
                 {unread > 0 && (
-                  <span className="absolute -top-1 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-party-pink px-1 text-[10px] font-bold text-white">
+                  <span className="absolute -top-1.5 -right-3 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-medium text-white">
                     {unread > 9 ? "9+" : unread}
                   </span>
                 )}
               </Link>
-              <Link href="/profile" variant="nav">پروفایل</Link>
+              <Link href="/profile" variant="nav">Profile</Link>
               <form action="/api/auth/logout" method="post">
-                <button type="submit" className="text-sm text-party-ink/60 hover:text-party-fuchsia">
-                  خروج
+                <button
+                  type="submit"
+                  className="text-sm text-muted hover:text-foreground transition-colors"
+                >
+                  Log out
                 </button>
               </form>
             </>
           ) : (
             <>
-              <Link href="/login" variant="nav">ورود</Link>
-              <Link href="/register" variant="button">ثبت‌نام</Link>
+              <Link href="/login" variant="nav">Log in</Link>
+              <Link href="/register" variant="button">Sign up</Link>
             </>
           )}
         </nav>

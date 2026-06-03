@@ -8,7 +8,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await requireUser();
-  if (!user) return jsonError("لطفاً وارد شوید", 401);
+  if (!user) return jsonError("Please sign in", 401);
 
   const { id } = await params;
   const ceremony = await db.ceremony.findUnique({
@@ -22,7 +22,7 @@ export async function POST(
   });
 
   if (!ceremony || ceremony.adminUserId !== user.id) {
-    return jsonError("فقط ادمین مالی", 403);
+    return jsonError("Treasurer only", 403);
   }
 
   let memberIds: string[] = [];
@@ -51,8 +51,8 @@ export async function POST(
       notifyUser({
         userId,
         type: "payment_reminder",
-        title: "یادآوری مشارکت در هدیه",
-        body: `هنوز برای جشن «${ceremony.title}» پرداختی ثبت نکرده‌اید. هر مبلغی که بتوانید عالی است!`,
+        title: "Gift contribution reminder",
+        body: `You have not contributed to "${ceremony.title}" yet. Any amount helps!`,
         link: `/ceremonies/${id}`,
       }),
     ),

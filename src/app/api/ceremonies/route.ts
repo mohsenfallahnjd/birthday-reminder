@@ -15,11 +15,11 @@ const schema = z.object({
 
 export async function POST(request: Request) {
   const user = await requireUser();
-  if (!user) return jsonError("لطفاً وارد شوید", 401);
+  if (!user) return jsonError("Please sign in", 401);
 
   const body = await parseJson<unknown>(request);
   const parsed = schema.safeParse(body);
-  if (!parsed.success) return jsonError("اطلاعات نامعتبر");
+  if (!parsed.success) return jsonError("Invalid input");
 
   if (parsed.data.groupId) {
     const member = await db.groupMember.findUnique({
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
         groupId_userId: { groupId: parsed.data.groupId, userId: user.id },
       },
     });
-    if (!member) return jsonError("عضو گروه نیستید", 403);
+    if (!member) return jsonError("Not a group member", 403);
   }
 
   const ceremony = await db.ceremony.create({
@@ -64,8 +64,8 @@ export async function POST(request: Request) {
 
   await notifyMany(notifyIds.filter((id) => id !== user.id), {
     type: "ceremony",
-    title: "جشن تولد جدید",
-    body: `جشن «${ceremony.title}» برای ${ceremony.birthdayUser.name} ساخته شد`,
+    title: "New birthday party",
+    body: `Party "${ceremony.title}" for ${ceremony.birthdayUser.name} was created`,
     link: `/ceremonies/${ceremony.id}`,
   });
 

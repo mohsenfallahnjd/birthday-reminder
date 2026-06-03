@@ -9,6 +9,21 @@ export type JalaliDateParts = {
   day: number;
 };
 
+const JALALI_MONTHS = [
+  "Farvardin",
+  "Ordibehesht",
+  "Khordad",
+  "Tir",
+  "Mordad",
+  "Shahrivar",
+  "Mehr",
+  "Aban",
+  "Azar",
+  "Dey",
+  "Bahman",
+  "Esfand",
+];
+
 export function getTodayJalali(): JalaliDateParts {
   const j = dayjs().calendar("jalali");
   return { year: j.year(), month: j.month() + 1, day: j.date() };
@@ -19,22 +34,19 @@ export function formatJalaliBirthday(
   day: number,
   year?: number | null,
 ) {
-  const months = [
-    "فروردین",
-    "اردیبهشت",
-    "خرداد",
-    "تیر",
-    "مرداد",
-    "شهریور",
-    "مهر",
-    "آبان",
-    "آذر",
-    "دی",
-    "بهمن",
-    "اسفند",
-  ];
-  const base = `${day} ${months[month - 1]}`;
-  return year ? `${base} ${year}` : base;
+  const monthName = JALALI_MONTHS[month - 1] ?? String(month);
+  const base = `${monthName} ${day}`;
+  return year ? `${base}, ${year}` : base;
+}
+
+export function formatJalaliNumeric(
+  month: number,
+  day: number,
+  year?: number | null,
+) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const md = `${pad(month)}/${pad(day)}`;
+  return year ? `${year}/${md}` : md;
 }
 
 export function daysUntilJalaliBirthday(

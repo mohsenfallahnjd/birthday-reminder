@@ -16,15 +16,15 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await requireUser();
-  if (!user) return jsonError("لطفاً وارد شوید", 401);
+  if (!user) return jsonError("Please sign in", 401);
 
   const { id: ceremonyId } = await params;
   const ceremony = await db.ceremony.findUnique({ where: { id: ceremonyId } });
-  if (!ceremony) return jsonError("جشن یافت نشد", 404);
+  if (!ceremony) return jsonError("Party not found", 404);
 
   const body = await parseJson<unknown>(request);
   const parsed = schema.safeParse(body);
-  if (!parsed.success) return jsonError("اطلاعات پرداخت نامعتبر");
+  if (!parsed.success) return jsonError("Invalid payment");
 
   const payment = await db.payment.create({
     data: {
@@ -41,8 +41,8 @@ export async function POST(
     await notifyUser({
       userId: ceremony.adminUserId,
       type: "payment_pending",
-      title: "پرداخت جدید در انتظار تأیید",
-      body: `${user.name} مبلغ ${parsed.data.amount.toLocaleString("fa-IR")} تومان پرداخت کرد`,
+      title: "New payment to review",
+      body: `${user.name} paid ${parsed.data.amount.toLocaleString("en-US")} Toman`,
       link: `/ceremonies/${ceremonyId}`,
     });
   }
