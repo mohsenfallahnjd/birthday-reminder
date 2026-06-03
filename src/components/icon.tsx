@@ -7,9 +7,11 @@ import {
   CreditCard,
   Gift,
   Heart,
+  Pencil,
   PartyPopper,
   Share2,
   Sparkles,
+  Trash2,
   Users,
   Wallet,
 } from "lucide-react";
@@ -28,6 +30,8 @@ export const icons = {
   card: CreditCard,
   copy: Copy,
   share: Share2,
+  pencil: Pencil,
+  trash: Trash2,
 } as const;
 
 export type IconName = keyof typeof icons;

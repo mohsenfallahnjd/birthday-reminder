@@ -97,7 +97,10 @@ export function PartyTeam({
       <div>
         <h2 className="text-sm font-medium text-foreground">Party team</h2>
         <p className="mt-0.5 text-xs text-muted">
-          Holder: <strong>{holder?.name ?? birthdayName}</strong> · Admins approve pay and manage the card · Guests contribute
+          Birthday: <strong>{holder?.name ?? birthdayName}</strong> · Admins approve pay and manage the card · Guests contribute
+          {canManage && (
+            <span className="block mt-1">Use <strong>Edit</strong> above to change title, color, or birthday holder.</span>
+          )}
         </p>
       </div>
 

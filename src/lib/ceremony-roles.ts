@@ -100,6 +100,68 @@ export async function canManagePartyTeam(
   return isCeremonyAdmin(ceremony.id, userId);
 }
 
+export async function isValidBirthdayHolderCandidate(
+  ceremony: { id: string; groupId: string | null },
+  userId: string,
+) {
+  if (ceremony.groupId) {
+    const inGroup = await db.groupMember.findUnique({
+      where: { groupId_userId: { groupId: ceremony.groupId, userId } },
+    });
+    if (inGroup) return true;
+  }
+  const onTeam = await db.ceremonyMember.findUnique({
+    where: { ceremonyId_userId: { ceremonyId: ceremony.id, userId } },
+  });
+  return !!onTeam;
+}
+
+export async function changeBirthdayHolder(
+  ceremonyId: string,
+  newUserId: string,
+  invitedById: string,
+) {
+  const ceremony = await db.ceremony.findUnique({ where: { id: ceremonyId } });
+  if (!ceremony) return { ok: false as const, error: "Party not found" };
+
+  if (!(await isValidBirthdayHolderCandidate(ceremony, newUserId))) {
+    return { ok: false as const, error: "That person cannot be the birthday holder" };
+  }
+
+  const oldUserId = ceremony.birthdayUserId;
+  if (oldUserId === newUserId) return { ok: true as const };
+
+  await db.$transaction(async (tx) => {
+    await tx.ceremony.update({
+      where: { id: ceremonyId },
+      data: { birthdayUserId: newUserId },
+    });
+
+    const oldRow = await tx.ceremonyMember.findUnique({
+      where: { ceremonyId_userId: { ceremonyId, userId: oldUserId } },
+    });
+    if (oldRow && oldRow.role === "BIRTHDAY") {
+      await tx.ceremonyMember.update({
+        where: { id: oldRow.id },
+        data: { role: "GUEST" },
+      });
+    }
+
+    await tx.ceremonyMember.upsert({
+      where: { ceremonyId_userId: { ceremonyId, userId: newUserId } },
+      create: {
+        ceremonyId,
+        userId: newUserId,
+        role: "BIRTHDAY",
+        invitedById,
+      },
+      update: { role: "BIRTHDAY" },
+    });
+  });
+
+  return { ok: true as const };
+}
+
 export async function canEditPartyWishlist(
   ceremony: { id: string; birthdayUserId: string },
   userId: string,

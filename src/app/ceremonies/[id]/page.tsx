@@ -1,5 +1,5 @@
 import { CeremonyDetail } from "@/components/ceremony-detail";
-import { PartyColorBar } from "@/components/party-color-bar";
+import { PartyHeader } from "@/components/party-header";
 import { PartyTeam } from "@/components/party-team";
 import { ShareInviteCode } from "@/components/share-invite-code";
 import { requireUser } from "@/lib/auth";
@@ -49,6 +49,20 @@ export default async function CeremonyPage({
     role: m.role,
   }));
 
+  const holderCandidates = await (async () => {
+    const map = new Map<string, { id: string; name: string }>();
+    if (ceremony.groupId) {
+      const groupMembers = await db.groupMember.findMany({
+        where: { groupId: ceremony.groupId },
+        include: { user: { select: { id: true, name: true } } },
+      });
+      for (const gm of groupMembers) map.set(gm.user.id, gm.user);
+    }
+    for (const m of members) map.set(m.user.id, { id: m.user.id, name: m.user.name });
+    for (const f of friends) map.set(f.id, { id: f.id, name: f.name });
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+  })();
+
   const wishlistItems = await db.wishlistItem.findMany({
     where: {
       userId: ceremony.birthdayUserId,
@@ -64,17 +78,19 @@ export default async function CeremonyPage({
 
   return (
     <div className="page">
-      <PartyColorBar color={ceremony.color} className="mb-6 p-4">
-        <header>
-          <h1 className="page-title">{ceremony.title}</h1>
-          <p className="page-desc mt-1">
-            Birthday holder: <strong>{ceremony.birthdayUser.name}</strong>
-            {isTreasurer && !isBirthdayPerson && (
-              <span className="ml-2 text-xs text-muted">· You are an admin</span>
-            )}
-          </p>
-        </header>
-      </PartyColorBar>
+      <PartyHeader
+        ceremonyId={ceremony.id}
+        title={ceremony.title}
+        color={ceremony.color}
+        birthdayUserId={ceremony.birthdayUserId}
+        birthdayName={ceremony.birthdayUser.name}
+        groupId={ceremony.group?.id ?? null}
+        groupName={ceremony.group?.name ?? null}
+        holderCandidates={holderCandidates}
+        canManage={canManageTeam}
+        isAdmin={isTreasurer}
+        isBirthdayPerson={isBirthdayPerson}
+      />
 
       {ceremony.group && (
         <div className="mb-8">
