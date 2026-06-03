@@ -1,11 +1,15 @@
 import { CeremonyDetail } from "@/components/ceremony-detail";
-import { PartyGuests } from "@/components/party-guests";
+import { PartyColorBar } from "@/components/party-color-bar";
+import { PartyTeam } from "@/components/party-team";
 import { ShareInviteCode } from "@/components/share-invite-code";
 import { requireUser } from "@/lib/auth";
 import {
-  canManageCeremonyGuests,
+  canApprovePayments,
+  canEditPartyWishlist,
+  canManagePartyTeam,
   getAcceptedFriends,
-} from "@/lib/ceremony-guests";
+  getCeremonyMembers,
+} from "@/lib/ceremony-roles";
 import { db } from "@/lib/db";
 import { redirect, notFound } from "next/navigation";
 
@@ -23,10 +27,6 @@ export default async function CeremonyPage({
     include: {
       birthdayUser: { select: { id: true, name: true } },
       group: { select: { id: true, name: true, inviteCode: true } },
-      guests: {
-        include: { user: { select: { id: true, name: true } } },
-        orderBy: { createdAt: "asc" },
-      },
       payments: {
         include: { payer: { select: { id: true, name: true } } },
         orderBy: { createdAt: "desc" },
@@ -36,9 +36,18 @@ export default async function CeremonyPage({
 
   if (!ceremony) notFound();
 
+  const members = await getCeremonyMembers(id);
   const friends = await getAcceptedFriends(user.id);
-  const canManage = canManageCeremonyGuests(ceremony, user.id);
-  const partyGuests = ceremony.guests.map((g) => g.user);
+  const canManageTeam = await canManagePartyTeam(ceremony, user.id);
+  const isTreasurer = await canApprovePayments(id, user.id);
+  const isBirthdayPerson = ceremony.birthdayUser.id === user.id;
+  const canEditWishlist = await canEditPartyWishlist(ceremony, user.id);
+
+  const teamMembers = members.map((m) => ({
+    id: m.user.id,
+    name: m.user.name,
+    role: m.role,
+  }));
 
   const wishlistItems = await db.wishlistItem.findMany({
     where: {
@@ -53,15 +62,19 @@ export default async function CeremonyPage({
     orderBy: { createdAt: "desc" },
   });
 
-  const isAdmin = ceremony.adminUserId === user.id;
-  const isBirthdayPerson = ceremony.birthdayUser.id === user.id;
-
   return (
     <div className="page">
-      <header className="mb-8">
-        <h1 className="page-title">{ceremony.title}</h1>
-        <p className="page-desc">Birthday: {ceremony.birthdayUser.name}</p>
-      </header>
+      <PartyColorBar color={ceremony.color} className="mb-6 p-4">
+        <header>
+          <h1 className="page-title">{ceremony.title}</h1>
+          <p className="page-desc mt-1">
+            Birthday holder: <strong>{ceremony.birthdayUser.name}</strong>
+            {isTreasurer && !isBirthdayPerson && (
+              <span className="ml-2 text-xs text-muted">· You are an admin</span>
+            )}
+          </p>
+        </header>
+      </PartyColorBar>
 
       {ceremony.group && (
         <div className="mb-8">
@@ -74,21 +87,23 @@ export default async function CeremonyPage({
       )}
 
       <div className="mb-8">
-        <PartyGuests
+        <PartyTeam
           ceremonyId={ceremony.id}
-          guests={partyGuests}
+          members={teamMembers}
           friends={friends}
           birthdayUserId={ceremony.birthdayUser.id}
+          birthdayName={ceremony.birthdayUser.name}
           currentUserId={user.id}
-          canManage={canManage}
+          canManage={canManageTeam}
         />
       </div>
 
       <CeremonyDetail
         ceremony={{ ...ceremony, wishlistItems }}
         currentUserId={user.id}
-        isAdmin={isAdmin}
+        isAdmin={isTreasurer}
         isBirthdayPerson={isBirthdayPerson}
+        canEditWishlist={canEditWishlist}
       />
     </div>
   );

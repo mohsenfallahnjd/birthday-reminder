@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
+import { canEditPartyWishlist, canEditTreasurerCard } from "@/lib/ceremony-roles";
 import { db } from "@/lib/db";
 import { jsonError, jsonOk, parseJson } from "@/lib/api";
 
@@ -53,13 +54,21 @@ export async function PATCH(
   const ceremony = await db.ceremony.findUnique({ where: { id } });
   if (!ceremony) return jsonError("Party not found", 404);
 
-  const isAdmin =
-    ceremony.adminUserId === user.id || ceremony.birthdayUserId === user.id;
-  if (!isAdmin) return jsonError("Only party admin can edit", 403);
-
   const body = await parseJson<unknown>(request);
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) return jsonError("Invalid input");
+
+  const { cardNumber, cardHolder, adminUserId, active } = parsed.data;
+  if (cardNumber !== undefined || cardHolder !== undefined) {
+    if (!(await canEditTreasurerCard(id, user.id))) {
+      return jsonError("Only party admins can edit the card", 403);
+    }
+  }
+  if (adminUserId !== undefined || active !== undefined) {
+    if (!(await canEditPartyWishlist(ceremony, user.id))) {
+      return jsonError("Only holder or admins can edit party settings", 403);
+    }
+  }
 
   const updated = await db.ceremony.update({
     where: { id },

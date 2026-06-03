@@ -3,7 +3,8 @@ import { ReminderButton } from "@/components/reminder-button";
 import { ShareInviteCode } from "@/components/share-invite-code";
 import { Link } from "@/components/link";
 import { requireUser } from "@/lib/auth";
-import { getAcceptedFriends } from "@/lib/ceremony-guests";
+import { PartyColorBar } from "@/components/party-color-bar";
+import { getAcceptedFriends } from "@/lib/ceremony-roles";
 import { db } from "@/lib/db";
 import { formatJalaliBirthday } from "@/lib/jalali";
 import { redirect, notFound } from "next/navigation";
@@ -31,7 +32,12 @@ export default async function GroupDetailPage({
         },
       },
       ceremonies: {
-        include: { birthdayUser: { select: { name: true } } },
+        select: {
+          id: true,
+          title: true,
+          color: true,
+          birthdayUser: { select: { name: true } },
+        },
         orderBy: { createdAt: "desc" },
       },
     },
@@ -92,11 +98,13 @@ export default async function GroupDetailPage({
           <h2 className="text-sm font-medium text-foreground">Parties</h2>
           <ul className="mt-3 divide-y divide-border border-t border-border">
             {group.ceremonies.map((c) => (
-              <li key={c.id} className="py-3 text-sm">
-                <Link href={`/ceremonies/${c.id}`} className="no-underline hover:underline">
-                  {c.title}
-                </Link>
-                <span className="text-muted"> · {c.birthdayUser.name}</span>
+              <li key={c.id} className="py-2">
+                <PartyColorBar color={c.color} className="px-3 py-2">
+                  <Link href={`/ceremonies/${c.id}`} className="text-sm font-medium no-underline hover:underline">
+                    {c.title}
+                  </Link>
+                  <span className="text-sm text-muted"> · {c.birthdayUser.name}</span>
+                </PartyColorBar>
               </li>
             ))}
           </ul>

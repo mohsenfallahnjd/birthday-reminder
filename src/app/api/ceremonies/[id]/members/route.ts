@@ -1,16 +1,18 @@
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import {
-  addCeremonyGuests,
-  canManageCeremonyGuests,
-  filterGuestIdsForInviter,
-} from "@/lib/ceremony-guests";
+  addCeremonyMembers,
+  canManagePartyTeam,
+  filterFriendIdsForInviter,
+  getCeremonyMembers,
+} from "@/lib/ceremony-roles";
 import { db } from "@/lib/db";
 import { notifyUserAsync } from "@/lib/notifications";
 import { jsonError, jsonOk, parseJson } from "@/lib/api";
 
 const postSchema = z.object({
   userIds: z.array(z.string()).min(1),
+  role: z.enum(["ADMIN", "GUEST"]),
 });
 
 export async function GET(
@@ -21,16 +23,15 @@ export async function GET(
   if (!user) return jsonError("Please sign in", 401);
 
   const { id } = await params;
-  const ceremony = await db.ceremony.findUnique({ where: { id } });
-  if (!ceremony) return jsonError("Party not found", 404);
-
-  const guests = await db.ceremonyGuest.findMany({
-    where: { ceremonyId: id },
-    include: { user: { select: { id: true, name: true, email: true } } },
-    orderBy: { createdAt: "asc" },
-  });
-
-  return jsonOk(guests.map((g) => g.user));
+  const members = await getCeremonyMembers(id);
+  return jsonOk(
+    members.map((m) => ({
+      id: m.user.id,
+      name: m.user.name,
+      email: m.user.email,
+      role: m.role,
+    })),
+  );
 }
 
 export async function POST(
@@ -46,30 +47,32 @@ export async function POST(
     include: { birthdayUser: { select: { name: true } } },
   });
   if (!ceremony) return jsonError("Party not found", 404);
-  if (!canManageCeremonyGuests(ceremony, user.id)) {
-    return jsonError("Only party organizer can invite", 403);
+  if (!(await canManagePartyTeam(ceremony, user.id))) {
+    return jsonError("Only holder or admins can manage the team", 403);
   }
 
   const body = await parseJson<unknown>(request);
   const parsed = postSchema.safeParse(body);
   if (!parsed.success) return jsonError("Invalid request");
 
-  const allowed = await filterGuestIdsForInviter(
-    user.id,
-    parsed.data.userIds.filter((uid) => uid !== ceremony.birthdayUserId),
-  );
-  if (allowed.length === 0) {
-    return jsonError("No valid friends to add", 400);
+  let userIds = parsed.data.userIds;
+  if (parsed.data.role === "GUEST") {
+    userIds = await filterFriendIdsForInviter(user.id, userIds);
   }
 
-  const { added } = await addCeremonyGuests(id, allowed, user.id);
+  const { added } = await addCeremonyMembers(
+    id,
+    userIds,
+    parsed.data.role,
+    user.id,
+  );
 
-  for (const guestId of allowed) {
+  for (const uid of userIds) {
     notifyUserAsync({
-      userId: guestId,
+      userId: uid,
       type: "ceremony_invite",
       title: "Party invitation",
-      body: `${user.name} added you to "${ceremony.title}" (${ceremony.birthdayUser.name}'s birthday)`,
+      body: `You're invited to "${ceremony.title}" (${ceremony.birthdayUser.name}'s birthday)`,
       link: `/ceremonies/${id}`,
     });
   }
@@ -87,15 +90,18 @@ export async function DELETE(
   const { id } = await params;
   const ceremony = await db.ceremony.findUnique({ where: { id } });
   if (!ceremony) return jsonError("Party not found", 404);
-  if (!canManageCeremonyGuests(ceremony, user.id)) {
-    return jsonError("Only party organizer can remove guests", 403);
+  if (!(await canManagePartyTeam(ceremony, user.id))) {
+    return jsonError("Only holder or admins can manage the team", 403);
   }
 
-  const guestUserId = new URL(request.url).searchParams.get("userId");
-  if (!guestUserId) return jsonError("userId required", 400);
+  const targetUserId = new URL(request.url).searchParams.get("userId");
+  if (!targetUserId) return jsonError("userId required", 400);
+  if (targetUserId === ceremony.birthdayUserId) {
+    return jsonError("Cannot remove the birthday holder", 400);
+  }
 
-  await db.ceremonyGuest.deleteMany({
-    where: { ceremonyId: id, userId: guestUserId },
+  await db.ceremonyMember.deleteMany({
+    where: { ceremonyId: id, userId: targetUserId },
   });
 
   return jsonOk({ ok: true });

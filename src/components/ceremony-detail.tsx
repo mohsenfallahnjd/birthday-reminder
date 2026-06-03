@@ -58,14 +58,16 @@ export function CeremonyDetail({
   currentUserId,
   isAdmin,
   isBirthdayPerson,
+  canEditWishlist,
 }: {
   ceremony: Ceremony;
   currentUserId: string;
   isAdmin: boolean;
   isBirthdayPerson: boolean;
+  canEditWishlist: boolean;
 }) {
   const router = useRouter();
-  const defaultTab = isBirthdayPerson ? "wishlist" : "pay";
+  const defaultTab = canEditWishlist ? "wishlist" : "pay";
   const [tab, setTab] = useState<"wishlist" | "pay" | "admin">(defaultTab);
 
   const partyItems = ceremony.wishlistItems.filter(
@@ -94,12 +96,27 @@ export function CeremonyDetail({
         </div>
       )}
 
-      {isBirthdayPerson && (
+      {canEditWishlist && (
         <div className="rounded-lg border border-border bg-muted-subtle p-4 text-sm">
-          <p className="font-medium text-foreground">You are the birthday person</p>
+          <p className="font-medium text-foreground">
+            {isBirthdayPerson ? "You are the birthday holder" : "You are a party admin"}
+          </p>
           <p className="mt-1 text-muted">
-            Add items under <strong>Wishlist</strong>, or pre-fill on{" "}
-            <Link href="/wishlist">My wishlist</Link> and attach them to this party.
+            Add gift or party-cost items under <strong>Wishlist</strong>.
+            {isBirthdayPerson && (
+              <>
+                {" "}
+                Or pre-fill on <Link href="/wishlist">My wishlist</Link> and attach them here.
+              </>
+            )}
+          </p>
+        </div>
+      )}
+      {isAdmin && !isBirthdayPerson && (
+        <div className="rounded-lg border border-border bg-muted-subtle p-4 text-sm">
+          <p className="font-medium text-foreground">Treasurer (admin)</p>
+          <p className="mt-1 text-muted">
+            Approve payments and set the shared card under the Treasurer tab.
           </p>
         </div>
       )}
@@ -169,12 +186,14 @@ export function CeremonyDetail({
               })}
             </ul>
           )}
-          {isBirthdayPerson ? (
+          {canEditWishlist ? (
             <WishlistManager
               items={partyItems}
               ceremonyId={ceremony.id}
               ceremonies={[{ id: ceremony.id, title: ceremony.title }]}
               canEdit
+              birthdayUserId={ceremony.birthdayUser.id}
+              actAsAdmin={isAdmin && !isBirthdayPerson}
             />
           ) : partyItems.length === 0 ? (
             <p className="text-sm text-muted">No wishlist items for this party yet.</p>
@@ -193,6 +212,8 @@ export function CeremonyDetail({
       {tab === "admin" && isAdmin && (
         <AdminSection
           ceremonyId={ceremony.id}
+          cardNumber={ceremony.cardNumber}
+          cardHolder={ceremony.cardHolder}
           payments={ceremony.payments}
           onUpdate={() => router.refresh()}
         />
@@ -362,15 +383,19 @@ function PaymentSection({
 
 function AdminSection({
   ceremonyId,
+  cardNumber: initialCard,
+  cardHolder: initialHolder,
   payments,
   onUpdate,
 }: {
   ceremonyId: string;
+  cardNumber: string | null;
+  cardHolder: string | null;
   payments: Payment[];
   onUpdate: () => void;
 }) {
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardHolder, setCardHolder] = useState("");
+  const [cardNumber, setCardNumber] = useState(initialCard ?? "");
+  const [cardHolder, setCardHolder] = useState(initialHolder ?? "");
   const [savingCard, setSavingCard] = useState(false);
   const [notifying, setNotifying] = useState(false);
   const [reviewingId, setReviewingId] = useState<string | null>(null);

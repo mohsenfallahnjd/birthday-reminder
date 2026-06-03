@@ -1,4 +1,5 @@
 import { Link } from "@/components/link";
+import { PartyColorBar } from "@/components/party-color-bar";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { daysUntilJalaliBirthday, formatJalaliBirthday } from "@/lib/jalali";
@@ -71,12 +72,17 @@ export default async function DashboardPage() {
       OR: [
         { birthdayUserId: user.id },
         { adminUserId: user.id },
+        { members: { some: { userId: user.id } } },
         { group: { members: { some: { userId: user.id } } } },
-        { guests: { some: { userId: user.id } } },
       ],
       active: true,
     },
-    include: { birthdayUser: { select: { name: true } } },
+    select: {
+      id: true,
+      title: true,
+      color: true,
+      birthdayUser: { select: { name: true } },
+    },
     take: 5,
     orderBy: { createdAt: "desc" },
   });
@@ -139,10 +145,12 @@ export default async function DashboardPage() {
           <ul className="mt-3 divide-y divide-border border-t border-border">
             {ceremonies.map((c) => (
               <li key={c.id} className="py-3 text-sm">
-                <Link href={`/ceremonies/${c.id}`} className="no-underline hover:underline">
-                  {c.title}
-                </Link>
-                <span className="text-muted"> · {c.birthdayUser.name}</span>
+                <PartyColorBar color={c.color} className="rounded-lg px-3 py-2">
+                  <Link href={`/ceremonies/${c.id}`} className="no-underline hover:underline font-medium">
+                    {c.title}
+                  </Link>
+                  <span className="text-muted"> · {c.birthdayUser.name}</span>
+                </PartyColorBar>
               </li>
             ))}
           </ul>

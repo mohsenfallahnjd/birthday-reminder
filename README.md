@@ -5,6 +5,7 @@ Web app for Jalali birthday reminders, friend groups, wishlists, and pooled gift
 ## Features
 
 - Jalali date picker · Groups · Wishlists · Treasurer payments
+- **Parties** — random accent color per party, invite **friends**, roles: birthday holder, admins (approve payments, card number, add party wishlist items), guests
 - **PWA** — install to home screen, custom app icon
 - **Web Push** — device notifications for birthdays, parties, payments
 

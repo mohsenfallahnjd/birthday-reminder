@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
+import { canEditPartyWishlist } from "@/lib/ceremony-roles";
 import { db } from "@/lib/db";
 import { jsonError, jsonOk, parseJson } from "@/lib/api";
 
@@ -19,9 +20,21 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return jsonError("Invalid wishlist item");
 
+  let ownerId = user.id;
+  if (parsed.data.ceremonyId) {
+    const ceremony = await db.ceremony.findUnique({
+      where: { id: parsed.data.ceremonyId },
+    });
+    if (!ceremony) return jsonError("Party not found", 404);
+    if (!(await canEditPartyWishlist(ceremony, user.id))) {
+      return jsonError("Only holder or admins can add party items", 403);
+    }
+    ownerId = ceremony.birthdayUserId;
+  }
+
   const item = await db.wishlistItem.create({
     data: {
-      userId: user.id,
+      userId: ownerId,
       title: parsed.data.title,
       link: parsed.data.link || null,
       cost: parsed.data.cost,

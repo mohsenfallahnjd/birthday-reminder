@@ -1,5 +1,5 @@
 import { requireUser } from "@/lib/auth";
-import { getCeremonyParticipantIds } from "@/lib/ceremony-guests";
+import { canApprovePayments, getCeremonyParticipantIds } from "@/lib/ceremony-roles";
 import { db } from "@/lib/db";
 import { notifyUserAsync } from "@/lib/notifications";
 import { jsonError, jsonOk } from "@/lib/api";
@@ -19,14 +19,23 @@ export async function POST(
     },
   });
 
-  if (!ceremony || ceremony.adminUserId !== user.id) {
-    return jsonError("Treasurer only", 403);
+  if (!ceremony || !(await canApprovePayments(id, user.id))) {
+    return jsonError("Party admins only", 403);
   }
 
   const participantIds = await getCeremonyParticipantIds(ceremony);
+  const adminIds = (
+    await db.ceremonyMember.findMany({
+      where: { ceremonyId: id, role: "ADMIN" },
+      select: { userId: true },
+    })
+  ).map((m) => m.userId);
   const paidSet = new Set(ceremony.payments.map((p) => p.payerId));
   const unpaid = participantIds.filter(
-    (pid) => pid !== ceremony.birthdayUserId && pid !== ceremony.adminUserId && !paidSet.has(pid),
+    (pid) =>
+      pid !== ceremony.birthdayUserId &&
+      !adminIds.includes(pid) &&
+      !paidSet.has(pid),
   );
 
   for (const guestId of unpaid) {

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
+import { canApprovePayments } from "@/lib/ceremony-roles";
 import { db } from "@/lib/db";
 import { notifyUser } from "@/lib/notifications";
 import { jsonError, jsonOk, parseJson } from "@/lib/api";
@@ -17,8 +18,8 @@ export async function PATCH(
 
   const { id: ceremonyId, paymentId } = await params;
   const ceremony = await db.ceremony.findUnique({ where: { id: ceremonyId } });
-  if (!ceremony || ceremony.adminUserId !== user.id) {
-    return jsonError("Only treasurer can approve", 403);
+  if (!ceremony || !(await canApprovePayments(ceremonyId, user.id))) {
+    return jsonError("Only party admins can approve", 403);
   }
 
   const body = await parseJson<unknown>(request);

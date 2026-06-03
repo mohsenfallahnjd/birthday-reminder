@@ -152,11 +152,16 @@ export function WishlistManager({
   ceremonies = [],
   ceremonyId: fixedCeremonyId,
   canEdit = true,
+  birthdayUserId: _birthdayUserId,
+  actAsAdmin: _actAsAdmin,
 }: {
   items: Item[];
   ceremonies?: { id: string; title: string }[];
   ceremonyId?: string;
   canEdit?: boolean;
+  /** Party page: items belong to birthday holder */
+  birthdayUserId?: string;
+  actAsAdmin?: boolean;
 }) {
   const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);

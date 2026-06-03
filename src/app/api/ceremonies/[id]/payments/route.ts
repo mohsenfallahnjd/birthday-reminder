@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
+import { getCeremonyAdminUserIds } from "@/lib/ceremony-roles";
 import { db } from "@/lib/db";
-import { notifyUser } from "@/lib/notifications";
+import { notifyUserAsync } from "@/lib/notifications";
 import { jsonError, jsonOk, parseJson } from "@/lib/api";
 
 const schema = z.object({
@@ -37,9 +38,16 @@ export async function POST(
     },
   });
 
-  if (ceremony.adminUserId) {
-    await notifyUser({
-      userId: ceremony.adminUserId,
+  const adminIds = await getCeremonyAdminUserIds(ceremonyId);
+  const notifyTargets =
+    adminIds.length > 0
+      ? adminIds
+      : ceremony.adminUserId
+        ? [ceremony.adminUserId]
+        : [];
+  for (const adminId of notifyTargets) {
+    notifyUserAsync({
+      userId: adminId,
       type: "payment_pending",
       title: "New payment to review",
       body: `${user.name} paid ${parsed.data.amount.toLocaleString("en-US")} Toman`,
