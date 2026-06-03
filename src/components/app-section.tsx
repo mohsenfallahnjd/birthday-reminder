@@ -35,7 +35,7 @@ export function AppCard({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-white/80 p-4 shadow-sm sm:p-5",
+        "rounded-xl border border-border bg-white/80 p-4 sm:p-5",
         className,
       )}
     >
@@ -64,7 +64,9 @@ export function AppSection({
       <div className="flex items-baseline justify-between gap-4">
         <div>
           <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-          {description && <p className="mt-0.5 text-xs text-muted">{description}</p>}
+          {description && (
+            <p className="mt-0.5 text-xs text-muted">{description}</p>
+          )}
         </div>
         {action && (
           <Link
@@ -92,14 +94,16 @@ export function FormSection({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-border bg-white/80 p-4 shadow-sm sm:p-5">
+    <section className="rounded-xl border border-border bg-white/80 p-4 sm:p-5">
       <div className="mb-4 flex gap-3">
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted-subtle text-xs font-semibold text-foreground">
           {step}
         </span>
         <div>
           <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-          {description && <p className="mt-0.5 text-xs text-muted">{description}</p>}
+          {description && (
+            <p className="mt-0.5 text-xs text-muted">{description}</p>
+          )}
         </div>
       </div>
       {children}
@@ -117,7 +121,7 @@ export function EmptyState({ children }: { children: ReactNode }) {
 
 export function InfoBanner({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-xl border border-border bg-white/90 px-4 py-3 text-sm shadow-sm">
+    <div className="rounded-xl border border-border bg-white/90 px-4 py-3 text-sm">
       {children}
     </div>
   );
@@ -177,10 +181,14 @@ export function PersonRow({
         </span>
         <div className="min-w-0">
           <p className="font-medium text-foreground">{name}</p>
-          {subtitle && <div className="mt-0.5 text-xs text-muted">{subtitle}</div>}
+          {subtitle && (
+            <div className="mt-0.5 text-xs text-muted">{subtitle}</div>
+          )}
         </div>
       </div>
-      {trailing && <div className="flex flex-wrap items-center gap-2">{trailing}</div>}
+      {trailing && (
+        <div className="flex flex-wrap items-center gap-2">{trailing}</div>
+      )}
     </div>
   );
 }
