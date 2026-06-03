@@ -1,3 +1,4 @@
+import { Icon } from "@/components/icon";
 import { Link } from "@/components/link";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { getSession } from "@/lib/auth";
@@ -74,11 +75,16 @@ export async function Nav() {
           </nav>
 
           {session ? (
-            <Link href="/notifications" variant="nav" className="relative md:hidden">
-              <span className="sr-only">Alerts</span>
-              <span className="text-sm font-medium">Alerts</span>
+            <Link
+              href="/notifications"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full text-foreground no-underline transition-colors hover:bg-muted-subtle md:hidden"
+              aria-label={
+                unread > 0 ? `Notifications, ${unread} unread` : "Notifications"
+              }
+            >
+              <Icon name="bell" size={22} className="text-foreground" strokeWidth={1.75} />
               {unread > 0 && (
-                <span className="absolute -top-1.5 -right-3 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-medium text-white">
+                <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-white">
                   {unread > 9 ? "9+" : unread}
                 </span>
               )}
@@ -91,7 +97,7 @@ export async function Nav() {
         </div>
       </header>
 
-      {session && <MobileBottomNav unread={unread} />}
+      {session && <MobileBottomNav />}
     </>
   );
 }
