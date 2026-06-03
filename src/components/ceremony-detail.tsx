@@ -6,8 +6,21 @@ import { WishlistManager } from "@/components/wishlist-manager";
 import { Button } from "@/components/ui/button";
 import { MoneyInput, getAmountFromInput } from "@/components/money-input";
 import { Input, Label, Textarea } from "@/components/ui/input";
+import { MoneyProgress } from "@/components/ui/money-progress";
 import { formatMoney } from "@/lib/utils";
 import { Link } from "@/components/link";
+
+function approvedTotal(item: WishlistItem) {
+  return item.payments
+    .filter((p) => p.status === "APPROVED")
+    .reduce((s, p) => s + p.amount, 0);
+}
+
+function partyFunding(items: WishlistItem[]) {
+  const target = items.reduce((s, i) => s + i.cost, 0);
+  const collected = items.reduce((s, i) => s + approvedTotal(i), 0);
+  return { collected, target };
+}
 
 type WishlistItem = {
   id: string;
@@ -58,6 +71,7 @@ export function CeremonyDetail({
   const partyItems = ceremony.wishlistItems.filter(
     (i) => i.ceremonyId === ceremony.id || i.ceremonyId === null,
   );
+  const funding = partyFunding(partyItems);
 
   const tabs = [
     { id: "wishlist" as const, label: "Wishlist" },
@@ -67,6 +81,19 @@ export function CeremonyDetail({
 
   return (
     <div className="space-y-6">
+      {partyItems.length > 0 && funding.target > 0 && (
+        <div className="rounded-lg border border-border bg-white p-4">
+          <p className="text-sm font-medium text-foreground">Party gift progress</p>
+          <p className="mt-0.5 text-xs text-muted">Approved contributions toward wishlist totals</p>
+          <MoneyProgress
+            className="mt-3"
+            collected={funding.collected}
+            target={funding.target}
+            label="Total raised"
+          />
+        </div>
+      )}
+
       {isBirthdayPerson && (
         <div className="rounded-lg border border-border bg-muted-subtle p-4 text-sm">
           <p className="font-medium text-foreground">You are the birthday person</p>
@@ -110,9 +137,7 @@ export function CeremonyDetail({
           {partyItems.length > 0 && (
             <ul className="space-y-3">
               {partyItems.map((item) => {
-                const approved = item.payments
-                  .filter((p) => p.status === "APPROVED")
-                  .reduce((s, p) => s + p.amount, 0);
+                const approved = approvedTotal(item);
                 return (
                   <li key={item.id} className="rounded-lg border border-border p-4">
                     <p className="font-bold">{item.title}</p>
@@ -126,15 +151,19 @@ export function CeremonyDetail({
                         View link
                       </a>
                     )}
-                    <p className="mt-1 text-sm">{formatMoney(item.cost)}</p>
+                    <p className="mt-1 text-sm tabular-nums">{formatMoney(item.cost)} goal</p>
                     {item.allowCheapIn && (
                       <span className="mt-2 inline-block rounded-full bg-muted-subtle px-2 py-0.5 text-xs">
                         Pay what you can
                       </span>
                     )}
-                    <p className="mt-2 text-xs text-muted">
-                      Collected (approved): {formatMoney(approved)} / {formatMoney(item.cost)}
-                    </p>
+                    <MoneyProgress
+                      className="mt-3"
+                      collected={approved}
+                      target={item.cost}
+                      label="Collected"
+                      size="sm"
+                    />
                   </li>
                 );
               })}
@@ -187,6 +216,7 @@ function PaymentSection({
   const [note, setNote] = useState("");
   const [proofUrl, setProofUrl] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   async function uploadProof(file: File) {
@@ -208,6 +238,7 @@ function PaymentSection({
       return;
     }
 
+    setSubmitting(true);
     const res = await fetch(`/api/ceremonies/${ceremonyId}/payments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -218,6 +249,7 @@ function PaymentSection({
         note: note || undefined,
       }),
     });
+    setSubmitting(false);
     if (!res.ok) {
       const data = await res.json();
       setError(data.error ?? "Could not submit payment");
@@ -269,15 +301,30 @@ function PaymentSection({
               if (f) uploadProof(f);
             }}
           />
-          {uploading && <p className="text-xs">Uploading…</p>}
-          {proofUrl && <p className="text-xs text-emerald-600">Proof uploaded</p>}
+          {uploading && (
+            <p className="mt-1 flex items-center gap-2 text-xs text-muted">
+              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-muted border-r-transparent" />
+              Uploading proof…
+            </p>
+          )}
+          {proofUrl && !uploading && (
+            <p className="text-xs text-emerald-600">Proof uploaded</p>
+          )}
         </div>
         <div>
           <Label>Note</Label>
           <Textarea value={note} onChange={(e) => setNote(e.target.value)} />
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
-        <Button onClick={submitPayment}>Submit payment</Button>
+        <Button
+          type="button"
+          onClick={submitPayment}
+          loading={submitting}
+          loadingText="Submitting…"
+          disabled={uploading}
+        >
+          Submit payment
+        </Button>
       </div>
 
       <div>
@@ -324,30 +371,39 @@ function AdminSection({
 }) {
   const [cardNumber, setCardNumber] = useState("");
   const [cardHolder, setCardHolder] = useState("");
+  const [savingCard, setSavingCard] = useState(false);
+  const [notifying, setNotifying] = useState(false);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
 
   async function saveCard() {
+    setSavingCard(true);
     await fetch(`/api/ceremonies/${ceremonyId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ cardNumber, cardHolder }),
     });
+    setSavingCard(false);
     onUpdate();
   }
 
   async function review(paymentId: string, status: "APPROVED" | "REJECTED") {
+    setReviewingId(paymentId);
     await fetch(`/api/ceremonies/${ceremonyId}/payments/${paymentId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
+    setReviewingId(null);
     onUpdate();
   }
 
   async function notifyUnpaid() {
+    setNotifying(true);
     const res = await fetch(`/api/ceremonies/${ceremonyId}/notify-unpaid`, {
       method: "POST",
     });
     const data = await res.json();
+    setNotifying(false);
     alert(`Notified ${data.notified ?? 0} people`);
   }
 
@@ -369,12 +425,23 @@ function AdminSection({
           value={cardHolder}
           onChange={(e) => setCardHolder(e.target.value)}
         />
-        <Button variant="outline" onClick={saveCard}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={saveCard}
+          loading={savingCard}
+          loadingText="Saving…"
+        >
           Save card
         </Button>
       </div>
 
-      <Button onClick={notifyUnpaid}>
+      <Button
+        type="button"
+        onClick={notifyUnpaid}
+        loading={notifying}
+        loadingText="Sending…"
+      >
         Notify people who have not paid
       </Button>
 
@@ -399,10 +466,24 @@ function AdminSection({
               <p className="text-sm mt-1">Status: {p.status}</p>
               {p.status === "PENDING" && (
                 <div className="mt-2 flex gap-2">
-                  <Button size="sm" variant="success" onClick={() => review(p.id, "APPROVED")}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="success"
+                    loading={reviewingId === p.id}
+                    loadingText="…"
+                    onClick={() => review(p.id, "APPROVED")}
+                  >
                     Approve
                   </Button>
-                  <Button size="sm" variant="danger" onClick={() => review(p.id, "REJECTED")}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="danger"
+                    loading={reviewingId === p.id}
+                    loadingText="…"
+                    onClick={() => review(p.id, "REJECTED")}
+                  >
                     Reject
                   </Button>
                 </div>

@@ -14,6 +14,7 @@ Web app for Jalali birthday reminders, friend groups, wishlists, and pooled gift
 bun install
 cp .env.example .env
 bun run vapid   # copy keys into .env
+vercel link && vercel env pull .env   # Blob: BLOB_STORE_ID, VERCEL_OIDC_TOKEN
 bun run db:push
 bun run dev
 ```
@@ -27,7 +28,8 @@ bun run dev
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Web Push (public) |
 | `VAPID_PRIVATE_KEY` | Web Push (secret) |
 | `VAPID_SUBJECT` | `mailto:you@example.com` |
-| `BLOB_READ_WRITE_TOKEN` | Payment proof uploads |
+| `BLOB_STORE_ID` + `VERCEL_OIDC_TOKEN` | Payment proof uploads (auto from Vercel Blob) |
+| `BLOB_READ_WRITE_TOKEN` | Optional legacy Blob token (outside Vercel) |
 | `CRON_SECRET` | Birthday cron auth |
 
 ### Enable push on a device

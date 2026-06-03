@@ -130,7 +130,9 @@ export function CeremonySetup({
       <Button
         type="button"
         onClick={create}
-        disabled={loading || !birthdayUserId}
+        loading={loading}
+        loadingText="Creating…"
+        disabled={!birthdayUserId}
         className="min-h-11"
       >
         Create party

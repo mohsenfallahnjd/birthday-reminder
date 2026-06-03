@@ -34,7 +34,13 @@ export function CreateGroupForm() {
         onChange={(e) => setName(e.target.value)}
         className="min-h-11"
       />
-      <Button onClick={create} disabled={loading} className="shrink-0 sm:min-w-[8rem]">
+      <Button
+        type="button"
+        onClick={create}
+        loading={loading}
+        loadingText="Creating…"
+        className="shrink-0 sm:min-w-[8rem]"
+      >
         Create group
       </Button>
     </div>
@@ -87,7 +93,9 @@ export function JoinGroupForm({ initialCode = "" }: { initialCode?: string }) {
           type="button"
           variant="primary"
           onClick={join}
-          disabled={loading || !code.trim()}
+          loading={loading}
+          loadingText="Joining…"
+          disabled={!code.trim()}
           className="shrink-0 min-h-11 sm:min-w-[5rem]"
         >
           Join

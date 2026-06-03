@@ -1,9 +1,10 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import type { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-60",
   {
     variants: {
       variant: {
@@ -26,10 +27,38 @@ const buttonVariants = cva(
 );
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
-  VariantProps<typeof buttonVariants>;
+  VariantProps<typeof buttonVariants> & {
+    loading?: boolean;
+    loadingText?: ReactNode;
+  };
 
-export function Button({ className, variant, size, ...props }: ButtonProps) {
+export function Button({
+  className,
+  variant,
+  size,
+  loading = false,
+  loadingText,
+  disabled,
+  children,
+  ...props
+}: ButtonProps) {
+  const showLoading = loading;
+  const label = showLoading ? (loadingText ?? children) : children;
+
   return (
-    <button className={cn(buttonVariants({ variant, size }), className)} {...props} />
+    <button
+      className={cn(buttonVariants({ variant, size }), className)}
+      disabled={disabled || showLoading}
+      aria-busy={showLoading || undefined}
+      {...props}
+    >
+      {showLoading && (
+        <Spinner
+          size="sm"
+          className={variant === "primary" || variant === "party" || variant === "danger" || variant === "success" ? "text-white" : "text-foreground"}
+        />
+      )}
+      {label}
+    </button>
   );
 }

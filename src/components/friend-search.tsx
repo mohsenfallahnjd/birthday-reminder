@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Input, Label } from "@/components/ui/input";
 import { postFriendRequest } from "@/lib/friend-request-client";
 import { formatJalaliBirthday } from "@/lib/jalali";
@@ -122,8 +123,8 @@ export function FriendSearch() {
 
   function actionButton(user: SearchUser) {
     const sending = actionId === user.id;
-    const busy =
-      sending || (actionId !== null && actionId === user.friendshipId);
+    const actingOnFriendship =
+      actionId !== null && actionId === user.friendshipId;
 
     switch (user.relation) {
       case "friends":
@@ -132,11 +133,12 @@ export function FriendSearch() {
             type="button"
             size="sm"
             variant="ghost"
-            disabled={busy}
+            loading={actingOnFriendship}
+            loadingText="Removing…"
             onClick={() => user.friendshipId && removeFriendship(user.friendshipId)}
             className="min-h-11"
           >
-            {busy ? "…" : "Remove"}
+            Remove
           </Button>
         );
       case "pending_sent":
@@ -147,11 +149,12 @@ export function FriendSearch() {
               type="button"
               size="sm"
               variant="outline"
-              disabled={busy}
+              loading={actingOnFriendship}
+              loadingText="Canceling…"
               onClick={() => user.friendshipId && removeFriendship(user.friendshipId)}
               className="min-h-11"
             >
-              {busy ? "…" : "Cancel request"}
+              Cancel request
             </Button>
           </div>
         );
@@ -162,17 +165,19 @@ export function FriendSearch() {
               type="button"
               size="sm"
               variant="primary"
-              disabled={busy}
+              loading={actingOnFriendship}
+              loadingText="Accepting…"
               onClick={() => user.friendshipId && acceptRequest(user.friendshipId)}
               className="min-h-11 min-w-[5.5rem]"
             >
-              {busy ? "…" : "Accept"}
+              Accept
             </Button>
             <Button
               type="button"
               size="sm"
               variant="ghost"
-              disabled={busy}
+              loading={actingOnFriendship}
+              loadingText="Declining…"
               onClick={() => user.friendshipId && removeFriendship(user.friendshipId)}
               className="min-h-11"
             >
@@ -186,8 +191,8 @@ export function FriendSearch() {
             type="button"
             size="sm"
             variant="primary"
-            disabled={sending}
-            aria-busy={sending}
+            loading={sending}
+            loadingText="Sending…"
             onClick={() => sendRequest(user.id)}
             className="min-h-11 min-w-[6.5rem]"
           >
@@ -220,7 +225,12 @@ export function FriendSearch() {
 
       {msg && <p className="text-sm text-red-600">{msg}</p>}
 
-      {loading && <p className="text-sm text-muted">Searching…</p>}
+      {loading && (
+        <p className="flex items-center gap-2 text-sm text-muted">
+          <Spinner size="sm" />
+          Searching…
+        </p>
+      )}
 
       {!loading && query.trim().length >= 2 && results.length === 0 && (
         <p className="text-sm text-muted">No users found. Try their full email below.</p>

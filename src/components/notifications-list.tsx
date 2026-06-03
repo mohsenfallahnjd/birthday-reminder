@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Link } from "@/components/link";
 import { Button } from "@/components/ui/button";
@@ -15,14 +16,20 @@ type Notification = {
 
 export function NotificationsList({ items }: { items: Notification[] }) {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   async function markAll() {
-    await fetch("/api/notifications", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ markAll: true }),
-    });
-    router.refresh();
+    setLoading(true);
+    try {
+      await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markAll: true }),
+      });
+      router.refresh();
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (items.length === 0) {
@@ -32,7 +39,14 @@ export function NotificationsList({ items }: { items: Notification[] }) {
   return (
     <div className="space-y-4">
       {items.some((n) => !n.read) && (
-        <Button variant="outline" size="sm" onClick={markAll}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={markAll}
+          loading={loading}
+          loadingText="Updating…"
+        >
           Mark all read
         </Button>
       )}

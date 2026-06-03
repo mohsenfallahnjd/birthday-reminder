@@ -118,11 +118,17 @@ function WishlistItemForm({
       </label>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="flex gap-2">
-        <Button size="sm" onClick={submit} disabled={busy}>
-          {busy ? "Saving…" : saveLabel}
+        <Button
+          type="button"
+          size="sm"
+          onClick={submit}
+          loading={busy}
+          loadingText="Saving…"
+        >
+          {saveLabel}
         </Button>
         {onCancel && (
-          <Button size="sm" variant="ghost" onClick={onCancel} disabled={busy}>
+          <Button type="button" size="sm" variant="ghost" onClick={onCancel} disabled={busy}>
             Cancel
           </Button>
         )}
@@ -275,13 +281,15 @@ export function WishlistManager({
                         Edit
                       </Button>
                       <Button
+                        type="button"
                         size="sm"
                         variant="ghost"
                         className="flex-1 text-red-600 hover:text-red-700 sm:flex-none"
-                        disabled={deletingId === item.id}
+                        loading={deletingId === item.id}
+                        loadingText="Deleting…"
                         onClick={() => deleteItem(item.id)}
                       >
-                        {deletingId === item.id ? "…" : "Delete"}
+                        Delete
                       </Button>
                     </div>
                   )}

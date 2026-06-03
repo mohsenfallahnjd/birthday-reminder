@@ -1,5 +1,6 @@
 import { put } from "@vercel/blob";
 import { requireUser } from "@/lib/auth";
+import { isBlobStorageConfigured } from "@/lib/blob";
 import { jsonError, jsonOk } from "@/lib/api";
 
 export async function POST(request: Request) {
@@ -12,14 +13,20 @@ export async function POST(request: Request) {
     return jsonError("File not found");
   }
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return jsonError("File storage not configured", 503);
+  if (!isBlobStorageConfigured()) {
+    return jsonError(
+      "File storage not configured. Link a Blob store on Vercel, then run: vercel env pull",
+      503,
+    );
   }
 
-  const blob = await put(`proofs/${user.id}-${Date.now()}-${file.name}`, file, {
-    access: "public",
-    token: process.env.BLOB_READ_WRITE_TOKEN,
-  });
-
-  return jsonOk({ url: blob.url });
+  try {
+    const blob = await put(`proofs/${user.id}-${Date.now()}-${file.name}`, file, {
+      access: "public",
+    });
+    return jsonOk({ url: blob.url });
+  } catch (err) {
+    console.error("[upload]", err);
+    return jsonError("Upload failed. Check Blob env vars and try again.", 500);
+  }
 }

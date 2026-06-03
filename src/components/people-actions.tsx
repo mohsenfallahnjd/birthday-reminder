@@ -22,7 +22,6 @@ export function AddFriendByEmail() {
     setOk(false);
     try {
       const { ok, data } = await postFriendRequest({ email: trimmed });
-      setLoading(false);
       if (ok) {
         setOk(true);
         setMsg("");
@@ -31,8 +30,9 @@ export function AddFriendByEmail() {
         setMsg(data.error ?? "Could not send request");
       }
     } catch {
-      setLoading(false);
       setMsg("Could not send request");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -59,14 +59,15 @@ export function AddFriendByEmail() {
             setEmail(e.target.value);
             setOk(false);
           }}
-          onKeyDown={(e) => e.key === "Enter" && add()}
+          onKeyDown={(e) => e.key === "Enter" && !loading && add()}
           className="min-h-11"
+          disabled={loading}
         />
         <Button
           type="button"
           variant="primary"
-          disabled={loading}
-          aria-busy={loading}
+          loading={loading}
+          loadingText="Sending…"
           onClick={add}
           className="shrink-0 min-h-11 sm:min-w-[7rem]"
         >
@@ -93,16 +94,20 @@ export function AcceptFriendButton({ friendshipId }: { friendshipId: string }) {
         type="button"
         size="sm"
         variant="primary"
-        disabled={loading}
         className="min-h-11"
+        loading={loading}
+        loadingText="Accepting…"
         onClick={async () => {
           setLoading(true);
-          await fetch(`/api/people/${friendshipId}`, { method: "PATCH" });
-          setLoading(false);
-          router.refresh();
+          try {
+            await fetch(`/api/people/${friendshipId}`, { method: "PATCH" });
+            router.refresh();
+          } finally {
+            setLoading(false);
+          }
         }}
       >
-        {loading ? "…" : "Accept"}
+        Accept
       </Button>
       <DeclineFriendButton friendshipId={friendshipId} />
     </div>
@@ -118,16 +123,20 @@ export function DeclineFriendButton({ friendshipId }: { friendshipId: string }) 
       type="button"
       size="sm"
       variant="ghost"
-      disabled={loading}
       className="min-h-11"
+      loading={loading}
+      loadingText="Declining…"
       onClick={async () => {
         setLoading(true);
-        await fetch(`/api/people/${friendshipId}`, { method: "DELETE" });
-        setLoading(false);
-        router.refresh();
+        try {
+          await fetch(`/api/people/${friendshipId}`, { method: "DELETE" });
+          router.refresh();
+        } finally {
+          setLoading(false);
+        }
       }}
     >
-      {loading ? "…" : "Decline"}
+      Decline
     </Button>
   );
 }
@@ -141,16 +150,20 @@ export function CancelRequestButton({ friendshipId }: { friendshipId: string }) 
       type="button"
       size="sm"
       variant="outline"
-      disabled={loading}
       className="min-h-11"
+      loading={loading}
+      loadingText="Canceling…"
       onClick={async () => {
         setLoading(true);
-        await fetch(`/api/people/${friendshipId}`, { method: "DELETE" });
-        setLoading(false);
-        router.refresh();
+        try {
+          await fetch(`/api/people/${friendshipId}`, { method: "DELETE" });
+          router.refresh();
+        } finally {
+          setLoading(false);
+        }
       }}
     >
-      {loading ? "…" : "Cancel"}
+      Cancel
     </Button>
   );
 }
@@ -165,16 +178,20 @@ export function RemoveFriendButton({ friendshipId }: { friendshipId: string }) {
       size="sm"
       variant="ghost"
       className="min-h-11 text-red-600 hover:text-red-700"
-      disabled={loading}
+      loading={loading}
+      loadingText="Removing…"
       onClick={async () => {
         if (!confirm("Remove this friend?")) return;
         setLoading(true);
-        await fetch(`/api/people/${friendshipId}`, { method: "DELETE" });
-        setLoading(false);
-        router.refresh();
+        try {
+          await fetch(`/api/people/${friendshipId}`, { method: "DELETE" });
+          router.refresh();
+        } finally {
+          setLoading(false);
+        }
       }}
     >
-      {loading ? "…" : "Remove"}
+      Remove
     </Button>
   );
 }

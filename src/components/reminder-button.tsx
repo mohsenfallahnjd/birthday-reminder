@@ -11,18 +11,32 @@ export function ReminderButton({
   groupId?: string;
 }) {
   const [done, setDone] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   async function setReminder() {
-    await fetch("/api/reminders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ targetUserId, groupId, daysBefore: 3 }),
-    });
-    setDone(true);
+    setLoading(true);
+    try {
+      await fetch("/api/reminders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetUserId, groupId, daysBefore: 3 }),
+      });
+      setDone(true);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <Button size="sm" variant="outline" onClick={setReminder} disabled={done}>
+    <Button
+      type="button"
+      size="sm"
+      variant="outline"
+      onClick={setReminder}
+      disabled={done}
+      loading={loading}
+      loadingText="Saving…"
+    >
       {done ? "Reminder on" : "Remind 3 days before"}
     </Button>
   );

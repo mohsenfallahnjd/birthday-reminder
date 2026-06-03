@@ -25,6 +25,7 @@ export function ShareInviteCode({
 }: ShareInviteCodeProps) {
   const [copied, setCopied] = useState<"code" | "link" | "all" | null>(null);
   const [shareError, setShareError] = useState("");
+  const [copying, setCopying] = useState<"code" | "link" | "share" | null>(null);
 
   const origin = useMemo(() => {
     if (appOrigin) return appOrigin.replace(/\/$/, "");
@@ -37,17 +38,22 @@ export function ShareInviteCode({
   const shareText = groupInviteShareMessage(groupName, inviteCode, origin || "http://localhost:3000");
 
   async function copyText(text: string, kind: "code" | "link" | "all") {
+    setCopying(kind === "all" ? "share" : kind);
+    setShareError("");
     try {
       await navigator.clipboard.writeText(text);
       setCopied(kind);
       setTimeout(() => setCopied(null), 2000);
     } catch {
       setShareError("Could not copy — select the code and copy manually.");
+    } finally {
+      setCopying(null);
     }
   }
 
   async function shareNative() {
     setShareError("");
+    setCopying("share");
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({
@@ -55,9 +61,13 @@ export function ShareInviteCode({
           text: shareText,
           url: joinUrl,
         });
+        setCopying(null);
         return;
       } catch (err) {
-        if ((err as Error).name === "AbortError") return;
+        if ((err as Error).name === "AbortError") {
+          setCopying(null);
+          return;
+        }
       }
     }
     await copyText(shareText, "all");
@@ -67,10 +77,24 @@ export function ShareInviteCode({
     return (
       <div className="flex flex-wrap items-center gap-2">
         <code className="rounded bg-muted-subtle px-2 py-1 font-mono text-xs">{inviteCode}</code>
-        <Button type="button" size="sm" variant="outline" onClick={() => copyText(inviteCode, "code")}>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          loading={copying === "code"}
+          loadingText="Copying…"
+          onClick={() => copyText(inviteCode, "code")}
+        >
           {copied === "code" ? "Copied" : "Copy"}
         </Button>
-        <Button type="button" size="sm" variant="outline" onClick={shareNative}>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          loading={copying === "share"}
+          loadingText="Sharing…"
+          onClick={shareNative}
+        >
           Share
         </Button>
       </div>
@@ -106,9 +130,11 @@ export function ShareInviteCode({
           size="sm"
           variant="primary"
           className="min-h-11"
+          loading={copying === "code"}
+          loadingText="Copying…"
           onClick={() => copyText(inviteCode, "code")}
         >
-          <Icon name="copy" size={14} className="text-white" />
+          {!copying && <Icon name="copy" size={14} className="text-white" />}
           {copied === "code" ? "Copied" : "Copy code"}
         </Button>
         <Button
@@ -116,12 +142,22 @@ export function ShareInviteCode({
           size="sm"
           variant="outline"
           className="min-h-11"
+          loading={copying === "link"}
+          loadingText="Copying…"
           onClick={() => copyText(joinUrl, "link")}
         >
           {copied === "link" ? "Copied" : "Copy link"}
         </Button>
-        <Button type="button" size="sm" variant="outline" className="min-h-11" onClick={shareNative}>
-          <Icon name="share" size={14} className="text-foreground" />
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="min-h-11"
+          loading={copying === "share"}
+          loadingText="Sharing…"
+          onClick={shareNative}
+        >
+          {!copying && <Icon name="share" size={14} className="text-foreground" />}
           Share
         </Button>
       </div>

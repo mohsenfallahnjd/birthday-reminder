@@ -99,7 +99,8 @@ export function PartyGuests({
                   type="button"
                   size="sm"
                   variant="ghost"
-                  disabled={busy}
+                  loading={busy}
+                  loadingText="Removing…"
                   className="text-red-600"
                   onClick={() => removeGuest(g.id)}
                 >
@@ -124,7 +125,9 @@ export function PartyGuests({
             type="button"
             size="sm"
             variant="primary"
-            disabled={busy || selectedIds.length === 0}
+            loading={busy}
+            loadingText="Inviting…"
+            disabled={selectedIds.length === 0}
             onClick={inviteSelected}
           >
             Invite to party

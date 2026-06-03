@@ -68,7 +68,13 @@ export function ProfileForm({ initial }: Props) {
         .
       </p>
       {msg && <p className="text-sm text-emerald-600">{msg}</p>}
-      <Button onClick={save} disabled={loading} className="w-full">
+      <Button
+        type="button"
+        onClick={save}
+        loading={loading}
+        loadingText="Saving…"
+        className="w-full"
+      >
         Save profile
       </Button>
     </div>

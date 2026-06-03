@@ -160,12 +160,26 @@ export function PushNotifications() {
       )}
 
       {status === "granted" ? (
-        <Button variant="outline" size="sm" onClick={disablePush} disabled={busy}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={disablePush}
+          loading={busy}
+          loadingText="Turning off…"
+        >
           Turn off push
         </Button>
       ) : (
-        <Button size="sm" onClick={enablePush} disabled={busy || status === "denied"}>
-          {busy ? "Enabling…" : "Enable push notifications"}
+        <Button
+          type="button"
+          size="sm"
+          onClick={enablePush}
+          loading={busy}
+          loadingText="Enabling…"
+          disabled={status === "denied"}
+        >
+          Enable push notifications
         </Button>
       )}
 

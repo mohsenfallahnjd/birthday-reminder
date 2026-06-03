@@ -59,8 +59,13 @@ export function AuthForm({ mode }: { mode: Mode }) {
         <Input id="password" name="password" type="password" required minLength={6} />
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? "Please wait…" : mode === "login" ? "Log in" : "Sign up"}
+      <Button
+        type="submit"
+        className="w-full"
+        loading={loading}
+        loadingText="Please wait…"
+      >
+        {mode === "login" ? "Log in" : "Sign up"}
       </Button>
       <p className="text-center text-sm text-muted">
         {mode === "login" ? (
