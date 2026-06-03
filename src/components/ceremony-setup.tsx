@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation";
 import { useMemo, useState } from "react";
 import { FriendGuestPicker } from "@/components/friend-guest-picker";
 import { Button } from "@/components/ui/button";

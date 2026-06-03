@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Nav } from "@/components/nav";
+import { AppProgressProvider } from "@/components/progress-provider";
 import { PwaInstallHint } from "@/components/pwa-install";
 import "./globals.css";
 
@@ -56,9 +57,11 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full`}
     >
       <body className="flex min-h-dvh flex-col bg-background text-foreground antialiased">
-        <Nav />
-        <main className="flex-1 min-w-0">{children}</main>
-        <PwaInstallHint />
+        <AppProgressProvider>
+          <Nav />
+          <main className="flex-1 min-w-0">{children}</main>
+          <PwaInstallHint />
+        </AppProgressProvider>
       </body>
     </html>
   );

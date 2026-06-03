@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation";
 import { useState } from "react";
 import { PersianDatePicker } from "@/components/persian-date-picker";
 import { Button } from "@/components/ui/button";
