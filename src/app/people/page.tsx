@@ -1,4 +1,9 @@
-import { AddFriendForm, AcceptFriendButton } from "@/components/people-actions";
+import { FriendSearch } from "@/components/friend-search";
+import {
+  AcceptFriendButton,
+  CancelRequestButton,
+  RemoveFriendButton,
+} from "@/components/people-actions";
 import { CeremonySetup } from "@/components/ceremony-setup";
 import { ReminderButton } from "@/components/reminder-button";
 import { requireUser } from "@/lib/auth";
@@ -16,6 +21,7 @@ export default async function PeoplePage() {
       user: { select: { id: true, name: true, email: true, birthMonth: true, birthDay: true } },
       friend: { select: { id: true, name: true, email: true, birthMonth: true, birthDay: true } },
     },
+    orderBy: { createdAt: "desc" },
   });
 
   const list = friendships.map((f) => {
@@ -24,29 +30,42 @@ export default async function PeoplePage() {
   });
 
   const accepted = list.filter((x) => x.friendship.status === "ACCEPTED");
-  const pending = list.filter(
+  const pendingIncoming = list.filter(
     (x) => x.friendship.status === "PENDING" && x.friendship.friendId === user.id,
+  );
+  const pendingOutgoing = list.filter(
+    (x) => x.friendship.status === "PENDING" && x.friendship.userId === user.id,
   );
 
   return (
     <div className="page-wide space-y-10">
       <header>
         <h1 className="page-title">Friends</h1>
-        <p className="page-desc">Invite by email and set birthday reminders.</p>
+        <p className="page-desc">
+          Search for people, send a request, and wait for them to accept.
+        </p>
       </header>
 
-      <section className="space-y-4">
-        <h2 className="text-sm font-medium text-foreground">Add friend</h2>
-        <AddFriendForm />
+      <section>
+        <h2 className="text-sm font-medium text-foreground mb-4">Find people</h2>
+        <FriendSearch />
       </section>
 
-      {pending.length > 0 && (
+      {pendingIncoming.length > 0 && (
         <section>
-          <h2 className="text-sm font-medium text-foreground">Pending</h2>
+          <h2 className="text-sm font-medium text-foreground">
+            Requests for you ({pendingIncoming.length})
+          </h2>
           <ul className="mt-3 divide-y divide-border border-t border-border">
-            {pending.map(({ friendship, other }) => (
-              <li key={friendship.id} className="flex flex-col gap-2 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-                <span>{other.name}</span>
+            {pendingIncoming.map(({ friendship, other }) => (
+              <li
+                key={friendship.id}
+                className="flex flex-col gap-2 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <span className="font-medium">{other.name}</span>
+                  <span className="ml-2 text-muted">{other.email}</span>
+                </div>
                 <AcceptFriendButton friendshipId={friendship.id} />
               </li>
             ))}
@@ -54,14 +73,42 @@ export default async function PeoplePage() {
         </section>
       )}
 
+      {pendingOutgoing.length > 0 && (
+        <section>
+          <h2 className="text-sm font-medium text-foreground">
+            Sent requests ({pendingOutgoing.length})
+          </h2>
+          <ul className="mt-3 divide-y divide-border border-t border-border">
+            {pendingOutgoing.map(({ friendship, other }) => (
+              <li
+                key={friendship.id}
+                className="flex flex-col gap-2 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <span className="font-medium">{other.name}</span>
+                  <span className="ml-2 text-muted">{other.email}</span>
+                </div>
+                <span className="text-xs text-muted sm:mr-2">Waiting for acceptance</span>
+                <CancelRequestButton friendshipId={friendship.id} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section>
-        <h2 className="text-sm font-medium text-foreground">Friends</h2>
+        <h2 className="text-sm font-medium text-foreground">
+          Friends ({accepted.length})
+        </h2>
         {accepted.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">No friends yet.</p>
+          <p className="mt-2 text-sm text-muted">No friends yet. Search above to add someone.</p>
         ) : (
           <ul className="mt-3 divide-y divide-border border-t border-border">
-            {accepted.map(({ other }) => (
-              <li key={other.id} className="flex flex-col gap-2 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+            {accepted.map(({ friendship, other }) => (
+              <li
+                key={other.id}
+                className="flex flex-col gap-2 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+              >
                 <div>
                   <span className="font-medium">{other.name}</span>
                   {other.birthMonth && other.birthDay && (
@@ -70,7 +117,10 @@ export default async function PeoplePage() {
                     </span>
                   )}
                 </div>
-                <ReminderButton targetUserId={other.id} />
+                <div className="flex flex-wrap items-center gap-2">
+                  <ReminderButton targetUserId={other.id} />
+                  <RemoveFriendButton friendshipId={friendship.id} />
+                </div>
               </li>
             ))}
           </ul>

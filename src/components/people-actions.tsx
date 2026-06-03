@@ -3,66 +3,91 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input, Label } from "@/components/ui/input";
 
-export function AddFriendForm() {
+export function AcceptFriendButton({ friendshipId }: { friendshipId: string }) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function add() {
-    setLoading(true);
-    setMsg("");
-    const res = await fetch("/api/people", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (res.ok) {
-      setEmail("");
-      router.refresh();
-    } else {
-      setMsg(data.error);
-    }
-  }
-
   return (
-    <div className="space-y-2">
-      <Label>Friend&apos;s email</Label>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="min-h-11"
-        />
-        <Button onClick={add} disabled={loading} className="shrink-0 sm:min-w-[5rem]">
-          Invite
-        </Button>
-      </div>
-      {msg && <p className="text-sm text-red-600">{msg}</p>}
+    <div className="flex gap-2">
+      <Button
+        size="sm"
+        disabled={loading}
+        onClick={async () => {
+          setLoading(true);
+          await fetch(`/api/people/${friendshipId}`, { method: "PATCH" });
+          setLoading(false);
+          router.refresh();
+        }}
+      >
+        {loading ? "…" : "Accept"}
+      </Button>
+      <DeclineFriendButton friendshipId={friendshipId} />
     </div>
   );
 }
 
-export function AcceptFriendButton({ friendshipId }: { friendshipId: string }) {
+export function DeclineFriendButton({ friendshipId }: { friendshipId: string }) {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
   return (
     <Button
       size="sm"
+      variant="ghost"
+      disabled={loading}
       onClick={async () => {
-        await fetch("/api/people/accept", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ friendshipId }),
-        });
+        setLoading(true);
+        await fetch(`/api/people/${friendshipId}`, { method: "DELETE" });
+        setLoading(false);
         router.refresh();
       }}
     >
-      Accept
+      {loading ? "…" : "Decline"}
+    </Button>
+  );
+}
+
+export function CancelRequestButton({ friendshipId }: { friendshipId: string }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      disabled={loading}
+      onClick={async () => {
+        setLoading(true);
+        await fetch(`/api/people/${friendshipId}`, { method: "DELETE" });
+        setLoading(false);
+        router.refresh();
+      }}
+    >
+      {loading ? "…" : "Cancel"}
+    </Button>
+  );
+}
+
+export function RemoveFriendButton({ friendshipId }: { friendshipId: string }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      className="text-red-600 hover:text-red-700"
+      disabled={loading}
+      onClick={async () => {
+        if (!confirm("Remove this friend?")) return;
+        setLoading(true);
+        await fetch(`/api/people/${friendshipId}`, { method: "DELETE" });
+        setLoading(false);
+        router.refresh();
+      }}
+    >
+      {loading ? "…" : "Remove"}
     </Button>
   );
 }
