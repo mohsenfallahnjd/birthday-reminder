@@ -6,18 +6,10 @@ import { Icon } from "@/components/icon";
 import { Link } from "@/components/link";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { UserAvatar } from "@/components/user-avatar";
 import { PARTY_COLORS, randomPartyColor } from "@/lib/ceremony-roles";
 
-type Person = { id: string; name: string };
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
-}
+type Person = { id: string; name: string; avatarUrl?: string | null };
 
 export function PartyHeader({
   ceremonyId,
@@ -25,6 +17,7 @@ export function PartyHeader({
   color: initialColor,
   birthdayUserId: initialHolderId,
   birthdayName: initialHolderName,
+  birthdayAvatarUrl: initialHolderAvatar,
   groupId,
   groupName,
   holderCandidates,
@@ -37,6 +30,7 @@ export function PartyHeader({
   color: string;
   birthdayUserId: string;
   birthdayName: string;
+  birthdayAvatarUrl?: string | null;
   groupId: string | null;
   groupName: string | null;
   holderCandidates: Person[];
@@ -54,9 +48,13 @@ export function PartyHeader({
 
   const displayTitle = editing ? title : initialTitle;
   const displayColor = editing ? partyColor : initialColor;
+  const selectedHolder = holderCandidates.find((p) => p.id === holderId);
   const displayHolderName = editing
-    ? holderCandidates.find((p) => p.id === holderId)?.name ?? initialHolderName
+    ? selectedHolder?.name ?? initialHolderName
     : initialHolderName;
+  const displayHolderAvatar = editing
+    ? selectedHolder?.avatarUrl ?? initialHolderAvatar
+    : initialHolderAvatar;
 
   const roleHint = isBirthdayPerson
     ? "You are the birthday holder"
@@ -204,12 +202,12 @@ export function PartyHeader({
                 backgroundColor: `${displayColor}0d`,
               }}
             >
-              <span
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
-                style={{ backgroundColor: displayColor }}
-              >
-                {initials(displayHolderName)}
-              </span>
+              <UserAvatar
+                name={displayHolderName}
+                avatarUrl={displayHolderAvatar}
+                size="md"
+                accentColor={displayColor}
+              />
               <div className="min-w-0">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted">
                   Birthday holder

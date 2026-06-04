@@ -10,6 +10,7 @@ import {
   PersonRow,
 } from "@/components/app-section";
 import { PartyCard } from "@/components/party-card";
+import { UserAvatar } from "@/components/user-avatar";
 import { Icon } from "@/components/icon";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -93,7 +94,7 @@ export default async function DashboardPage() {
       title: true,
       color: true,
       birthdayUserId: true,
-      birthdayUser: { select: { name: true } },
+      birthdayUser: { select: { name: true, avatarUrl: true } },
       group: { select: { name: true } },
       members: {
         where: { userId: user.id },
@@ -109,7 +110,11 @@ export default async function DashboardPage() {
 
   return (
     <div className="page-wide space-y-8">
-      <PageHeader title={`Hi, ${user.name}`} description="Upcoming birthdays and active parties" />
+      <PageHeader
+        title={`Hi, ${user.name}`}
+        description="Upcoming birthdays and active parties"
+        badge={<UserAvatar name={user.name} avatarUrl={user.avatarUrl} size="lg" />}
+      />
 
       {!user.birthMonth && (
         <InfoBanner>
@@ -197,6 +202,7 @@ export default async function DashboardPage() {
                     title={c.title}
                     color={c.color}
                     holderName={c.birthdayUser.name}
+                    holderAvatarUrl={c.birthdayUser.avatarUrl}
                     groupName={c.group?.name}
                     memberRole={memberRole}
                     isYourBirthday={isYourBirthday}

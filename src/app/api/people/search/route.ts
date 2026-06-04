@@ -24,6 +24,7 @@ export async function GET(request: Request) {
       id: true,
       name: true,
       email: true,
+      avatarUrl: true,
       birthMonth: true,
       birthDay: true,
     },

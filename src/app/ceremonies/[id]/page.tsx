@@ -26,7 +26,7 @@ export default async function CeremonyPage({
   const ceremony = await db.ceremony.findUnique({
     where: { id },
     include: {
-      birthdayUser: { select: { id: true, name: true } },
+      birthdayUser: { select: { id: true, name: true, avatarUrl: true } },
       group: { select: { id: true, name: true, inviteCode: true } },
       payments: {
         include: { payer: { select: { id: true, name: true } } },
@@ -51,16 +51,22 @@ export default async function CeremonyPage({
   }));
 
   const holderCandidates = await (async () => {
-    const map = new Map<string, { id: string; name: string }>();
+    const map = new Map<string, { id: string; name: string; avatarUrl: string | null }>();
     if (ceremony.groupId) {
       const groupMembers = await db.groupMember.findMany({
         where: { groupId: ceremony.groupId },
-        include: { user: { select: { id: true, name: true } } },
+        include: { user: { select: { id: true, name: true, avatarUrl: true } } },
       });
       for (const gm of groupMembers) map.set(gm.user.id, gm.user);
     }
-    for (const m of members) map.set(m.user.id, { id: m.user.id, name: m.user.name });
-    for (const f of friends) map.set(f.id, { id: f.id, name: f.name });
+    for (const m of members)
+      map.set(m.user.id, {
+        id: m.user.id,
+        name: m.user.name,
+        avatarUrl: m.user.avatarUrl ?? null,
+      });
+    for (const f of friends)
+      map.set(f.id, { id: f.id, name: f.name, avatarUrl: f.avatarUrl ?? null });
     return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
   })();
 
@@ -85,6 +91,7 @@ export default async function CeremonyPage({
         color={ceremony.color}
         birthdayUserId={ceremony.birthdayUserId}
         birthdayName={ceremony.birthdayUser.name}
+        birthdayAvatarUrl={ceremony.birthdayUser.avatarUrl}
         groupId={ceremony.group?.id ?? null}
         groupName={ceremony.group?.name ?? null}
         holderCandidates={holderCandidates}

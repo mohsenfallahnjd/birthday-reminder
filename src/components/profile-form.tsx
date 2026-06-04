@@ -5,11 +5,13 @@ import { useState } from "react";
 import { PersianDatePicker } from "@/components/persian-date-picker";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { AvatarPicker } from "@/components/avatar-picker";
 import { Link } from "@/components/link";
 
 type Props = {
   initial: {
     name: string;
+    avatarUrl: string | null;
     birthMonth: number | null;
     birthDay: number | null;
     birthYear: number | null;
@@ -19,6 +21,7 @@ type Props = {
 export function ProfileForm({ initial }: Props) {
   const router = useRouter();
   const [name, setName] = useState(initial.name);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(initial.avatarUrl);
   const [birth, setBirth] = useState({
     year: initial.birthYear ?? 1370,
     month: initial.birthMonth ?? 1,
@@ -35,6 +38,7 @@ export function ProfileForm({ initial }: Props) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name,
+        avatarUrl,
         birthMonth: birth.month,
         birthDay: birth.day,
         birthYear: birth.year,
@@ -51,7 +55,13 @@ export function ProfileForm({ initial }: Props) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <AvatarPicker
+        name={name.trim() || "You"}
+        initialAvatarUrl={initial.avatarUrl}
+        onChange={setAvatarUrl}
+      />
+
       <div>
         <Label>Display name</Label>
         <Input value={name} onChange={(e) => setName(e.target.value)} />

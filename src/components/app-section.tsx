@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "@/components/link";
+import { UserAvatar } from "@/components/user-avatar";
 import { cn } from "@/lib/utils";
 
 export function PageHeader({
@@ -150,35 +151,23 @@ export function AppListItem({
   );
 }
 
-export function personInitials(name: string) {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
-}
-
 export function PersonRow({
   name,
   subtitle,
-  accentColor = "#4f46e5",
+  avatarUrl,
+  accentColor,
   trailing,
 }: {
   name: string;
   subtitle?: ReactNode;
+  avatarUrl?: string | null;
   accentColor?: string;
   trailing?: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 items-center gap-3">
-        <span
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-          style={{ backgroundColor: accentColor }}
-        >
-          {personInitials(name)}
-        </span>
+        <UserAvatar name={name} avatarUrl={avatarUrl} size="md" accentColor={accentColor} />
         <div className="min-w-0">
           <p className="font-medium text-foreground">{name}</p>
           {subtitle && (

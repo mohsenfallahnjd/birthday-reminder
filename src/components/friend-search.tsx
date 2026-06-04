@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Input, Label } from "@/components/ui/input";
 import { postFriendRequest } from "@/lib/friend-request-client";
-import { AppList, AppListItem } from "@/components/app-section";
+import { AppList, AppListItem, PersonRow } from "@/components/app-section";
 import { formatJalaliBirthday } from "@/lib/jalali";
 
 type SearchUser = {
@@ -16,6 +16,7 @@ type SearchUser = {
   email: string;
   birthMonth: number | null;
   birthDay: number | null;
+  avatarUrl: string | null;
   relation: "none" | "friends" | "pending_sent" | "pending_received";
   friendshipId: string | null;
 };
@@ -240,20 +241,22 @@ export function FriendSearch() {
       {results.length > 0 && (
         <AppList>
           {results.map((user) => (
-            <AppListItem
-              key={user.id}
-              className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="min-w-0">
-                <p className="font-medium text-foreground">{user.name}</p>
-                <p className="truncate text-muted">{user.email}</p>
-                {user.birthMonth && user.birthDay && (
-                  <p className="mt-0.5 text-xs text-muted">
-                    Birthday: {formatJalaliBirthday(user.birthMonth, user.birthDay)}
-                  </p>
-                )}
-              </div>
-              <div className="shrink-0">{actionButton(user)}</div>
+            <AppListItem key={user.id}>
+              <PersonRow
+                name={user.name}
+                avatarUrl={user.avatarUrl}
+                subtitle={
+                  <>
+                    <span className="block truncate">{user.email}</span>
+                    {user.birthMonth && user.birthDay && (
+                      <span className="block">
+                        Birthday: {formatJalaliBirthday(user.birthMonth, user.birthDay)}
+                      </span>
+                    )}
+                  </>
+                }
+                trailing={actionButton(user)}
+              />
             </AppListItem>
           ))}
         </AppList>

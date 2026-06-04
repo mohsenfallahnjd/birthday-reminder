@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createSession, hashPassword } from "@/lib/auth";
+import { randomPresetAvatar } from "@/lib/avatars";
 import { db } from "@/lib/db";
 import { jsonError, jsonOk, parseJson } from "@/lib/api";
 
@@ -24,6 +25,7 @@ export async function POST(request: Request) {
       name: parsed.data.name,
       email: parsed.data.email.toLowerCase(),
       passwordHash: await hashPassword(parsed.data.password),
+      avatarUrl: randomPresetAvatar(),
     },
   });
 

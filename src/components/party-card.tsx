@@ -1,15 +1,7 @@
 import { Icon } from "@/components/icon";
 import { Link } from "@/components/link";
+import { UserAvatar } from "@/components/user-avatar";
 import type { CeremonyMemberRole } from "@prisma/client";
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
-}
 
 function roleBadge(
   role: CeremonyMemberRole | "GROUP" | null,
@@ -34,6 +26,7 @@ export function PartyCard({
   title,
   color,
   holderName,
+  holderAvatarUrl,
   groupName,
   memberRole,
   isYourBirthday = false,
@@ -42,6 +35,7 @@ export function PartyCard({
   title: string;
   color: string;
   holderName: string;
+  holderAvatarUrl?: string | null;
   groupName?: string | null;
   memberRole?: CeremonyMemberRole | "GROUP" | null;
   isYourBirthday?: boolean;
@@ -102,12 +96,12 @@ export function PartyCard({
             </div>
 
             <div className="mt-2 flex items-center gap-2">
-              <span
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                style={{ backgroundColor: color }}
-              >
-                {initials(holderName)}
-              </span>
+              <UserAvatar
+                name={holderName}
+                avatarUrl={holderAvatarUrl}
+                size="sm"
+                accentColor={color}
+              />
               <div className="min-w-0 text-sm">
                 <span className="text-muted">Birthday · </span>
                 <span className="font-medium text-foreground">

@@ -1,7 +1,7 @@
 import { ShareInviteCode } from "@/components/share-invite-code";
 import { Icon } from "@/components/icon";
 import { Link } from "@/components/link";
-import { personInitials } from "@/components/app-section";
+import { personInitials } from "@/lib/avatars";
 
 const GROUP_ACCENT = "#4f46e5";
 

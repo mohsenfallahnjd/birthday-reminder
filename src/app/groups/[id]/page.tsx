@@ -46,7 +46,15 @@ export default async function GroupDetailPage({
     include: {
       members: {
         include: {
-          user: { select: { id: true, name: true, birthMonth: true, birthDay: true } },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              avatarUrl: true,
+              birthMonth: true,
+              birthDay: true,
+            },
+          },
         },
       },
       ceremonies: {
@@ -55,7 +63,7 @@ export default async function GroupDetailPage({
           title: true,
           color: true,
           birthdayUserId: true,
-          birthdayUser: { select: { name: true } },
+          birthdayUser: { select: { name: true, avatarUrl: true } },
           members: {
             where: { userId: user.id },
             select: { role: true },
@@ -101,6 +109,7 @@ export default async function GroupDetailPage({
             <AppListItem key={m.id}>
               <PersonRow
                 name={m.name}
+                avatarUrl={m.avatarUrl}
                 subtitle={
                   m.birthMonth && m.birthDay
                     ? formatJalaliBirthday(m.birthMonth, m.birthDay)
@@ -142,6 +151,7 @@ export default async function GroupDetailPage({
                   title={c.title}
                   color={c.color}
                   holderName={c.birthdayUser.name}
+                  holderAvatarUrl={c.birthdayUser.avatarUrl}
                   groupName={group.name}
                   memberRole={c.members[0]?.role ?? null}
                   isYourBirthday={c.birthdayUserId === user.id}

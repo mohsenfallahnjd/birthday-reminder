@@ -34,8 +34,8 @@ export async function getAcceptedFriends(userId: string) {
       OR: [{ userId }, { friendId: userId }],
     },
     include: {
-      user: { select: { id: true, name: true, email: true } },
-      friend: { select: { id: true, name: true, email: true } },
+      user: { select: { id: true, name: true, email: true, avatarUrl: true } },
+      friend: { select: { id: true, name: true, email: true, avatarUrl: true } },
     },
   });
   return friendships.map((f) => (f.userId === userId ? f.friend : f.user));
@@ -51,7 +51,7 @@ export async function filterFriendIdsForInviter(inviterId: string, candidateIds:
 export async function getCeremonyMembers(ceremonyId: string) {
   return db.ceremonyMember.findMany({
     where: { ceremonyId },
-    include: { user: { select: { id: true, name: true, email: true } } },
+    include: { user: { select: { id: true, name: true, email: true, avatarUrl: true } } },
     orderBy: [{ role: "asc" }, { createdAt: "asc" }],
   });
 }

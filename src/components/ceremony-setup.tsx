@@ -2,7 +2,8 @@
 
 import { useRouter } from "@/lib/navigation";
 import { useMemo, useState } from "react";
-import { FormSection, personInitials } from "@/components/app-section";
+import { FormSection } from "@/components/app-section";
+import { personInitials } from "@/lib/avatars";
 import { AdminPicker } from "@/components/admin-picker";
 import { FriendGuestPicker } from "@/components/friend-guest-picker";
 import { Icon } from "@/components/icon";

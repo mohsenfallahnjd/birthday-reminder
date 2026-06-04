@@ -28,8 +28,26 @@ export default async function PeoplePage() {
   const friendships = await db.friendship.findMany({
     where: { OR: [{ userId: user.id }, { friendId: user.id }] },
     include: {
-      user: { select: { id: true, name: true, email: true, birthMonth: true, birthDay: true } },
-      friend: { select: { id: true, name: true, email: true, birthMonth: true, birthDay: true } },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatarUrl: true,
+          birthMonth: true,
+          birthDay: true,
+        },
+      },
+      friend: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatarUrl: true,
+          birthMonth: true,
+          birthDay: true,
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -77,6 +95,7 @@ export default async function PeoplePage() {
               <AppListItem key={friendship.id}>
                 <PersonRow
                   name={other.name}
+                  avatarUrl={other.avatarUrl}
                   subtitle={other.email}
                   accentColor="#059669"
                   trailing={<AcceptFriendButton friendshipId={friendship.id} />}
@@ -97,6 +116,7 @@ export default async function PeoplePage() {
               <AppListItem key={friendship.id}>
                 <PersonRow
                   name={other.name}
+                  avatarUrl={other.avatarUrl}
                   subtitle={other.email}
                   accentColor="#a1a1aa"
                   trailing={
@@ -121,6 +141,7 @@ export default async function PeoplePage() {
               <AppListItem key={other.id}>
                 <PersonRow
                   name={other.name}
+                  avatarUrl={other.avatarUrl}
                   subtitle={
                     other.birthMonth && other.birthDay
                       ? formatJalaliBirthday(other.birthMonth, other.birthDay)
