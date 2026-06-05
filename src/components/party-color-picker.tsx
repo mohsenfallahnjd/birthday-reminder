@@ -28,7 +28,7 @@ export function PartyColorPicker({
               }`}
               style={{
                 backgroundColor: c,
-                ...(selected ? { ringColor: c } : {}),
+                ...(selected ? { "--tw-ring-color": c } : {}),
               }}
               onClick={() => onChange(c)}
               aria-pressed={selected}
