@@ -27,12 +27,18 @@ export default async function DashboardPage() {
       OR: [{ userId: user.id }, { friendId: user.id }],
     },
     include: {
-      user: { select: { id: true, name: true, birthMonth: true, birthDay: true } },
-      friend: { select: { id: true, name: true, birthMonth: true, birthDay: true } },
+      user: {
+        select: { id: true, name: true, birthMonth: true, birthDay: true },
+      },
+      friend: {
+        select: { id: true, name: true, birthMonth: true, birthDay: true },
+      },
     },
   });
 
-  const friends = friendships.map((f) => (f.userId === user.id ? f.friend : f.user));
+  const friends = friendships.map((f) =>
+    f.userId === user.id ? f.friend : f.user,
+  );
 
   const groupMembers = await db.groupMember.findMany({
     where: { userId: user.id },
@@ -42,7 +48,12 @@ export default async function DashboardPage() {
           members: {
             include: {
               user: {
-                select: { id: true, name: true, birthMonth: true, birthDay: true },
+                select: {
+                  id: true,
+                  name: true,
+                  birthMonth: true,
+                  birthDay: true,
+                },
               },
             },
           },
@@ -51,7 +62,8 @@ export default async function DashboardPage() {
     },
   });
 
-  const upcoming: { name: string; id: string; days: number; date: string }[] = [];
+  const upcoming: { name: string; id: string; days: number; date: string }[] =
+    [];
 
   for (const friend of friends) {
     if (!friend.birthMonth || !friend.birthDay) continue;
@@ -106,14 +118,18 @@ export default async function DashboardPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  const wishlistCount = await db.wishlistItem.count({ where: { userId: user.id } });
+  const wishlistCount = await db.wishlistItem.count({
+    where: { userId: user.id },
+  });
 
   return (
     <div className="page-wide space-y-8">
       <PageHeader
         title={`Hi, ${user.name}`}
         description="Upcoming birthdays and active parties"
-        badge={<UserAvatar name={user.name} avatarUrl={user.avatarUrl} size="lg" />}
+        badge={
+          <UserAvatar name={user.name} avatarUrl={user.avatarUrl} size="lg" />
+        }
       />
 
       {!user.birthMonth && (
@@ -124,50 +140,6 @@ export default async function DashboardPage() {
           <span className="text-muted">so friends get reminders.</span>
         </InfoBanner>
       )}
-
-      <AppSection
-        title="Wishlist"
-        description="Gift ideas friends can contribute toward"
-        action={{ href: "/wishlist", label: "Manage →" }}
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#db2777]/15 text-[#db2777]">
-            <Icon name="gift" size={22} className="text-current" />
-          </div>
-          <p className="text-sm text-foreground">
-            {wishlistCount === 0 ? (
-              <span className="text-muted">No items yet — add your first gift idea.</span>
-            ) : (
-              <>
-                <span className="font-semibold tabular-nums">{wishlistCount}</span>
-                <span className="text-muted">
-                  {" "}
-                  item{wishlistCount === 1 ? "" : "s"} on your list
-                </span>
-              </>
-            )}
-          </p>
-        </div>
-      </AppSection>
-
-      <AppSection title="Upcoming birthdays" description="From friends and groups">
-        {upcoming.length === 0 ? (
-          <EmptyState>No upcoming birthdays in the next year.</EmptyState>
-        ) : (
-          <AppList>
-            {upcoming.slice(0, 8).map((u) => (
-              <AppListItem key={u.id}>
-                <PersonRow
-                  name={u.name}
-                  subtitle={u.date}
-                  accentColor={u.days <= 7 ? "#e11d48" : "#0891b2"}
-                  trailing={<DaysBadge days={u.days} />}
-                />
-              </AppListItem>
-            ))}
-          </AppList>
-        )}
-      </AppSection>
 
       <AppSection
         title="Active parties"
@@ -193,7 +165,8 @@ export default async function DashboardPage() {
               const myMember = c.members[0];
               const isYourBirthday = c.birthdayUserId === user.id;
               const memberRole =
-                myMember?.role ?? (c.group && !myMember ? ("GROUP" as const) : null);
+                myMember?.role ??
+                (c.group && !myMember ? ("GROUP" as const) : null);
 
               return (
                 <li key={c.id}>
@@ -211,6 +184,57 @@ export default async function DashboardPage() {
               );
             })}
           </ul>
+        )}
+      </AppSection>
+
+      <AppSection
+        title="Wishlist"
+        description="Gift ideas friends can contribute toward"
+        action={{ href: "/wishlist", label: "Manage →" }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#db2777]/15 text-[#db2777]">
+            <Icon name="gift" size={22} className="text-current" />
+          </div>
+          <p className="text-sm text-foreground">
+            {wishlistCount === 0 ? (
+              <span className="text-muted">
+                No items yet — add your first gift idea.
+              </span>
+            ) : (
+              <>
+                <span className="font-semibold tabular-nums">
+                  {wishlistCount}
+                </span>
+                <span className="text-muted">
+                  {" "}
+                  item{wishlistCount === 1 ? "" : "s"} on your list
+                </span>
+              </>
+            )}
+          </p>
+        </div>
+      </AppSection>
+
+      <AppSection
+        title="Upcoming birthdays"
+        description="From friends and groups"
+      >
+        {upcoming.length === 0 ? (
+          <EmptyState>No upcoming birthdays in the next year.</EmptyState>
+        ) : (
+          <AppList>
+            {upcoming.slice(0, 8).map((u) => (
+              <AppListItem key={u.id}>
+                <PersonRow
+                  name={u.name}
+                  subtitle={u.date}
+                  accentColor={u.days <= 7 ? "#e11d48" : "#0891b2"}
+                  trailing={<DaysBadge days={u.days} />}
+                />
+              </AppListItem>
+            ))}
+          </AppList>
         )}
       </AppSection>
     </div>

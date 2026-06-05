@@ -50,10 +50,10 @@ export function PartyHeader({
   const displayColor = editing ? partyColor : initialColor;
   const selectedHolder = holderCandidates.find((p) => p.id === holderId);
   const displayHolderName = editing
-    ? selectedHolder?.name ?? initialHolderName
+    ? (selectedHolder?.name ?? initialHolderName)
     : initialHolderName;
   const displayHolderAvatar = editing
-    ? selectedHolder?.avatarUrl ?? initialHolderAvatar
+    ? (selectedHolder?.avatarUrl ?? initialHolderAvatar)
     : initialHolderAvatar;
 
   const roleHint = isBirthdayPerson
@@ -149,9 +149,17 @@ export function PartyHeader({
         <div className="flex items-start justify-between gap-3">
           <div
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl shadow-sm"
-            style={{ backgroundColor: `${displayColor}22`, color: displayColor }}
+            style={{
+              backgroundColor: `${displayColor}22`,
+              color: displayColor,
+            }}
           >
-            <Icon name="party" size={26} className="text-current" strokeWidth={1.75} />
+            <Icon
+              name="party"
+              size={26}
+              className="text-current"
+              strokeWidth={1.75}
+            />
           </div>
 
           {canManage && !editing && (
@@ -191,7 +199,10 @@ export function PartyHeader({
             {groupName && groupId && (
               <p className="mt-1 text-sm text-muted">
                 In group{" "}
-                <Link href={`/groups/${groupId}`} className="font-medium text-foreground">
+                <Link
+                  href={`/groups/${groupId}`}
+                  className="font-medium text-foreground"
+                >
                   {groupName}
                 </Link>
               </p>
@@ -217,13 +228,18 @@ export function PartyHeader({
                   {displayHolderName}
                 </p>
               </div>
-              <span className="ml-auto shrink-0" style={{ color: displayColor }}>
-                <Icon name="cake" size={20} className="text-current opacity-90" />
+              <span
+                className="ml-auto shrink-0"
+                style={{ color: displayColor }}
+              >
+                <Icon
+                  name="cake"
+                  size={20}
+                  className="text-current opacity-90"
+                />
               </span>
             </div>
-            {roleHint && (
-              <p className="mt-3 text-xs text-muted">{roleHint}</p>
-            )}
+            {roleHint && <p className="mt-3 text-xs text-muted">{roleHint}</p>}
           </>
         ) : (
           <div className="mt-4 space-y-4">
@@ -250,12 +266,15 @@ export function PartyHeader({
                 ))}
               </select>
               <p className="mt-1 text-xs text-muted">
-                Choose who this party celebrates. Group members or people already on the team.
+                Choose who this party celebrates. Group members or people
+                already on the team.
               </p>
             </div>
 
             <div>
-              <p className="text-xs font-medium text-foreground mb-2">Party color</p>
+              <p className="text-xs font-medium text-foreground mb-2">
+                Party color
+              </p>
               <div className="flex flex-wrap gap-2">
                 {PARTY_COLORS.map((c) => (
                   <button
@@ -294,14 +313,21 @@ export function PartyHeader({
               >
                 Save changes
               </Button>
-              <Button type="button" variant="ghost" disabled={busy} onClick={cancelEdit}>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={busy}
+                onClick={cancelEdit}
+              >
                 Cancel
               </Button>
             </div>
           </div>
         )}
 
-        {error && !editing && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        {error && !editing && (
+          <p className="mt-3 text-sm text-red-600">{error}</p>
+        )}
       </div>
     </section>
   );
