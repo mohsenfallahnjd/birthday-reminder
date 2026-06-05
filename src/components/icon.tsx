@@ -3,15 +3,20 @@ import {
   Bell,
   Cake,
   Calendar,
+  ChevronLeft,
+  Clock,
   Copy,
   CreditCard,
   Gift,
   Heart,
+  Lock,
   Pencil,
   PartyPopper,
+  Search,
   Share2,
   Sparkles,
   Trash2,
+  UserPlus,
   Users,
   Wallet,
 } from "lucide-react";
@@ -32,6 +37,11 @@ export const icons = {
   share: Share2,
   pencil: Pencil,
   trash: Trash2,
+  search: Search,
+  "user-plus": UserPlus,
+  "chevron-left": ChevronLeft,
+  clock: Clock,
+  lock: Lock,
 } as const;
 
 export type IconName = keyof typeof icons;

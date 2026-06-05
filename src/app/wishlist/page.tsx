@@ -11,6 +11,16 @@ export default async function WishlistPage() {
   const items = await db.wishlistItem.findMany({
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      link: true,
+      ogImage: true,
+      ogDescription: true,
+      cost: true,
+      allowCheapIn: true,
+      ceremonyId: true,
+    },
   });
 
   const ceremonies = await db.ceremony.findMany({

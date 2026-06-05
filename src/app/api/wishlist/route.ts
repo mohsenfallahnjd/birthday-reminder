@@ -7,6 +7,8 @@ import { jsonError, jsonOk, parseJson } from "@/lib/api";
 const schema = z.object({
   title: z.string().min(1),
   link: z.string().optional(),
+  ogImage: z.string().nullable().optional(),
+  ogDescription: z.string().nullable().optional(),
   cost: z.number().positive(),
   allowCheapIn: z.boolean().default(false),
   ceremonyId: z.string().optional(),
@@ -37,6 +39,8 @@ export async function POST(request: Request) {
       userId: ownerId,
       title: parsed.data.title,
       link: parsed.data.link || null,
+      ogImage: parsed.data.ogImage ?? null,
+      ogDescription: parsed.data.ogDescription ?? null,
       cost: parsed.data.cost,
       allowCheapIn: parsed.data.allowCheapIn,
       ceremonyId: parsed.data.ceremonyId,

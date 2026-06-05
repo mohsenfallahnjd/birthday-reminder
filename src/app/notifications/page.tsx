@@ -14,6 +14,12 @@ export default async function NotificationsPage() {
     take: 50,
   });
 
+  // Auto-mark all as read on open
+  await db.notification.updateMany({
+    where: { userId: user.id, read: false },
+    data: { read: true },
+  });
+
   return (
     <div className="page space-y-8">
       <PageHeader title="Notifications" description="Recent activity and invites" />

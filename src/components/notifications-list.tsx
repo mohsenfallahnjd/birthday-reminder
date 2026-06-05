@@ -1,10 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "@/lib/navigation";
 import { AppList, AppListItem, EmptyState } from "@/components/app-section";
 import { Link } from "@/components/link";
-import { Button } from "@/components/ui/button";
 
 type Notification = {
   id: string;
@@ -16,41 +13,12 @@ type Notification = {
 };
 
 export function NotificationsList({ items }: { items: Notification[] }) {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-
-  async function markAll() {
-    setLoading(true);
-    try {
-      await fetch("/api/notifications", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ markAll: true }),
-      });
-      router.refresh();
-    } finally {
-      setLoading(false);
-    }
-  }
-
   if (items.length === 0) {
     return <EmptyState>No notifications yet.</EmptyState>;
   }
 
   return (
     <div className="space-y-4">
-      {items.some((n) => !n.read) && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={markAll}
-          loading={loading}
-          loadingText="Updating…"
-        >
-          Mark all read
-        </Button>
-      )}
       <AppList>
         {items.map((n) => (
           <AppListItem key={n.id} className={n.read ? "opacity-70" : undefined}>

@@ -7,6 +7,8 @@ import { jsonError, jsonOk, parseJson } from "@/lib/api";
 const patchSchema = z.object({
   title: z.string().min(1).optional(),
   link: z.string().optional().nullable(),
+  ogImage: z.string().nullable().optional(),
+  ogDescription: z.string().nullable().optional(),
   cost: z.number().positive().optional(),
   allowCheapIn: z.boolean().optional(),
   ceremonyId: z.string().optional().nullable(),
@@ -46,6 +48,8 @@ export async function PATCH(
     data: {
       ...(data.title !== undefined ? { title: data.title } : {}),
       ...(data.link !== undefined ? { link: data.link || null } : {}),
+      ...(data.ogImage !== undefined ? { ogImage: data.ogImage } : {}),
+      ...(data.ogDescription !== undefined ? { ogDescription: data.ogDescription } : {}),
       ...(data.cost !== undefined ? { cost: data.cost } : {}),
       ...(data.allowCheapIn !== undefined ? { allowCheapIn: data.allowCheapIn } : {}),
       ...(data.ceremonyId !== undefined ? { ceremonyId: data.ceremonyId } : {}),

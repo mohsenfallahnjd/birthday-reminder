@@ -51,6 +51,7 @@ const patchSchema = z.object({
   cardNumber: z.string().optional(),
   cardHolder: z.string().optional(),
   active: z.boolean().optional(),
+  hideContributors: z.boolean().optional(),
 });
 
 export async function PATCH(
@@ -68,7 +69,7 @@ export async function PATCH(
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) return jsonError("Invalid input");
 
-  const { title, color, birthdayUserId, cardNumber, cardHolder, adminUserId, active } =
+  const { title, color, birthdayUserId, cardNumber, cardHolder, adminUserId, active, hideContributors } =
     parsed.data;
 
   const settingsChange =
@@ -76,7 +77,8 @@ export async function PATCH(
     color !== undefined ||
     birthdayUserId !== undefined ||
     adminUserId !== undefined ||
-    active !== undefined;
+    active !== undefined ||
+    hideContributors !== undefined;
 
   if (cardNumber !== undefined || cardHolder !== undefined) {
     if (!(await canEditTreasurerCard(id, user.id))) {
@@ -101,6 +103,7 @@ export async function PATCH(
     cardNumber?: string;
     cardHolder?: string;
     active?: boolean;
+    hideContributors?: boolean;
   } = {};
 
   if (title !== undefined) data.title = title;
@@ -109,6 +112,7 @@ export async function PATCH(
   if (cardNumber !== undefined) data.cardNumber = cardNumber;
   if (cardHolder !== undefined) data.cardHolder = cardHolder;
   if (active !== undefined) data.active = active;
+  if (hideContributors !== undefined) data.hideContributors = hideContributors;
 
   const updated =
     Object.keys(data).length > 0

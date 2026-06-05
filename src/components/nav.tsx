@@ -39,6 +39,9 @@ export async function Nav() {
                 <Link href="/groups" variant="nav">
                   Groups
                 </Link>
+                <Link href="/explore" variant="nav">
+                  Explore
+                </Link>
                 <Link href="/people" variant="nav">
                   Friends
                 </Link>

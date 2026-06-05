@@ -10,6 +10,7 @@ const schema = z.object({
   wishlistItemId: z.string().optional(),
   proofUrl: z.string().optional(),
   note: z.string().optional(),
+  isDebt: z.boolean().optional(), // pledge now, pay later
 });
 
 export async function POST(
@@ -27,32 +28,57 @@ export async function POST(
   const parsed = schema.safeParse(body);
   if (!parsed.success) return jsonError("Invalid payment");
 
+  const isDebt = parsed.data.isDebt === true;
+  const status = isDebt ? "DEBT" : "PENDING";
+
   const payment = await db.payment.create({
     data: {
       ceremonyId,
       payerId: user.id,
       amount: parsed.data.amount,
       wishlistItemId: parsed.data.wishlistItemId,
-      proofUrl: parsed.data.proofUrl,
+      proofUrl: isDebt ? null : (parsed.data.proofUrl ?? null),
       note: parsed.data.note,
+      status,
     },
   });
 
-  const adminIds = await getCeremonyAdminUserIds(ceremonyId);
-  const notifyTargets =
-    adminIds.length > 0
-      ? adminIds
-      : ceremony.adminUserId
-        ? [ceremony.adminUserId]
-        : [];
-  for (const adminId of notifyTargets) {
-    notifyUserAsync({
-      userId: adminId,
-      type: "payment_pending",
-      title: "New payment to review",
-      body: `${user.name} paid ${parsed.data.amount.toLocaleString("en-US")} Toman`,
-      link: `/ceremonies/${ceremonyId}`,
-    });
+  // Only notify admins for real (non-debt) payments
+  if (!isDebt) {
+    const adminIds = await getCeremonyAdminUserIds(ceremonyId);
+    const notifyTargets =
+      adminIds.length > 0
+        ? adminIds
+        : ceremony.adminUserId
+          ? [ceremony.adminUserId]
+          : [];
+    for (const adminId of notifyTargets) {
+      notifyUserAsync({
+        userId: adminId,
+        type: "payment_pending",
+        title: "New payment to review",
+        body: `${user.name} paid ${parsed.data.amount.toLocaleString("en-US")} Toman`,
+        link: `/ceremonies/${ceremonyId}`,
+      });
+    }
+  } else {
+    // Notify admin of a new debt pledge
+    const adminIds = await getCeremonyAdminUserIds(ceremonyId);
+    const notifyTargets =
+      adminIds.length > 0
+        ? adminIds
+        : ceremony.adminUserId
+          ? [ceremony.adminUserId]
+          : [];
+    for (const adminId of notifyTargets) {
+      notifyUserAsync({
+        userId: adminId,
+        type: "payment_debt",
+        title: "New debt pledge",
+        body: `${user.name} pledged ${parsed.data.amount.toLocaleString("en-US")} Toman (will pay later)`,
+        link: `/ceremonies/${ceremonyId}`,
+      });
+    }
   }
 
   return jsonOk(payment);
