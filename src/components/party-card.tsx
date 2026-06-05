@@ -48,10 +48,11 @@ export function PartyCard({
       className="group block no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl"
     >
       <article
-        className="relative overflow-hidden rounded-2xl border border-white/80 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-md"
+        className="relative overflow-hidden rounded-2xl border transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-md"
         style={{
           background: `linear-gradient(135deg, ${color}14 0%, #ffffff 55%, ${color}0a 100%)`,
           boxShadow: `0 1px 0 ${color}25, 0 8px 24px -10px ${color}55`,
+          borderColor: `${color}44`,
         }}
       >
         <div

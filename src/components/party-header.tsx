@@ -119,10 +119,11 @@ export function PartyHeader({
 
   return (
     <section
-      className="relative mb-8 overflow-hidden rounded-2xl border border-white/60 shadow-sm"
+      className="relative mb-8 overflow-hidden rounded-2xl border shadow-sm"
       style={{
         background: `linear-gradient(145deg, ${displayColor}18 0%, #ffffff 42%, ${displayColor}12 100%)`,
         boxShadow: `0 1px 0 ${displayColor}22, 0 12px 40px -12px ${displayColor}44`,
+        borderColor: `${displayColor}44`,
       }}
     >
       <div
