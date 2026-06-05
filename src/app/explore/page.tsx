@@ -38,26 +38,35 @@ export default async function ExplorePage() {
 		},
 	});
 
-	// Get current user's friend IDs
+	// Get current user's friendships (all statuses)
 	const friendships = await db.friendship.findMany({
 		where: {
 			OR: [{ userId: user.id }, { friendId: user.id }],
-			status: "ACCEPTED",
 		},
 		select: {
 			userId: true,
 			friendId: true,
+			status: true,
 		},
 	});
 
-	const friendIds = new Set(
-		friendships.map((f) => (f.userId === user.id ? f.friendId : f.userId)),
-	);
+	const friendIds = new Set<string>();
+	const pendingIds = new Set<string>();
+
+	for (const f of friendships) {
+		const otherId = f.userId === user.id ? f.friendId : f.userId;
+		if (f.status === "ACCEPTED") {
+			friendIds.add(otherId);
+		} else {
+			pendingIds.add(otherId);
+		}
+	}
 
 	// Add friendship status to each user
 	const usersWithStatus = users.map((u) => ({
 		...u,
 		isFriend: friendIds.has(u.id),
+		isPending: pendingIds.has(u.id),
 		groupCount: u._count.memberships,
 		ceremonyCount: u._count.birthdayCeremonies,
 	}));

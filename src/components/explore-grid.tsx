@@ -17,6 +17,7 @@ type ExploreUser = {
 	birthDay: number | null;
 	birthYear: number | null;
 	isFriend: boolean;
+	isPending: boolean;
 	groupCount: number;
 	ceremonyCount: number;
 };
@@ -29,7 +30,7 @@ type Props = {
 export function ExploreGrid({ users: initialUsers, currentUserId }: Props) {
 	const [users, setUsers] = useState(initialUsers);
 	const [search, setSearch] = useState("");
-	const [loading, setLoading] = useState(false);
+	const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
 
 	const filteredUsers = users.filter(
 		(user) =>
@@ -38,12 +39,12 @@ export function ExploreGrid({ users: initialUsers, currentUserId }: Props) {
 	);
 
 	const handleAddFriend = async (userId: string) => {
+		setLoadingIds((prev) => new Set(prev).add(userId));
 		try {
-			setLoading(true);
 			const response = await fetch("/api/people", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ friendEmail: users.find((u) => u.id === userId)?.email }),
+				body: JSON.stringify({ userId }),
 			});
 
 			const data = await response.json();
@@ -51,15 +52,18 @@ export function ExploreGrid({ users: initialUsers, currentUserId }: Props) {
 			if (data.error) {
 				alert(data.error);
 			} else {
-				// Update the user's friend status
-				setUsers(
-					users.map((u) => (u.id === userId ? { ...u, isFriend: true } : u)),
+				setUsers((prev) =>
+					prev.map((u) => (u.id === userId ? { ...u, isPending: true } : u)),
 				);
 			}
-		} catch (error) {
+		} catch {
 			alert("Failed to send friend request");
 		} finally {
-			setLoading(false);
+			setLoadingIds((prev) => {
+				const next = new Set(prev);
+				next.delete(userId);
+				return next;
+			});
 		}
 	};
 
@@ -105,6 +109,12 @@ export function ExploreGrid({ users: initialUsers, currentUserId }: Props) {
 											<span>Friend</span>
 										</div>
 									)}
+									{!user.isFriend && user.isPending && (
+										<div className="flex items-center gap-1 text-xs text-muted bg-muted/10 px-2 py-1 rounded-full">
+											<Icon name="clock" className="w-3 h-3" />
+											<span>Pending</span>
+										</div>
+									)}
 								</div>
 
 								<h3 className="font-semibold text-lg mb-1 group-hover:text-accent transition-colors">
@@ -136,7 +146,7 @@ export function ExploreGrid({ users: initialUsers, currentUserId }: Props) {
 									</div>
 								</div>
 
-								{!user.isFriend && (
+								{!user.isFriend && !user.isPending && (
 									<Button
 										variant="outline"
 										size="sm"
@@ -145,7 +155,7 @@ export function ExploreGrid({ users: initialUsers, currentUserId }: Props) {
 											e.preventDefault();
 											handleAddFriend(user.id);
 										}}
-										disabled={loading}
+										disabled={loadingIds.has(user.id)}
 									>
 										<Icon name="user-plus" className="w-4 h-4 mr-2" />
 										Add Friend
