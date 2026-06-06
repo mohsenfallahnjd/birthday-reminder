@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 export function ReminderButton({
   targetUserId,
   groupId,
+  initialSet = false,
 }: {
   targetUserId: string;
   groupId?: string;
+  initialSet?: boolean;
 }) {
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState(initialSet);
   const [loading, setLoading] = useState(false);
 
   async function setReminder() {

@@ -79,6 +79,12 @@ export default async function GroupDetailPage({
   const isOwner = group.ownerId === user.id;
   const members = groupDetails.members.map((m) => m.user);
   const friends = await getAcceptedFriends(user.id);
+
+  const existingReminders = await db.reminder.findMany({
+    where: { ownerId: user.id, groupId: id },
+    select: { targetUserId: true },
+  });
+  const reminderSet = new Set(existingReminders.map((r) => r.targetUserId));
   const appOrigin = process.env.NEXT_PUBLIC_APP_URL;
 
   return (
@@ -118,7 +124,7 @@ export default async function GroupDetailPage({
                 accentColor="#4f46e5"
                 trailing={
                   m.id !== user.id && m.birthMonth ? (
-                    <ReminderButton targetUserId={m.id} groupId={group.id} />
+                    <ReminderButton targetUserId={m.id} groupId={group.id} initialSet={reminderSet.has(m.id)} />
                   ) : undefined
                 }
               />
