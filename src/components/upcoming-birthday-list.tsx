@@ -65,7 +65,13 @@ function tierConfig(days: number): TierConfig {
   };
 }
 
-function BirthdayCard({ name, days, date, avatarUrl }: BirthdayEntry) {
+function BirthdayCard({
+  name,
+  days,
+  date,
+  avatarUrl,
+  hasParty,
+}: BirthdayEntry & { hasParty?: boolean }) {
   const t = tierConfig(days);
   const isToday = days === 0;
 
@@ -98,7 +104,14 @@ function BirthdayCard({ name, days, date, avatarUrl }: BirthdayEntry) {
 
       {/* Name + date */}
       <div className="relative min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-foreground">{name}</p>
+        <div className="flex items-center gap-2">
+          <p className="truncate text-sm font-semibold text-foreground">{name}</p>
+          {hasParty && (
+            <span className="shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+              Party ✓
+            </span>
+          )}
+        </div>
         <p className="mt-0.5 flex items-center gap-1 text-xs text-muted">
           <Icon name="cake" size={11} className="shrink-0 opacity-70" />
           {date}
@@ -151,7 +164,13 @@ function SectionLabel({ label, color }: { label: string; color: string }) {
   );
 }
 
-export function UpcomingBirthdayList({ entries }: { entries: BirthdayEntry[] }) {
+export function UpcomingBirthdayList({
+  entries,
+  activePartyUserIds,
+}: {
+  entries: BirthdayEntry[];
+  activePartyUserIds?: Set<string>;
+}) {
   if (entries.length === 0) return null;
 
   const today = entries.filter((e) => e.days === 0);
@@ -173,7 +192,11 @@ export function UpcomingBirthdayList({ entries }: { entries: BirthdayEntry[] }) 
           <SectionLabel label={group.label} color={group.color} />
           <ul className="space-y-2">
             {group.items.map((entry) => (
-              <BirthdayCard key={entry.id} {...entry} />
+              <BirthdayCard
+                key={entry.id}
+                {...entry}
+                hasParty={activePartyUserIds?.has(entry.id)}
+              />
             ))}
           </ul>
         </div>
