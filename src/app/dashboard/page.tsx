@@ -7,6 +7,7 @@ import {
 } from "@/components/app-section";
 import { PartyCard } from "@/components/party-card";
 import { UpcomingBirthdayList } from "@/components/upcoming-birthday-list";
+import { PartySuggestions } from "@/components/party-suggestions";
 import { UserAvatar } from "@/components/user-avatar";
 import { Icon } from "@/components/icon";
 import { requireUser } from "@/lib/auth";
@@ -117,6 +118,12 @@ export default async function DashboardPage() {
     orderBy: { createdAt: "desc" },
   });
 
+  const activeBirthdayUserIds = new Set(ceremonies.map((c) => c.birthdayUserId));
+
+  const suggestions = upcoming
+    .filter((u) => u.days <= 14 && !activeBirthdayUserIds.has(u.id))
+    .slice(0, 3);
+
   const wishlistCount = await db.wishlistItem.count({
     where: { userId: user.id },
   });
@@ -215,11 +222,18 @@ export default async function DashboardPage() {
         </div>
       </AppSection>
 
+      {suggestions.length > 0 && (
+        <PartySuggestions suggestions={suggestions} />
+      )}
+
       <AppSection title="Upcoming birthdays" description="From friends and groups" unboxed>
         {upcoming.length === 0 ? (
           <EmptyState>No upcoming birthdays in the next year.</EmptyState>
         ) : (
-          <UpcomingBirthdayList entries={upcoming.slice(0, 8)} />
+          <UpcomingBirthdayList
+            entries={upcoming.slice(0, 8)}
+            activePartyUserIds={activeBirthdayUserIds}
+          />
         )}
       </AppSection>
     </div>
