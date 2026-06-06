@@ -67,6 +67,12 @@ export default async function PeoplePage() {
 
   const allFriends = await getAcceptedFriends(user.id);
 
+  const existingReminders = await db.reminder.findMany({
+    where: { ownerId: user.id, groupId: null },
+    select: { targetUserId: true },
+  });
+  const reminderSet = new Set(existingReminders.map((r) => r.targetUserId));
+
   return (
     <div className="page-wide space-y-8">
       <PageHeader
@@ -150,7 +156,7 @@ export default async function PeoplePage() {
                   accentColor="#db2777"
                   trailing={
                     <>
-                      <ReminderButton targetUserId={other.id} />
+                      <ReminderButton targetUserId={other.id} initialSet={reminderSet.has(other.id)} />
                       <RemoveFriendButton friendshipId={friendship.id} />
                     </>
                   }
