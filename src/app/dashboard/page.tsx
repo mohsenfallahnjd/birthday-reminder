@@ -1,15 +1,12 @@
 import { Link } from "@/components/link";
 import {
-  AppList,
-  AppListItem,
   AppSection,
-  DaysBadge,
   EmptyState,
   InfoBanner,
   PageHeader,
-  PersonRow,
 } from "@/components/app-section";
 import { PartyCard } from "@/components/party-card";
+import { UpcomingBirthdayList } from "@/components/upcoming-birthday-list";
 import { UserAvatar } from "@/components/user-avatar";
 import { Icon } from "@/components/icon";
 import { requireUser } from "@/lib/auth";
@@ -28,10 +25,10 @@ export default async function DashboardPage() {
     },
     include: {
       user: {
-        select: { id: true, name: true, birthMonth: true, birthDay: true },
+        select: { id: true, name: true, avatarUrl: true, birthMonth: true, birthDay: true },
       },
       friend: {
-        select: { id: true, name: true, birthMonth: true, birthDay: true },
+        select: { id: true, name: true, avatarUrl: true, birthMonth: true, birthDay: true },
       },
     },
   });
@@ -51,6 +48,7 @@ export default async function DashboardPage() {
                 select: {
                   id: true,
                   name: true,
+                  avatarUrl: true,
                   birthMonth: true,
                   birthDay: true,
                 },
@@ -62,14 +60,14 @@ export default async function DashboardPage() {
     },
   });
 
-  const upcoming: { name: string; id: string; days: number; date: string }[] =
-    [];
+  const upcoming: { name: string; id: string; days: number; date: string; avatarUrl: string | null }[] = [];
 
   for (const friend of friends) {
     if (!friend.birthMonth || !friend.birthDay) continue;
     upcoming.push({
       id: friend.id,
       name: friend.name,
+      avatarUrl: friend.avatarUrl ?? null,
       days: daysUntilJalaliBirthday(friend.birthMonth, friend.birthDay),
       date: formatJalaliBirthday(friend.birthMonth, friend.birthDay),
     });
@@ -83,6 +81,7 @@ export default async function DashboardPage() {
       upcoming.push({
         id: u.id,
         name: u.name,
+        avatarUrl: u.avatarUrl ?? null,
         days: daysUntilJalaliBirthday(u.birthMonth, u.birthDay),
         date: formatJalaliBirthday(u.birthMonth, u.birthDay),
       });
@@ -216,25 +215,11 @@ export default async function DashboardPage() {
         </div>
       </AppSection>
 
-      <AppSection
-        title="Upcoming birthdays"
-        description="From friends and groups"
-      >
+      <AppSection title="Upcoming birthdays" description="From friends and groups" unboxed>
         {upcoming.length === 0 ? (
           <EmptyState>No upcoming birthdays in the next year.</EmptyState>
         ) : (
-          <AppList>
-            {upcoming.slice(0, 8).map((u) => (
-              <AppListItem key={u.id}>
-                <PersonRow
-                  name={u.name}
-                  subtitle={u.date}
-                  accentColor={u.days <= 7 ? "#e11d48" : "#0891b2"}
-                  trailing={<DaysBadge days={u.days} />}
-                />
-              </AppListItem>
-            ))}
-          </AppList>
+          <UpcomingBirthdayList entries={upcoming.slice(0, 8)} />
         )}
       </AppSection>
     </div>
