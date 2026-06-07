@@ -28,17 +28,14 @@ function generalApprovedPool(payments: Payment[]) {
 }
 
 /**
- * Distribute the general pool proportionally across all items based on each
- * item's remaining gap. Every item with an unfilled gap receives a share.
- * Returns a map of item.id → effective collected (own + share from pool).
+ * Apply the full general pool to every item (capped at each item's cost).
+ * Returns a map of item.id → effective collected (own + pool, capped at cost).
  */
 function distributeGeneralPool(items: WishlistItem[], pool: number): Map<string, number> {
   const result = new Map<string, number>();
-  const gaps = items.map((item) => ({ item, own: approvedTotal(item), gap: Math.max(0, item.cost - approvedTotal(item)) }));
-  const totalGap = gaps.reduce((s, g) => s + g.gap, 0);
-  for (const { item, own, gap } of gaps) {
-    const share = totalGap > 0 ? Math.min(gap, (gap / totalGap) * pool) : 0;
-    result.set(item.id, own + share);
+  for (const item of items) {
+    const own = approvedTotal(item);
+    result.set(item.id, Math.min(item.cost, own + pool));
   }
   return result;
 }
