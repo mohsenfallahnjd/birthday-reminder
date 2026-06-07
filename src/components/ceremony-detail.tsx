@@ -6,8 +6,10 @@ import { WishlistManager } from "@/components/wishlist-manager";
 import { Button } from "@/components/ui/button";
 import { MoneyInput, getAmountFromInput } from "@/components/money-input";
 import { Input, Label, Textarea } from "@/components/ui/input";
-import { MoneyProgress } from "@/components/ui/money-progress";
+import { getFundingPercent, MoneyProgress } from "@/components/ui/money-progress";
+import { formatAmount } from "@/lib/money";
 import { formatMoney } from "@/lib/utils";
+import { Icon } from "@/components/icon";
 import { Link } from "@/components/link";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -18,9 +20,29 @@ function approvedTotal(item: WishlistItem) {
     .reduce((s, p) => s + p.amount, 0);
 }
 
-function partyFunding(items: WishlistItem[]) {
+/** Approved payments not tied to any specific wishlist item. */
+function generalApprovedPool(payments: Payment[]) {
+  return payments
+    .filter((p) => p.status === "APPROVED" && p.wishlistItemId === null)
+    .reduce((s, p) => s + p.amount, 0);
+}
+
+/**
+ * Apply the full general pool to every item (capped at each item's cost).
+ * Returns a map of item.id → effective collected (own + pool, capped at cost).
+ */
+function distributeGeneralPool(items: WishlistItem[], pool: number): Map<string, number> {
+  const result = new Map<string, number>();
+  for (const item of items) {
+    const own = approvedTotal(item);
+    result.set(item.id, Math.min(item.cost, own + pool));
+  }
+  return result;
+}
+
+function partyFunding(items: WishlistItem[], generalPool: number) {
   const target = items.reduce((s, i) => s + i.cost, 0);
-  const collected = items.reduce((s, i) => s + approvedTotal(i), 0);
+  const collected = items.reduce((s, i) => s + approvedTotal(i), 0) + generalPool;
   return { collected, target };
 }
 
@@ -29,6 +51,65 @@ function statusLabel(status: string) {
   if (status === "REJECTED") return { text: "Rejected", cls: "text-red-600 bg-red-50" };
   if (status === "DEBT")     return { text: "Debt (pending payment)", cls: "text-amber-700 bg-amber-50" };
   return { text: "Pending review", cls: "text-amber-600 bg-amber-50" };
+}
+
+// ─── share progress button ────────────────────────────────────────────────────
+
+function ShareProgressButton({
+  ceremonyTitle,
+  items,
+  itemEffective,
+  funding,
+}: {
+  ceremonyTitle: string;
+  items: { id: string; title: string; cost: number }[];
+  itemEffective: Map<string, number>;
+  funding: { collected: number; target: number };
+}) {
+  const [state, setState] = useState<"idle" | "copied">("idle");
+
+  function buildText() {
+    const pct = getFundingPercent(funding.collected, funding.target);
+    const lines: string[] = [
+      `🎂 ${ceremonyTitle}`,
+      `💰 ${formatAmount(funding.collected)} / ${formatAmount(funding.target)} Toman (${pct}% collected)`,
+    ];
+    if (items.length > 0) {
+      lines.push("", "🎁 Wishlist:");
+      for (const item of items) {
+        const collected = itemEffective.get(item.id) ?? 0;
+        const p = getFundingPercent(collected, item.cost);
+        lines.push(`• ${item.title} — ${formatAmount(collected)} / ${formatAmount(item.cost)} Toman (${p}%)`);
+      }
+    }
+    lines.push("", `Help fill the wishlist → ${typeof window !== "undefined" ? window.location.href : ""}`);
+    return lines.join("\n");
+  }
+
+  async function share() {
+    const text = buildText();
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: `${ceremonyTitle} – Gift Progress`, text, url });
+      } catch { /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(text);
+      setState("copied");
+      setTimeout(() => setState("idle"), 2000);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={share}
+      className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:border-foreground/30 hover:text-foreground"
+    >
+      <Icon name={state === "copied" ? "copy" : "share"} size={13} className="text-current" />
+      {state === "copied" ? "Copied!" : "Share"}
+    </button>
+  );
 }
 
 // ─── types ────────────────────────────────────────────────────────────────────
@@ -89,7 +170,9 @@ export function CeremonyDetail({
   const partyItems = ceremony.wishlistItems.filter(
     (i) => i.ceremonyId === ceremony.id || i.ceremonyId === null,
   );
-  const funding = partyFunding(partyItems);
+  const generalPool = generalApprovedPool(ceremony.payments);
+  const itemEffective = distributeGeneralPool(partyItems, generalPool);
+  const funding = partyFunding(partyItems, generalPool);
 
   const tabs = [
     ...(isBirthdayPerson ? [{ id: "gifts" as const, label: "🎁 My gifts" }] : []),
@@ -103,8 +186,18 @@ export function CeremonyDetail({
       {/* Funding progress */}
       {partyItems.length > 0 && funding.target > 0 && (
         <div className="rounded-xl border border-border bg-white/80 p-4 shadow-sm sm:p-5">
-          <p className="text-sm font-medium text-foreground">Party gift progress</p>
-          <p className="mt-0.5 text-xs text-muted">Approved contributions toward wishlist totals</p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-foreground">Party gift progress</p>
+              <p className="mt-0.5 text-xs text-muted">Approved contributions toward wishlist totals</p>
+            </div>
+            <ShareProgressButton
+              ceremonyTitle={ceremony.title}
+              items={partyItems}
+              itemEffective={itemEffective}
+              funding={funding}
+            />
+          </div>
           <MoneyProgress
             className="mt-3"
             collected={funding.collected}
@@ -184,7 +277,9 @@ export function CeremonyDetail({
           {partyItems.length > 0 && (
             <ul className="space-y-3">
               {partyItems.map((item) => {
-                const approved = approvedTotal(item);
+                const own = approvedTotal(item);
+                const effective = itemEffective.get(item.id) ?? own;
+                const fromGeneral = effective - own;
                 return (
                   <li key={item.id} className="rounded-xl border border-border shadow-sm overflow-hidden">
                     <div className="flex gap-3">
@@ -213,7 +308,12 @@ export function CeremonyDetail({
                             Pay what you can
                           </span>
                         )}
-                        <MoneyProgress className="mt-3" collected={approved} target={item.cost} label="Collected" size="sm" />
+                        <MoneyProgress className="mt-3" collected={effective} target={item.cost} label="Collected" size="sm" />
+                        {fromGeneral > 0 && (
+                          <p className="mt-1 text-[11px] text-muted">
+                            includes {formatMoney(fromGeneral)} from general contributions
+                          </p>
+                        )}
                       </div>
                     </div>
                   </li>
