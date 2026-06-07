@@ -19,9 +19,34 @@ function approvedTotal(item: WishlistItem) {
     .reduce((s, p) => s + p.amount, 0);
 }
 
-function partyFunding(items: WishlistItem[]) {
+/** Approved payments not tied to any specific wishlist item. */
+function generalApprovedPool(payments: Payment[]) {
+  return payments
+    .filter((p) => p.status === "APPROVED" && p.wishlistItemId === null)
+    .reduce((s, p) => s + p.amount, 0);
+}
+
+/**
+ * Distribute the general pool sequentially across items, filling each item's
+ * remaining gap before moving to the next. Returns a map of item.id →
+ * effective collected (own + share from pool).
+ */
+function distributeGeneralPool(items: WishlistItem[], pool: number): Map<string, number> {
+  const result = new Map<string, number>();
+  let remaining = pool;
+  for (const item of items) {
+    const own = approvedTotal(item);
+    const gap = Math.max(0, item.cost - own);
+    const fill = Math.min(remaining, gap);
+    result.set(item.id, own + fill);
+    remaining -= fill;
+  }
+  return result;
+}
+
+function partyFunding(items: WishlistItem[], generalPool: number) {
   const target = items.reduce((s, i) => s + i.cost, 0);
-  const collected = items.reduce((s, i) => s + approvedTotal(i), 0);
+  const collected = items.reduce((s, i) => s + approvedTotal(i), 0) + generalPool;
   return { collected, target };
 }
 
@@ -37,10 +62,12 @@ function statusLabel(status: string) {
 function ShareProgressButton({
   ceremonyTitle,
   items,
+  itemEffective,
   funding,
 }: {
   ceremonyTitle: string;
-  items: { title: string; cost: number; payments: { amount: number; status: string }[] }[];
+  items: { id: string; title: string; cost: number }[];
+  itemEffective: Map<string, number>;
   funding: { collected: number; target: number };
 }) {
   const [state, setState] = useState<"idle" | "copied">("idle");
@@ -54,9 +81,7 @@ function ShareProgressButton({
     if (items.length > 0) {
       lines.push("", "🎁 Wishlist:");
       for (const item of items) {
-        const collected = item.payments
-          .filter((p) => p.status === "APPROVED")
-          .reduce((s, p) => s + p.amount, 0);
+        const collected = itemEffective.get(item.id) ?? 0;
         const p = getFundingPercent(collected, item.cost);
         lines.push(`• ${item.title} — ${formatAmount(collected)} / ${formatAmount(item.cost)} Toman (${p}%)`);
       }
@@ -149,7 +174,9 @@ export function CeremonyDetail({
   const partyItems = ceremony.wishlistItems.filter(
     (i) => i.ceremonyId === ceremony.id || i.ceremonyId === null,
   );
-  const funding = partyFunding(partyItems);
+  const generalPool = generalApprovedPool(ceremony.payments);
+  const itemEffective = distributeGeneralPool(partyItems, generalPool);
+  const funding = partyFunding(partyItems, generalPool);
 
   const tabs = [
     ...(isBirthdayPerson ? [{ id: "gifts" as const, label: "🎁 My gifts" }] : []),
@@ -171,6 +198,7 @@ export function CeremonyDetail({
             <ShareProgressButton
               ceremonyTitle={ceremony.title}
               items={partyItems}
+              itemEffective={itemEffective}
               funding={funding}
             />
           </div>
@@ -253,7 +281,9 @@ export function CeremonyDetail({
           {partyItems.length > 0 && (
             <ul className="space-y-3">
               {partyItems.map((item) => {
-                const approved = approvedTotal(item);
+                const own = approvedTotal(item);
+                const effective = itemEffective.get(item.id) ?? own;
+                const fromGeneral = effective - own;
                 return (
                   <li key={item.id} className="rounded-xl border border-border shadow-sm overflow-hidden">
                     <div className="flex gap-3">
@@ -282,7 +312,12 @@ export function CeremonyDetail({
                             Pay what you can
                           </span>
                         )}
-                        <MoneyProgress className="mt-3" collected={approved} target={item.cost} label="Collected" size="sm" />
+                        <MoneyProgress className="mt-3" collected={effective} target={item.cost} label="Collected" size="sm" />
+                        {fromGeneral > 0 && (
+                          <p className="mt-1 text-[11px] text-muted">
+                            includes {formatMoney(fromGeneral)} from general contributions
+                          </p>
+                        )}
                       </div>
                     </div>
                   </li>
