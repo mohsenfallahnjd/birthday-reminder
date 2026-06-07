@@ -9,6 +9,7 @@ import { Input, Label, Textarea } from "@/components/ui/input";
 import { getFundingPercent, MoneyProgress } from "@/components/ui/money-progress";
 import { formatAmount } from "@/lib/money";
 import { formatMoney } from "@/lib/utils";
+import { Icon } from "@/components/icon";
 import { Link } from "@/components/link";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
