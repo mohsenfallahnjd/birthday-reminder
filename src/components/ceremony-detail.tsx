@@ -6,7 +6,8 @@ import { WishlistManager } from "@/components/wishlist-manager";
 import { Button } from "@/components/ui/button";
 import { MoneyInput, getAmountFromInput } from "@/components/money-input";
 import { Input, Label, Textarea } from "@/components/ui/input";
-import { MoneyProgress } from "@/components/ui/money-progress";
+import { getFundingPercent, MoneyProgress } from "@/components/ui/money-progress";
+import { formatAmount } from "@/lib/money";
 import { formatMoney } from "@/lib/utils";
 import { Link } from "@/components/link";
 
@@ -29,6 +30,65 @@ function statusLabel(status: string) {
   if (status === "REJECTED") return { text: "Rejected", cls: "text-red-600 bg-red-50" };
   if (status === "DEBT")     return { text: "Debt (pending payment)", cls: "text-amber-700 bg-amber-50" };
   return { text: "Pending review", cls: "text-amber-600 bg-amber-50" };
+}
+
+// ─── share progress button ────────────────────────────────────────────────────
+
+function ShareProgressButton({
+  ceremonyTitle,
+  items,
+  funding,
+}: {
+  ceremonyTitle: string;
+  items: { title: string; cost: number; payments: { amount: number; status: string }[] }[];
+  funding: { collected: number; target: number };
+}) {
+  const [state, setState] = useState<"idle" | "copied">("idle");
+
+  function buildText() {
+    const pct = getFundingPercent(funding.collected, funding.target);
+    const lines: string[] = [
+      `🎂 ${ceremonyTitle}`,
+      `💰 ${formatAmount(funding.collected)} / ${formatAmount(funding.target)} Toman (${pct}% collected)`,
+    ];
+    if (items.length > 0) {
+      lines.push("", "🎁 Wishlist:");
+      for (const item of items) {
+        const collected = item.payments
+          .filter((p) => p.status === "APPROVED")
+          .reduce((s, p) => s + p.amount, 0);
+        const p = getFundingPercent(collected, item.cost);
+        lines.push(`• ${item.title} — ${formatAmount(collected)} / ${formatAmount(item.cost)} Toman (${p}%)`);
+      }
+    }
+    lines.push("", `Help fill the wishlist → ${typeof window !== "undefined" ? window.location.href : ""}`);
+    return lines.join("\n");
+  }
+
+  async function share() {
+    const text = buildText();
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: `${ceremonyTitle} – Gift Progress`, text, url });
+      } catch { /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(text);
+      setState("copied");
+      setTimeout(() => setState("idle"), 2000);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={share}
+      className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:border-foreground/30 hover:text-foreground"
+    >
+      <Icon name={state === "copied" ? "copy" : "share"} size={13} className="text-current" />
+      {state === "copied" ? "Copied!" : "Share"}
+    </button>
+  );
 }
 
 // ─── types ────────────────────────────────────────────────────────────────────
@@ -103,8 +163,17 @@ export function CeremonyDetail({
       {/* Funding progress */}
       {partyItems.length > 0 && funding.target > 0 && (
         <div className="rounded-xl border border-border bg-white/80 p-4 shadow-sm sm:p-5">
-          <p className="text-sm font-medium text-foreground">Party gift progress</p>
-          <p className="mt-0.5 text-xs text-muted">Approved contributions toward wishlist totals</p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-foreground">Party gift progress</p>
+              <p className="mt-0.5 text-xs text-muted">Approved contributions toward wishlist totals</p>
+            </div>
+            <ShareProgressButton
+              ceremonyTitle={ceremony.title}
+              items={partyItems}
+              funding={funding}
+            />
+          </div>
           <MoneyProgress
             className="mt-3"
             collected={funding.collected}
