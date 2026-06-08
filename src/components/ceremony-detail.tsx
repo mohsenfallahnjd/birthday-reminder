@@ -156,12 +156,14 @@ export function CeremonyDetail({
   isAdmin,
   isBirthdayPerson,
   canEditWishlist,
+  members,
 }: {
   ceremony: Ceremony;
   currentUserId: string;
   isAdmin: boolean;
   isBirthdayPerson: boolean;
   canEditWishlist: boolean;
+  members?: { id: string; name: string }[];
 }) {
   const router = useRouter();
   const defaultTab = isBirthdayPerson ? "gifts" : canEditWishlist ? "wishlist" : "pay";
@@ -354,6 +356,8 @@ export function CeremonyDetail({
           cardHolder={ceremony.cardHolder}
           hideContributors={ceremony.hideContributors}
           payments={ceremony.payments}
+          items={partyItems}
+          guests={members ?? []}
           onUpdate={() => router.refresh()}
         />
       )}
@@ -670,6 +674,8 @@ function AdminSection({
   cardHolder: initialHolder,
   hideContributors: initialHide,
   payments,
+  items,
+  guests,
   onUpdate,
 }: {
   ceremonyId: string;
@@ -677,6 +683,8 @@ function AdminSection({
   cardHolder: string | null;
   hideContributors: boolean;
   payments: Payment[];
+  items: WishlistItem[];
+  guests: { id: string; name: string }[];
   onUpdate: () => void;
 }) {
   const [cardNumber, setCardNumber] = useState(initialCard ?? "");
@@ -686,6 +694,50 @@ function AdminSection({
   const [savingVisibility, setSavingVisibility] = useState(false);
   const [notifying, setNotifying] = useState(false);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
+
+  // Record payment on behalf of a guest
+  const [recGuestId, setRecGuestId] = useState(guests[0]?.id ?? "");
+  const [recAmount, setRecAmount] = useState("");
+  const [recItemId, setRecItemId] = useState("");
+  const [recNote, setRecNote] = useState("");
+  const [recProofUrl, setRecProofUrl] = useState("");
+  const [recUploading, setRecUploading] = useState(false);
+  const [recSubmitting, setRecSubmitting] = useState(false);
+  const [recError, setRecError] = useState("");
+
+  async function uploadProof(file: File) {
+    setRecUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    const data = await res.json();
+    setRecUploading(false);
+    if (res.ok) setRecProofUrl(data.url);
+    else setRecError(data.error ?? "Upload failed");
+  }
+
+  async function recordPayment() {
+    setRecError("");
+    const parsedAmount = getAmountFromInput(recAmount);
+    if (!parsedAmount) { setRecError("Enter a valid amount."); return; }
+    if (!recGuestId) { setRecError("Select a guest."); return; }
+    setRecSubmitting(true);
+    const res = await fetch(`/api/ceremonies/${ceremonyId}/payments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: parsedAmount,
+        onBehalfOfUserId: recGuestId,
+        wishlistItemId: recItemId || undefined,
+        proofUrl: recProofUrl || undefined,
+        note: recNote || undefined,
+      }),
+    });
+    setRecSubmitting(false);
+    if (!res.ok) { const d = await res.json(); setRecError(d.error ?? "Could not record"); return; }
+    setRecAmount(""); setRecNote(""); setRecProofUrl(""); setRecItemId("");
+    onUpdate();
+  }
 
   async function saveCard() {
     setSavingCard(true);
@@ -861,6 +913,79 @@ function AdminSection({
               );
             })}
           </ul>
+        </div>
+      )}
+
+      {/* ── Record payment for a guest ── */}
+      {guests.length > 0 && (
+        <div className="space-y-3 rounded-xl border border-border bg-white p-4 shadow-sm">
+          <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Icon name="users" size={15} className="text-muted" />
+            Record payment for a guest
+          </p>
+          <p className="text-xs text-muted -mt-1">Payment will be auto-approved.</p>
+
+          <div>
+            <Label>Guest</Label>
+            <select
+              className="h-9 w-full rounded-md border border-border bg-white px-3 text-sm mt-1.5"
+              value={recGuestId}
+              onChange={(e) => setRecGuestId(e.target.value)}
+            >
+              {guests.map((g) => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <Label>Amount (Toman)</Label>
+            <MoneyInput value={recAmount} onValueChange={setRecAmount} placeholder="500,000" />
+          </div>
+
+          {items.length > 0 && (
+            <div>
+              <Label>For which item? (optional)</Label>
+              <select
+                className="h-9 w-full rounded-md border border-border bg-white px-3 text-sm"
+                value={recItemId}
+                onChange={(e) => setRecItemId(e.target.value)}
+              >
+                <option value="">General / unspecified</option>
+                {items.map((i) => <option key={i.id} value={i.id}>{i.title}</option>)}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <Label>Note (optional)</Label>
+            <Textarea value={recNote} onChange={(e) => setRecNote(e.target.value)} placeholder="Add a note…" />
+          </div>
+
+          <div>
+            <Label>Payment proof (optional)</Label>
+            <input
+              type="file"
+              accept="image/*"
+              className="block w-full text-sm text-muted"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadProof(f); }}
+            />
+            {recUploading && <p className="mt-1 text-xs text-muted animate-pulse">Uploading…</p>}
+            {recProofUrl && !recUploading && <p className="text-xs text-emerald-600 mt-1">✓ Proof uploaded</p>}
+          </div>
+
+          {recError && <p className="text-sm text-red-600">{recError}</p>}
+
+          <Button
+            type="button"
+            variant="success"
+            onClick={recordPayment}
+            loading={recSubmitting}
+            loadingText="Recording…"
+            disabled={recUploading}
+          >
+            ✓ Record as approved
+          </Button>
         </div>
       )}
 
