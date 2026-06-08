@@ -11,6 +11,7 @@ const schema = z.object({
   proofUrl: z.string().optional(),
   note: z.string().optional(),
   isDebt: z.boolean().optional(), // pledge now, pay later
+  onBehalfOfUserId: z.string().optional(), // admin recording a payment for a guest
 });
 
 export async function POST(
@@ -27,6 +28,27 @@ export async function POST(
   const body = await parseJson<unknown>(request);
   const parsed = schema.safeParse(body);
   if (!parsed.success) return jsonError("Invalid payment");
+
+  // Admin recording payment on behalf of a guest — auto-approve
+  if (parsed.data.onBehalfOfUserId) {
+    const adminIds = await getCeremonyAdminUserIds(ceremonyId);
+    const isAdmin =
+      adminIds.includes(user.id) || ceremony.adminUserId === user.id;
+    if (!isAdmin) return jsonError("Only admins can record payments for others", 403);
+
+    const payment = await db.payment.create({
+      data: {
+        ceremonyId,
+        payerId: parsed.data.onBehalfOfUserId,
+        amount: parsed.data.amount,
+        wishlistItemId: parsed.data.wishlistItemId ?? null,
+        proofUrl: parsed.data.proofUrl ?? null,
+        note: parsed.data.note ?? null,
+        status: "APPROVED",
+      },
+    });
+    return jsonOk(payment);
+  }
 
   const isDebt = parsed.data.isDebt === true;
   const status = isDebt ? "DEBT" : "PENDING";

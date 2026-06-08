@@ -129,6 +129,7 @@ export default async function CeremonyPage({
         isAdmin={isTreasurer}
         isBirthdayPerson={isBirthdayPerson}
         canEditWishlist={canEditWishlist}
+        members={teamMembers}
       />
       </AppSection>
     </div>
