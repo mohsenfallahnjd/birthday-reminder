@@ -781,6 +781,32 @@ function AdminSection({
     alert(`Notified ${data.notified ?? 0} people`);
   }
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function saveEdit(paymentId: string) {
+    const parsedAmount = getAmountFromInput(editAmount);
+    if (!parsedAmount) return;
+    setEditSaving(true);
+    const res = await fetch(`/api/ceremonies/${ceremonyId}/payments/${paymentId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: parsedAmount, note: editNote || null }),
+    });
+    setEditSaving(false);
+    if (res.ok) { setEditingId(null); onUpdate(); }
+  }
+
+  async function deletePayment(paymentId: string) {
+    setDeletingId(paymentId);
+    const res = await fetch(`/api/ceremonies/${ceremonyId}/payments/${paymentId}`, { method: "DELETE" });
+    setDeletingId(null);
+    if (res.ok) onUpdate();
+  }
+
   const debts = payments.filter((p) => p.status === "DEBT");
   const pending = payments.filter((p) => p.status === "PENDING");
   const reviewed = payments.filter((p) => p.status === "APPROVED" || p.status === "REJECTED");
@@ -899,16 +925,62 @@ function AdminSection({
           <ul className="divide-y divide-border rounded-xl border border-border bg-white overflow-hidden shadow-sm">
             {reviewed.map((p) => {
               const s = statusLabel(p.status);
+              const isEditing = editingId === p.id;
               return (
-                <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                  <div>
-                    <p className="font-medium">{p.payer.name}</p>
-                    {p.note && <p className="text-xs text-muted">{p.note}</p>}
+                <li key={p.id} className="px-4 py-3 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium">{p.payer.name}</p>
+                      {p.note && !isEditing && <p className="text-xs text-muted">{p.note}</p>}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <div className="text-right">
+                        <p className="font-medium">{formatMoney(p.amount)}</p>
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.cls}`}>{s.text}</span>
+                      </div>
+                      <button
+                        type="button"
+                        title="Edit"
+                        onClick={() => {
+                          setEditingId(isEditing ? null : p.id);
+                          setEditAmount(String(p.amount));
+                          setEditNote(p.note ?? "");
+                        }}
+                        className="rounded-lg p-1.5 text-muted hover:bg-muted-subtle hover:text-foreground transition-colors"
+                      >
+                        <Icon name="pencil" size={14} className="text-current" />
+                      </button>
+                      <button
+                        type="button"
+                        title="Delete"
+                        onClick={() => deletePayment(p.id)}
+                        disabled={deletingId === p.id}
+                        className="rounded-lg p-1.5 text-muted hover:bg-red-50 hover:text-red-600 transition-colors"
+                      >
+                        <Icon name="trash" size={14} className="text-current" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-medium">{formatMoney(p.amount)}</p>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.cls}`}>{s.text}</span>
-                  </div>
+                  {isEditing && (
+                    <div className="mt-3 space-y-2 rounded-lg border border-border bg-muted-subtle/50 p-3">
+                      <div>
+                        <Label>Amount (Toman)</Label>
+                        <MoneyInput value={editAmount} onValueChange={setEditAmount} placeholder="500,000" />
+                      </div>
+                      <div>
+                        <Label>Note</Label>
+                        <Textarea value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Optional note" />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" type="button" variant="success" loading={editSaving} loadingText="Saving…" onClick={() => saveEdit(p.id)}>
+                          Save
+                        </Button>
+                        <Button size="sm" type="button" variant="outline" onClick={() => setEditingId(null)}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </li>
               );
             })}
