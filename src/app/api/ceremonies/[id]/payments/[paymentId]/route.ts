@@ -10,6 +10,13 @@ const adminSchema = z.object({
   status: z.enum(["APPROVED", "REJECTED"]),
 });
 
+// Admin: edit amount/note on any payment
+const adminEditSchema = z.object({
+  amount: z.number().positive().optional(),
+  note: z.string().nullable().optional(),
+  wishlistItemId: z.string().nullable().optional(),
+});
+
 // Payer: settle a DEBT by uploading proof
 const settleSchema = z.object({
   settle: z.literal(true),
@@ -63,6 +70,23 @@ export async function PATCH(
     return jsonOk(updated);
   }
 
+  // ── Admin edit amount / note ────────────────────────────────────────────
+  const editParsed = adminEditSchema.safeParse(body);
+  if (editParsed.success && Object.keys(editParsed.data).length > 0 && !("status" in (body as object))) {
+    if (!(await canApprovePayments(ceremonyId, user.id))) {
+      return jsonError("Only party admins can edit payments", 403);
+    }
+    const updated = await db.payment.update({
+      where: { id: paymentId },
+      data: {
+        ...(editParsed.data.amount !== undefined && { amount: editParsed.data.amount }),
+        ...(editParsed.data.note !== undefined && { note: editParsed.data.note }),
+        ...(editParsed.data.wishlistItemId !== undefined && { wishlistItemId: editParsed.data.wishlistItemId }),
+      },
+    });
+    return jsonOk(updated);
+  }
+
   // ── Admin approve/reject ────────────────────────────────────────────────
   if (!(await canApprovePayments(ceremonyId, user.id))) {
     return jsonError("Only party admins can approve", 403);
@@ -91,4 +115,23 @@ export async function PATCH(
   });
 
   return jsonOk(payment);
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string; paymentId: string }> },
+) {
+  const user = await requireUser();
+  if (!user) return jsonError("Please sign in", 401);
+
+  const { id: ceremonyId, paymentId } = await params;
+  if (!(await canApprovePayments(ceremonyId, user.id))) {
+    return jsonError("Only party admins can delete payments", 403);
+  }
+
+  const payment = await db.payment.findUnique({ where: { id: paymentId } });
+  if (!payment || payment.ceremonyId !== ceremonyId) return jsonError("Payment not found", 404);
+
+  await db.payment.delete({ where: { id: paymentId } });
+  return jsonOk({ deleted: true });
 }
