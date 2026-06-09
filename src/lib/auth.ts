@@ -77,6 +77,7 @@ export async function requireUser() {
       birthYear: true,
       avatarUrl: true,
       profileToken: true,
+      username: true,
     },
   });
 

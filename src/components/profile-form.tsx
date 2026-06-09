@@ -15,6 +15,7 @@ type Props = {
     birthMonth: number | null;
     birthDay: number | null;
     birthYear: number | null;
+    username: string | null;
   };
 };
 
@@ -22,6 +23,7 @@ export function ProfileForm({ initial }: Props) {
   const router = useRouter();
   const [name, setName] = useState(initial.name);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initial.avatarUrl);
+  const [username, setUsername] = useState(initial.username ?? "");
   const [birth, setBirth] = useState({
     year: initial.birthYear ?? 1370,
     month: initial.birthMonth ?? 1,
@@ -42,6 +44,7 @@ export function ProfileForm({ initial }: Props) {
         birthMonth: birth.month,
         birthDay: birth.day,
         birthYear: birth.year,
+        username: username.trim() || null,
       }),
     });
     setLoading(false);
@@ -65,6 +68,19 @@ export function ProfileForm({ initial }: Props) {
       <div>
         <Label>Display name</Label>
         <Input value={name} onChange={(e) => setName(e.target.value)} />
+      </div>
+      <div>
+        <Label>Username</Label>
+        <div className="relative">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted">@</span>
+          <Input
+            value={username}
+            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+            placeholder="your_username"
+            className="pl-7"
+          />
+        </div>
+        <p className="mt-1 text-xs text-muted">Lowercase letters, numbers, underscores. Used in your profile URL.</p>
       </div>
       <div>
         <Label>Birthday (Jalali / Shamsi)</Label>

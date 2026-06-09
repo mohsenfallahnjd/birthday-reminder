@@ -16,8 +16,8 @@ export async function POST(
 ) {
   const { token } = await params;
 
-  const user = await db.user.findUnique({
-    where: { profileToken: token },
+  const user = await db.user.findFirst({
+    where: { OR: [{ username: token }, { profileToken: token }] },
     select: { id: true, name: true },
   });
   if (!user) return jsonError("Profile not found", 404);

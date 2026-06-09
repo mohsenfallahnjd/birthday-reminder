@@ -3,20 +3,24 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/icon";
+import Link from "next/link";
 
 export function ShareProfileButton({
   profileToken,
+  username,
   name,
 }: {
   profileToken: string;
+  username: string | null;
   name: string;
 }) {
   const [copied, setCopied] = useState(false);
 
+  const slug = username ?? profileToken;
   const url =
     typeof window !== "undefined"
-      ? `${window.location.origin}/u/${profileToken}`
-      : `/u/${profileToken}`;
+      ? `${window.location.origin}/u/${slug}`
+      : `/u/${slug}`;
 
   async function share() {
     if (typeof navigator !== "undefined" && navigator.share) {
@@ -27,7 +31,9 @@ export function ShareProfileButton({
           url,
         });
         return;
-      } catch { /* cancelled */ }
+      } catch {
+        /* cancelled */
+      }
     }
     await navigator.clipboard.writeText(url);
     setCopied(true);
@@ -37,12 +43,29 @@ export function ShareProfileButton({
   return (
     <div className="space-y-3">
       <p className="font-mono text-xs text-muted break-all rounded-lg bg-muted-subtle px-3 py-2">
-        /u/{profileToken}
+        /u/{slug}
       </p>
-      <Button type="button" variant="outline" onClick={share} className="gap-2">
-        <Icon name={copied ? "copy" : "share"} size={14} className="text-foreground" />
-        {copied ? "Copied!" : "Share wishlist link"}
-      </Button>
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={share}
+          className="gap-2"
+        >
+          <Icon
+            name={copied ? "copy" : "share"}
+            size={14}
+            className="text-foreground"
+          />
+          {copied ? "Copied!" : "Share wishlist link"}
+        </Button>
+        <Link href={url} target="_blank">
+          <Button type="button" variant="outline" className="gap-2">
+            <Icon name="users" size={14} className="text-foreground" />
+            open profile
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }

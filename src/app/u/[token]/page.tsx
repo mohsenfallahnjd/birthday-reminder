@@ -13,8 +13,8 @@ export default async function PublicProfilePage({
 }) {
   const { token } = await params;
 
-  const user = await db.user.findUnique({
-    where: { profileToken: token },
+  const user = await db.user.findFirst({
+    where: { OR: [{ username: token }, { profileToken: token }] },
     select: {
       name: true,
       avatarUrl: true,
@@ -33,10 +33,20 @@ export default async function PublicProfilePage({
         },
         orderBy: { createdAt: "desc" },
       },
+      profilePayments: {
+        select: { amount: true },
+      },
     },
   });
 
   if (!user) notFound();
+
+  const totalReceived = user.profilePayments.reduce((s, p) => s + p.amount, 0);
+  const totalGoal = user.wishlistItems.reduce((s, w) => s + w.cost, 0);
+  const progressPct =
+    totalGoal > 0 && totalReceived > 0
+      ? Math.min(100, Math.round((totalReceived / totalGoal) * 100))
+      : null;
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
@@ -61,6 +71,20 @@ export default async function PublicProfilePage({
       </div>
 
       <div className="mx-auto max-w-lg space-y-4 px-5 pb-16 pt-6">
+        {progressPct !== null && (
+          <div className="rounded-2xl border border-border bg-white px-4 py-3 shadow-sm space-y-2">
+            <div className="flex justify-between text-xs text-muted">
+              <span className="font-semibold text-accent">{formatMoney(totalReceived)} chipped in</span>
+              <span>{progressPct}% of {formatMoney(totalGoal)}</span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-accent/15 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-accent transition-all"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          </div>
+        )}
         {user.wishlistItems.length === 0 ? (
           <div className="rounded-2xl border border-border bg-white p-8 text-center shadow-sm">
             <p className="text-2xl mb-2">🎁</p>

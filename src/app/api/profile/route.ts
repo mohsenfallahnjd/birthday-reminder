@@ -10,6 +10,13 @@ const schema = z.object({
   birthMonth: z.number().min(1).max(12).optional(),
   birthDay: z.number().min(1).max(31).optional(),
   birthYear: z.number().optional().nullable(),
+  username: z
+    .string()
+    .min(3)
+    .max(30)
+    .regex(/^[a-z0-9_]+$/, "Only lowercase letters, numbers, and underscores")
+    .nullable()
+    .optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -27,6 +34,14 @@ export async function PATCH(request: Request) {
     return jsonError("Invalid avatar", 400);
   }
 
+  if (parsed.data.username) {
+    const taken = await db.user.findUnique({
+      where: { username: parsed.data.username },
+      select: { id: true },
+    });
+    if (taken && taken.id !== user.id) return jsonError("Username already taken", 409);
+  }
+
   const updated = await db.user.update({
     where: { id: user.id },
     data: parsed.data,
@@ -39,5 +54,6 @@ export async function PATCH(request: Request) {
     birthMonth: updated.birthMonth,
     birthDay: updated.birthDay,
     birthYear: updated.birthYear,
+    username: updated.username,
   });
 }
