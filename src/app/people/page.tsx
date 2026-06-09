@@ -77,7 +77,7 @@ export default async function PeoplePage() {
   const contactReminders = await db.contactReminder.findMany({
     where: { ownerId: user.id },
     orderBy: [{ birthMonth: "asc" }, { birthDay: "asc" }],
-  });
+  }).catch(() => []);
 
   return (
     <div className="page-wide space-y-8">

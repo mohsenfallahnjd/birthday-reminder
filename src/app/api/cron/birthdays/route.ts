@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     },
   });
 
-  const contactReminders = await db.contactReminder.findMany();
+  const contactReminders = await db.contactReminder.findMany().catch(() => []);
 
   let sent = 0;
 
