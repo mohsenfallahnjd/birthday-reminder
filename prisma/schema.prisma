@@ -34,6 +34,7 @@ model User {
   birthdayCeremonies Ceremony[] @relation("BirthdayPerson")
   ceremonyMembers CeremonyMember[]
   pushSubscriptions PushSubscription[]
+  profilePayments   ProfilePayment[]
 }
 
 model PushSubscription {
@@ -215,4 +216,18 @@ model ContactReminder {
   createdAt  DateTime @default(now())
 
   @@index([ownerId])
+}
+
+model ProfilePayment {
+  id        String   @id @default(cuid())
+  userId    String
+  guestName String
+  amount    Int
+  note      String?
+  proofUrl  String?
+  seen      Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
