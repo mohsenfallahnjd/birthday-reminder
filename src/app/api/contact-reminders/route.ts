@@ -17,7 +17,7 @@ export async function GET() {
   const contacts = await db.contactReminder.findMany({
     where: { ownerId: user.id },
     orderBy: [{ birthMonth: "asc" }, { birthDay: "asc" }],
-  });
+  }).catch(() => []);
 
   return jsonOk(contacts);
 }
