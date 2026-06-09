@@ -2,14 +2,18 @@ import { AppSection, PageHeader } from "@/components/app-section";
 import { ProfileForm } from "@/components/profile-form";
 import { PushNotifications } from "@/components/push-notifications";
 import { ShareProfileButton } from "@/components/share-profile-button";
+import { DateSystemToggle } from "@/components/date-system-toggle";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/utils";
+import { getDateSystem } from "@/lib/date-system";
 import { redirect } from "next/navigation";
 
 export default async function ProfilePage() {
   const user = await requireUser();
   if (!user) redirect("/login");
+
+  const dateSystem = await getDateSystem();
 
   const [profilePayments, wishlistItems] = await Promise.all([
     db.profilePayment
@@ -124,6 +128,10 @@ export default async function ProfilePage() {
           </div>
         </AppSection>
       )}
+
+      <AppSection title="Date display" description="Choose how dates appear across the app">
+        <DateSystemToggle current={dateSystem} />
+      </AppSection>
 
       <AppSection
         title="Notifications"

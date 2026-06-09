@@ -3,6 +3,8 @@ import jalaliday from "jalaliday/dayjs";
 
 dayjs.extend(jalaliday);
 
+export type DateSystem = "jalali" | "gregorian";
+
 export type JalaliDateParts = {
   year: number;
   month: number;
@@ -84,4 +86,28 @@ export function isBirthdayWithinDays(
 ): boolean {
   const until = daysUntilJalaliBirthday(birthMonth, birthDay);
   return until >= 0 && until <= daysBefore;
+}
+
+export function formatTodayDate(system: DateSystem): string {
+  if (system === "gregorian") {
+    return dayjs().format("MMMM D, YYYY");
+  }
+  const { year, month, day } = getTodayJalali();
+  return `${JALALI_MONTHS[month - 1]} ${day}, ${year}`;
+}
+
+export function formatBirthdayBySystem(
+  month: number,
+  day: number,
+  year: number | null | undefined,
+  system: DateSystem,
+): string {
+  if (system === "gregorian") {
+    // Convert Jalali month/day to Gregorian using a representative year
+    const d = dayjs().calendar("jalali").year(1400).month(month - 1).date(day);
+    const monthName = d.format("MMMM");
+    const dayNum = d.date();
+    return `${monthName} ${dayNum}`;
+  }
+  return formatJalaliBirthday(month, day, year);
 }
