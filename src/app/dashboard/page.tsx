@@ -12,12 +12,16 @@ import { UserAvatar } from "@/components/user-avatar";
 import { Icon } from "@/components/icon";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { daysUntilJalaliBirthday, formatJalaliBirthday } from "@/lib/jalali";
+import { daysUntilJalaliBirthday, formatBirthdayBySystem, formatTodayDate } from "@/lib/jalali";
+import { getDateSystem } from "@/lib/date-system";
 import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
   const user = await requireUser();
   if (!user) redirect("/login");
+
+  const dateSystem = await getDateSystem();
+  const todayFormatted = formatTodayDate(dateSystem);
 
   const friendships = await db.friendship.findMany({
     where: {
@@ -70,7 +74,7 @@ export default async function DashboardPage() {
       name: friend.name,
       avatarUrl: friend.avatarUrl ?? null,
       days: daysUntilJalaliBirthday(friend.birthMonth, friend.birthDay),
-      date: formatJalaliBirthday(friend.birthMonth, friend.birthDay),
+      date: formatBirthdayBySystem(friend.birthMonth, friend.birthDay, null, dateSystem),
     });
   }
 
@@ -84,7 +88,7 @@ export default async function DashboardPage() {
         name: u.name,
         avatarUrl: u.avatarUrl ?? null,
         days: daysUntilJalaliBirthday(u.birthMonth, u.birthDay),
-        date: formatJalaliBirthday(u.birthMonth, u.birthDay),
+        date: formatBirthdayBySystem(u.birthMonth, u.birthDay, null, dateSystem),
       });
     }
   }
@@ -102,7 +106,7 @@ export default async function DashboardPage() {
       name: cr.name,
       avatarUrl: null,
       days: daysUntilJalaliBirthday(cr.birthMonth, cr.birthDay),
-      date: formatJalaliBirthday(cr.birthMonth, cr.birthDay),
+      date: formatBirthdayBySystem(cr.birthMonth, cr.birthDay, null, dateSystem),
     });
   }
 
@@ -153,7 +157,9 @@ export default async function DashboardPage() {
         badge={
           <UserAvatar name={user.name} avatarUrl={user.avatarUrl} size="lg" />
         }
-      />
+      >
+        <p className="text-xs text-muted tabular-nums">{todayFormatted}</p>
+      </PageHeader>
 
       {!user.birthMonth && (
         <InfoBanner>

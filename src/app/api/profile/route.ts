@@ -17,6 +17,8 @@ const schema = z.object({
     .regex(/^[a-z0-9_]+$/, "Only lowercase letters, numbers, and underscores")
     .nullable()
     .optional(),
+  cardNumber: z.string().max(19).nullable().optional(),
+  cardHolder: z.string().max(80).nullable().optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -55,5 +57,7 @@ export async function PATCH(request: Request) {
     birthDay: updated.birthDay,
     birthYear: updated.birthYear,
     username: updated.username,
+    cardNumber: updated.cardNumber,
+    cardHolder: updated.cardHolder,
   });
 }
