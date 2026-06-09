@@ -91,6 +91,23 @@ export default async function DashboardPage() {
 
   upcoming.sort((a, b) => a.days - b.days);
 
+  // Add unregistered contact reminders to the upcoming list
+  const contactBirthdays = await db.contactReminder.findMany({
+    where: { ownerId: user.id },
+  }).catch(() => []);
+
+  for (const cr of contactBirthdays) {
+    upcoming.push({
+      id: `contact:${cr.id}`,
+      name: cr.name,
+      avatarUrl: null,
+      days: daysUntilJalaliBirthday(cr.birthMonth, cr.birthDay),
+      date: formatJalaliBirthday(cr.birthMonth, cr.birthDay),
+    });
+  }
+
+  upcoming.sort((a, b) => a.days - b.days);
+
   const ceremonies = await db.ceremony.findMany({
     where: {
       OR: [
