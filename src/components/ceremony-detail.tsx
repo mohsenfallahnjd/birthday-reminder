@@ -701,7 +701,9 @@ function AdminSection({
   const [reviewingId, setReviewingId] = useState<string | null>(null);
 
   // Record payment on behalf of a guest
+  const [recMode, setRecMode] = useState<"member" | "unregistered">("member");
   const [recGuestId, setRecGuestId] = useState(guests[0]?.id ?? "");
+  const [recGuestName, setRecGuestName] = useState("");
   const [recAmount, setRecAmount] = useState("");
   const [recItemId, setRecItemId] = useState("");
   const [recNote, setRecNote] = useState("");
@@ -725,22 +727,21 @@ function AdminSection({
     setRecError("");
     const parsedAmount = getAmountFromInput(recAmount);
     if (!parsedAmount) { setRecError("Enter a valid amount."); return; }
-    if (!recGuestId) { setRecError("Select a guest."); return; }
+    if (recMode === "member" && !recGuestId) { setRecError("Select a member."); return; }
+    if (recMode === "unregistered" && !recGuestName.trim()) { setRecError("Enter the person's name."); return; }
     setRecSubmitting(true);
+    const body =
+      recMode === "member"
+        ? { amount: parsedAmount, onBehalfOfUserId: recGuestId, wishlistItemId: recItemId || undefined, proofUrl: recProofUrl || undefined, note: recNote || undefined }
+        : { amount: parsedAmount, adminGuestName: recGuestName.trim(), wishlistItemId: recItemId || undefined, proofUrl: recProofUrl || undefined, note: recNote || undefined };
     const res = await fetch(`/api/ceremonies/${ceremonyId}/payments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        amount: parsedAmount,
-        onBehalfOfUserId: recGuestId,
-        wishlistItemId: recItemId || undefined,
-        proofUrl: recProofUrl || undefined,
-        note: recNote || undefined,
-      }),
+      body: JSON.stringify(body),
     });
     setRecSubmitting(false);
     if (!res.ok) { const d = await res.json(); setRecError(d.error ?? "Could not record"); return; }
-    setRecAmount(""); setRecNote(""); setRecProofUrl(""); setRecItemId("");
+    setRecAmount(""); setRecNote(""); setRecProofUrl(""); setRecItemId(""); setRecGuestName("");
     onUpdate();
   }
 
@@ -994,26 +995,57 @@ function AdminSection({
       )}
 
       {/* ── Record payment for a guest ── */}
-      {guests.length > 0 && (
-        <div className="space-y-3 rounded-xl border border-border bg-white p-4 shadow-sm">
+      <div className="space-y-3 rounded-xl border border-border bg-white p-4 shadow-sm">
           <p className="text-sm font-semibold text-foreground flex items-center gap-2">
             <Icon name="users" size={15} className="text-muted" />
-            Record payment for a guest
+            Record payment
           </p>
           <p className="text-xs text-muted -mt-1">Payment will be auto-approved.</p>
 
-          <div>
-            <Label>Guest</Label>
-            <select
-              className="h-9 w-full rounded-md border border-border bg-white px-3 text-sm mt-1.5"
-              value={recGuestId}
-              onChange={(e) => setRecGuestId(e.target.value)}
+          {/* Mode toggle */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setRecMode("member")}
+              className={`rounded-lg border px-3 py-2 text-sm transition-all ${recMode === "member" ? "border-accent bg-accent/5 font-semibold text-accent" : "border-border text-muted hover:border-foreground/20"}`}
             >
-              {guests.map((g) => (
-                <option key={g.id} value={g.id}>{g.name}</option>
-              ))}
-            </select>
+              Party member
+            </button>
+            <button
+              type="button"
+              onClick={() => setRecMode("unregistered")}
+              className={`rounded-lg border px-3 py-2 text-sm transition-all ${recMode === "unregistered" ? "border-accent bg-accent/5 font-semibold text-accent" : "border-border text-muted hover:border-foreground/20"}`}
+            >
+              Non-registered
+            </button>
           </div>
+
+          {recMode === "member" && guests.length > 0 && (
+            <div>
+              <Label>Member</Label>
+              <select
+                className="h-9 w-full rounded-md border border-border bg-white px-3 text-sm mt-1.5"
+                value={recGuestId}
+                onChange={(e) => setRecGuestId(e.target.value)}
+              >
+                {guests.map((g) => (
+                  <option key={g.id} value={g.id}>{g.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {recMode === "unregistered" && (
+            <div>
+              <Label>Name</Label>
+              <Input
+                value={recGuestName}
+                onChange={(e) => setRecGuestName(e.target.value)}
+                placeholder="e.g. Ali Rezaei"
+                className="mt-1.5"
+              />
+            </div>
+          )}
 
           <div>
             <Label>Amount (Toman)</Label>
@@ -1064,7 +1096,6 @@ function AdminSection({
             ✓ Record as approved
           </Button>
         </div>
-      )}
 
       {/* ── Treasurer card ── */}
       <div className="space-y-3 rounded-xl border border-border bg-white p-4 shadow-sm">

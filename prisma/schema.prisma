@@ -16,6 +16,7 @@ model User {
   birthMonth   Int?
   birthDay     Int?
   birthYear    Int?
+  profileToken String   @unique @default(dbgenerated("gen_random_uuid()"))
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

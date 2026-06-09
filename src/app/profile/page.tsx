@@ -1,6 +1,7 @@
 import { AppSection, PageHeader } from "@/components/app-section";
 import { ProfileForm } from "@/components/profile-form";
 import { PushNotifications } from "@/components/push-notifications";
+import { ShareProfileButton } from "@/components/share-profile-button";
 import { requireUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
@@ -21,6 +22,9 @@ export default async function ProfilePage() {
             birthYear: user.birthYear,
           }}
         />
+      </AppSection>
+      <AppSection title="Wishlist link" description="Share your wishlist without opening a party">
+        <ShareProfileButton profileToken={user.profileToken} name={user.name} />
       </AppSection>
       <AppSection title="Notifications" description="Push alerts on this device" unboxed className="mt-0">
         <PushNotifications />

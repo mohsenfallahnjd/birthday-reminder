@@ -10,8 +10,9 @@ const schema = z.object({
   wishlistItemId: z.string().optional(),
   proofUrl: z.string().optional(),
   note: z.string().optional(),
-  isDebt: z.boolean().optional(), // pledge now, pay later
-  onBehalfOfUserId: z.string().optional(), // admin recording a payment for a guest
+  isDebt: z.boolean().optional(),
+  onBehalfOfUserId: z.string().optional(),  // admin: registered member
+  adminGuestName: z.string().min(1).max(80).optional(), // admin: non-registered person
 });
 
 export async function POST(
@@ -29,17 +30,17 @@ export async function POST(
   const parsed = schema.safeParse(body);
   if (!parsed.success) return jsonError("Invalid payment");
 
-  // Admin recording payment on behalf of a guest — auto-approve
-  if (parsed.data.onBehalfOfUserId) {
+  // Admin recording payment (registered member or non-registered) — auto-approve
+  if (parsed.data.onBehalfOfUserId || parsed.data.adminGuestName) {
     const adminIds = await getCeremonyAdminUserIds(ceremonyId);
-    const isAdmin =
-      adminIds.includes(user.id) || ceremony.adminUserId === user.id;
+    const isAdmin = adminIds.includes(user.id) || ceremony.adminUserId === user.id;
     if (!isAdmin) return jsonError("Only admins can record payments for others", 403);
 
     const payment = await db.payment.create({
       data: {
         ceremonyId,
-        payerId: parsed.data.onBehalfOfUserId,
+        payerId: parsed.data.onBehalfOfUserId ?? null,
+        guestName: parsed.data.adminGuestName ?? null,
         amount: parsed.data.amount,
         wishlistItemId: parsed.data.wishlistItemId ?? null,
         proofUrl: parsed.data.proofUrl ?? null,
