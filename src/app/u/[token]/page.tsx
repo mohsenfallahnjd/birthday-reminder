@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { UserAvatar } from "@/components/user-avatar";
 import { Icon } from "@/components/icon";
+import { ProfilePaymentForm } from "@/components/profile-payment-form";
 import { formatJalaliBirthday } from "@/lib/jalali";
 import { formatMoney } from "@/lib/utils";
 
@@ -113,6 +114,9 @@ export default async function PublicProfilePage({
             </ul>
           </>
         )}
+
+        {/* Payment form */}
+        <ProfilePaymentForm profileToken={token} />
 
         <p className="text-center text-xs text-muted pt-2">
           Powered by Birthday Reminder
