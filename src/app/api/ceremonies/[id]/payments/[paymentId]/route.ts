@@ -103,16 +103,18 @@ export async function PATCH(
     },
   });
 
-  await notifyUser({
-    userId: payment.payerId,
-    type: "payment_review",
-    title: parsed.data.status === "APPROVED" ? "Payment approved 🎉" : "Payment rejected",
-    body:
-      parsed.data.status === "APPROVED"
-        ? "Your contribution was approved. Thank you!"
-        : "Your payment was rejected. Contact the treasurer.",
-    link: `/ceremonies/${ceremonyId}`,
-  });
+  if (payment.payerId) {
+    await notifyUser({
+      userId: payment.payerId,
+      type: "payment_review",
+      title: parsed.data.status === "APPROVED" ? "Payment approved 🎉" : "Payment rejected",
+      body:
+        parsed.data.status === "APPROVED"
+          ? "Your contribution was approved. Thank you!"
+          : "Your payment was rejected. Contact the treasurer.",
+      link: `/ceremonies/${ceremonyId}`,
+    });
+  }
 
   return jsonOk(payment);
 }

@@ -28,6 +28,7 @@ export default async function CeremonyPage({
     include: {
       birthdayUser: { select: { id: true, name: true, avatarUrl: true } },
       group: { select: { id: true, name: true, inviteCode: true } },
+      // shareToken is selected automatically as a scalar field
       payments: {
         include: { payer: { select: { id: true, name: true } } },
         orderBy: { createdAt: "desc" },
@@ -98,6 +99,7 @@ export default async function CeremonyPage({
         canManage={canManageTeam}
         isAdmin={isTreasurer}
         isBirthdayPerson={isBirthdayPerson}
+        shareToken={ceremony.shareToken}
       />
 
       {ceremony.group && (

@@ -25,6 +25,7 @@ model User {
   friendshipsB  Friendship[]   @relation("UserB")
   reminders     Reminder[]     @relation("ReminderOwner")
   remindersFor  Reminder[]     @relation("ReminderTarget")
+  contactReminders ContactReminder[]
   notifications Notification[]
   wishlistItems WishlistItem[]
   payments      Payment[]
@@ -132,6 +133,7 @@ model Ceremony {
   year           Int      @default(1404)
   active           Boolean  @default(true)
   hideContributors Boolean  @default(false)
+  shareToken     String   @unique @default(cuid())
   birthdayUser   User     @relation("BirthdayPerson", fields: [birthdayUserId], references: [id])
   admin          User?    @relation("CeremonyAdmin", fields: [adminUserId], references: [id])
   group          Group?   @relation(fields: [groupId], references: [id], onDelete: SetNull)
@@ -180,7 +182,8 @@ model WishlistItem {
 model Payment {
   id             String        @id @default(cuid())
   ceremonyId     String
-  payerId        String
+  payerId        String?
+  guestName      String?
   wishlistItemId String?
   amount         Int
   proofUrl       String?
@@ -188,7 +191,7 @@ model Payment {
   status         PaymentStatus @default(PENDING)
   reviewedAt     DateTime?
   ceremony       Ceremony      @relation(fields: [ceremonyId], references: [id], onDelete: Cascade)
-  payer          User          @relation(fields: [payerId], references: [id])
+  payer          User?         @relation(fields: [payerId], references: [id])
   wishlistItem   WishlistItem? @relation(fields: [wishlistItemId], references: [id])
   createdAt      DateTime      @default(now())
 }
@@ -198,4 +201,17 @@ enum PaymentStatus {
   PENDING   // proof submitted, awaiting admin approval
   APPROVED
   REJECTED
+}
+
+model ContactReminder {
+  id         String   @id @default(cuid())
+  ownerId    String
+  name       String
+  birthMonth Int
+  birthDay   Int
+  daysBefore Int      @default(1)
+  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([ownerId])
 }
