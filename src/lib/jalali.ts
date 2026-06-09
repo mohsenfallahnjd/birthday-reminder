@@ -9,7 +9,7 @@ export type JalaliDateParts = {
   day: number;
 };
 
-const JALALI_MONTHS = [
+export const JALALI_MONTHS = [
   "Farvardin",
   "Ordibehesht",
   "Khordad",

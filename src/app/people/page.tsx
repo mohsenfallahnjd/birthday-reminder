@@ -7,6 +7,7 @@ import {
 } from "@/components/people-actions";
 import { CeremonySetup } from "@/components/ceremony-setup";
 import { ReminderButton } from "@/components/reminder-button";
+import { ContactReminderManager } from "@/components/contact-reminder-manager";
 import {
   AppList,
   AppListItem,
@@ -72,6 +73,11 @@ export default async function PeoplePage() {
     select: { targetUserId: true },
   });
   const reminderSet = new Set(existingReminders.map((r) => r.targetUserId));
+
+  const contactReminders = await db.contactReminder.findMany({
+    where: { ownerId: user.id },
+    orderBy: [{ birthMonth: "asc" }, { birthDay: "asc" }],
+  });
 
   return (
     <div className="page-wide space-y-8">
@@ -165,6 +171,13 @@ export default async function PeoplePage() {
             ))}
           </AppList>
         )}
+      </AppSection>
+
+      <AppSection
+        title="Birthday contacts"
+        description="Track birthdays for people not on the app"
+      >
+        <ContactReminderManager initial={contactReminders} />
       </AppSection>
 
       {accepted.length > 0 && (

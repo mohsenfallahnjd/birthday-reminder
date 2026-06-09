@@ -25,6 +25,7 @@ model User {
   friendshipsB  Friendship[]   @relation("UserB")
   reminders     Reminder[]     @relation("ReminderOwner")
   remindersFor  Reminder[]     @relation("ReminderTarget")
+  contactReminders ContactReminder[]
   notifications Notification[]
   wishlistItems WishlistItem[]
   payments      Payment[]
@@ -198,4 +199,17 @@ enum PaymentStatus {
   PENDING   // proof submitted, awaiting admin approval
   APPROVED
   REJECTED
+}
+
+model ContactReminder {
+  id         String   @id @default(cuid())
+  ownerId    String
+  name       String
+  birthMonth Int
+  birthDay   Int
+  daysBefore Int      @default(1)
+  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([ownerId])
 }
