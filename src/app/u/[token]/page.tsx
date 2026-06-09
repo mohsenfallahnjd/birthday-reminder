@@ -20,6 +20,8 @@ export default async function PublicProfilePage({
       avatarUrl: true,
       birthMonth: true,
       birthDay: true,
+      cardNumber: true,
+      cardHolder: true,
       wishlistItems: {
         where: { ceremonyId: null },
         select: {
@@ -137,6 +139,22 @@ export default async function PublicProfilePage({
               ))}
             </ul>
           </>
+        )}
+
+        {/* Card number */}
+        {user.cardNumber && (
+          <div className="rounded-2xl border border-border bg-white px-4 py-3 shadow-sm space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">Bank card</p>
+            <p
+              className="font-mono text-lg font-semibold tracking-widest text-foreground select-all"
+              dir="ltr"
+            >
+              {user.cardNumber.replace(/(.{4})/g, "$1-").replace(/-$/, "")}
+            </p>
+            {user.cardHolder && (
+              <p className="text-xs text-muted">{user.cardHolder}</p>
+            )}
+          </div>
         )}
 
         {/* Payment form */}

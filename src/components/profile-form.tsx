@@ -16,6 +16,8 @@ type Props = {
     birthDay: number | null;
     birthYear: number | null;
     username: string | null;
+    cardNumber: string | null;
+    cardHolder: string | null;
   };
 };
 
@@ -24,6 +26,8 @@ export function ProfileForm({ initial }: Props) {
   const [name, setName] = useState(initial.name);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initial.avatarUrl);
   const [username, setUsername] = useState(initial.username ?? "");
+  const [cardNumber, setCardNumber] = useState(initial.cardNumber ?? "");
+  const [cardHolder, setCardHolder] = useState(initial.cardHolder ?? "");
   const [birth, setBirth] = useState({
     year: initial.birthYear ?? 1370,
     month: initial.birthMonth ?? 1,
@@ -31,6 +35,11 @@ export function ProfileForm({ initial }: Props) {
   });
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
+
+  function formatCardNumber(value: string) {
+    const digits = value.replace(/\D/g, "").slice(0, 16);
+    return digits.replace(/(.{4})/g, "$1-").replace(/-$/, "");
+  }
 
   async function save() {
     setLoading(true);
@@ -45,6 +54,8 @@ export function ProfileForm({ initial }: Props) {
         birthDay: birth.day,
         birthYear: birth.year,
         username: username.trim() || null,
+        cardNumber: cardNumber.replace(/-/g, "").trim() || null,
+        cardHolder: cardHolder.trim() || null,
       }),
     });
     setLoading(false);
@@ -81,6 +92,25 @@ export function ProfileForm({ initial }: Props) {
           />
         </div>
         <p className="mt-1 text-xs text-muted">Lowercase letters, numbers, underscores. Used in your profile URL.</p>
+      </div>
+      <div>
+        <Label>Card number</Label>
+        <Input
+          value={cardNumber}
+          onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+          placeholder="1234-5678-9012-3456"
+          inputMode="numeric"
+          dir="ltr"
+        />
+        <p className="mt-1 text-xs text-muted">Shown on your public profile so friends can transfer money directly.</p>
+      </div>
+      <div>
+        <Label>Card holder name</Label>
+        <Input
+          value={cardHolder}
+          onChange={(e) => setCardHolder(e.target.value)}
+          placeholder="Name on card"
+        />
       </div>
       <div>
         <Label>Birthday (Jalali / Shamsi)</Label>

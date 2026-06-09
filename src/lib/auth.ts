@@ -78,6 +78,8 @@ export async function requireUser() {
       avatarUrl: true,
       profileToken: true,
       username: true,
+      cardNumber: true,
+      cardHolder: true,
     },
   });
 

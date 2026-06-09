@@ -56,6 +56,8 @@ export default async function ProfilePage() {
             birthDay: user.birthDay,
             birthYear: user.birthYear,
             username: user.username ?? null,
+            cardNumber: user.cardNumber ?? null,
+            cardHolder: user.cardHolder ?? null,
           }}
         />
       </AppSection>

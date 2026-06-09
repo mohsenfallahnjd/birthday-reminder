@@ -18,6 +18,8 @@ model User {
   birthYear    Int?
   profileToken String   @unique @default(dbgenerated("gen_random_uuid()"))
   username     String?  @unique
+  cardNumber   String?
+  cardHolder   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
