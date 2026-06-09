@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@bprogress/next": "^3.2.12",
-    "@prisma/client": "5.22.0",
+    "@prisma/client": "^6.19.3",
     "@vercel/blob": "^2.4.0",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
@@ -43,7 +43,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
-    "prisma": "5.22.0",
+    "prisma": "^6.19.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
