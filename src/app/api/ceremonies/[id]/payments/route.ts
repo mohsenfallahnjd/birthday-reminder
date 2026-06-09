@@ -66,14 +66,15 @@ export async function POST(
   });
 
   // Only notify admins for real (non-debt) payments
+  const adminIds = await getCeremonyAdminUserIds(ceremonyId);
+  const notifyTargets =
+    adminIds.length > 0
+      ? adminIds
+      : ceremony.adminUserId
+        ? [ceremony.adminUserId]
+        : [];
+
   if (!isDebt) {
-    const adminIds = await getCeremonyAdminUserIds(ceremonyId);
-    const notifyTargets =
-      adminIds.length > 0
-        ? adminIds
-        : ceremony.adminUserId
-          ? [ceremony.adminUserId]
-          : [];
     for (const adminId of notifyTargets) {
       notifyUserAsync({
         userId: adminId,
@@ -84,14 +85,6 @@ export async function POST(
       });
     }
   } else {
-    // Notify admin of a new debt pledge
-    const adminIds = await getCeremonyAdminUserIds(ceremonyId);
-    const notifyTargets =
-      adminIds.length > 0
-        ? adminIds
-        : ceremony.adminUserId
-          ? [ceremony.adminUserId]
-          : [];
     for (const adminId of notifyTargets) {
       notifyUserAsync({
         userId: adminId,

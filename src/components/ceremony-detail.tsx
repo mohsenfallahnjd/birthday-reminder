@@ -123,7 +123,7 @@ type WishlistItem = {
   cost: number;
   allowCheapIn: boolean;
   ceremonyId: string | null;
-  payments: { amount: number; status: string; payer: { name: string } }[];
+  payments: { amount: number; status: string; payer: { name: string } | null }[];
 };
 
 type Payment = {
@@ -132,9 +132,14 @@ type Payment = {
   status: string;
   proofUrl: string | null;
   note: string | null;
-  payer: { id: string; name: string };
+  payer: { id: string; name: string } | null;
+  guestName: string | null;
   wishlistItemId: string | null;
 };
+
+function payerDisplayName(p: Pick<Payment, "payer" | "guestName">) {
+  return p.payer?.name ?? p.guestName ?? "Guest";
+}
 
 type Ceremony = {
   id: string;
@@ -343,7 +348,7 @@ export function CeremonyDetail({
         <PaymentSection
           ceremonyId={ceremony.id}
           items={partyItems}
-          payments={ceremony.payments.filter((p) => p.payer.id === currentUserId)}
+          payments={ceremony.payments.filter((p) => p.payer?.id === currentUserId)}
           onRefresh={() => router.refresh()}
         />
       )}
@@ -401,11 +406,11 @@ function GiftsSection({
               <div className="flex items-center gap-3">
                 {/* Avatar placeholder */}
                 <div className="h-9 w-9 rounded-full bg-accent/10 flex items-center justify-center text-sm font-bold text-accent flex-shrink-0">
-                  {hideContributors ? "?" : p.payer.name[0]?.toUpperCase()}
+                  {hideContributors ? "?" : payerDisplayName(p)[0]?.toUpperCase()}
                 </div>
                 <div>
                   <p className="text-sm font-medium text-foreground">
-                    {hideContributors ? "Anonymous contributor" : p.payer.name}
+                    {hideContributors ? "Anonymous contributor" : payerDisplayName(p)}
                   </p>
                   {p.note && !hideContributors && (
                     <p className="text-xs text-muted">{p.note}</p>
@@ -811,7 +816,7 @@ function AdminSection({
   const pending = payments.filter((p) => p.status === "PENDING");
   const reviewed = payments.filter((p) => p.status === "APPROVED" || p.status === "REJECTED");
   const approvedCount = new Set(
-    payments.filter((p) => p.status === "APPROVED").map((p) => p.payer.id),
+    payments.filter((p) => p.status === "APPROVED" && p.payer).map((p) => p.payer!.id),
   ).size;
 
   return (
@@ -868,7 +873,7 @@ function AdminSection({
               <li key={p.id} className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-foreground">{p.payer.name}</p>
+                    <p className="font-semibold text-foreground">{payerDisplayName(p)}</p>
                     {p.note && <p className="text-xs text-muted">{p.note}</p>}
                   </div>
                   <div className="text-right">
@@ -894,7 +899,7 @@ function AdminSection({
               <li key={p.id} className="rounded-xl border border-border bg-white p-4 shadow-sm space-y-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-foreground">{p.payer.name}</p>
+                    <p className="font-semibold text-foreground">{payerDisplayName(p)}</p>
                     {p.note && <p className="text-xs text-muted">{p.note}</p>}
                   </div>
                   <p className="font-semibold text-accent">{formatMoney(p.amount)}</p>
@@ -930,7 +935,7 @@ function AdminSection({
                 <li key={p.id} className="px-4 py-3 text-sm">
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-medium">{p.payer.name}</p>
+                      <p className="font-medium">{payerDisplayName(p)}</p>
                       {p.note && !isEditing && <p className="text-xs text-muted">{p.note}</p>}
                     </div>
                     <div className="flex shrink-0 items-center gap-2">

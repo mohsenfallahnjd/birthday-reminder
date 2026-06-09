@@ -24,6 +24,7 @@ export function PartyHeader({
   canManage,
   isAdmin,
   isBirthdayPerson,
+  shareToken,
 }: {
   ceremonyId: string;
   title: string;
@@ -37,9 +38,25 @@ export function PartyHeader({
   canManage: boolean;
   isAdmin: boolean;
   isBirthdayPerson: boolean;
+  shareToken?: string;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+
+  async function copyShareLink() {
+    if (!shareToken) return;
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/p/${shareToken}`;
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: initialTitle, url });
+        return;
+      } catch { /* cancelled */ }
+    }
+    await navigator.clipboard.writeText(url);
+    setShareCopied(true);
+    setTimeout(() => setShareCopied(false), 2000);
+  }
   const [title, setTitle] = useState(initialTitle);
   const [partyColor, setPartyColor] = useState(initialColor);
   const [holderId, setHolderId] = useState(initialHolderId);
@@ -162,31 +179,48 @@ export function PartyHeader({
             />
           </div>
 
-          {canManage && !editing && (
-            <div className="flex shrink-0 gap-1">
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="min-h-9 gap-1.5"
-                onClick={() => setEditing(true)}
-                aria-label="Edit party"
-              >
-                <Icon name="pencil" size={15} className="text-foreground" />
-                Edit
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="min-h-9 gap-1.5 text-red-600 hover:text-red-700"
-                loading={busy}
-                onClick={removeParty}
-                aria-label="Delete party"
-              >
-                <Icon name="trash" size={15} className="text-current" />
-                Delete
-              </Button>
+          {!editing && (
+            <div className="flex shrink-0 flex-wrap gap-1">
+              {shareToken && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="min-h-9 gap-1.5"
+                  onClick={copyShareLink}
+                  aria-label="Share party link"
+                >
+                  <Icon name={shareCopied ? "copy" : "share"} size={15} className="text-foreground" />
+                  {shareCopied ? "Copied!" : "Share"}
+                </Button>
+              )}
+              {canManage && (
+                <>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="min-h-9 gap-1.5"
+                    onClick={() => setEditing(true)}
+                    aria-label="Edit party"
+                  >
+                    <Icon name="pencil" size={15} className="text-foreground" />
+                    Edit
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="min-h-9 gap-1.5 text-red-600 hover:text-red-700"
+                    loading={busy}
+                    onClick={removeParty}
+                    aria-label="Delete party"
+                  >
+                    <Icon name="trash" size={15} className="text-current" />
+                    Delete
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </div>
