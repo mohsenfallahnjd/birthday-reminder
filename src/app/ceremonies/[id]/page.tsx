@@ -100,6 +100,7 @@ export default async function CeremonyPage({
         isAdmin={isTreasurer}
         isBirthdayPerson={isBirthdayPerson}
         shareToken={ceremony.shareToken}
+        active={ceremony.active}
       />
 
       {ceremony.group && (

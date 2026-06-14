@@ -173,7 +173,7 @@ export default async function DashboardPage() {
       <AppSection
         title="Active parties"
         description="Tap a party to open gifts and payments"
-        action={{ href: "/groups", label: "Groups →" }}
+        action={{ href: "/parties", label: "History →" }}
         unboxed
       >
         {ceremonies.length === 0 ? (

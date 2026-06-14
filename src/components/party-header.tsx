@@ -25,6 +25,7 @@ export function PartyHeader({
   isAdmin,
   isBirthdayPerson,
   shareToken,
+  active,
 }: {
   ceremonyId: string;
   title: string;
@@ -39,6 +40,7 @@ export function PartyHeader({
   isAdmin: boolean;
   isBirthdayPerson: boolean;
   shareToken?: string;
+  active: boolean;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -100,6 +102,33 @@ export function PartyHeader({
     } else {
       setError(data.error ?? "Could not save");
     }
+  }
+
+  async function endParty() {
+    if (!confirm("End this party? It will move to your party history and can be re-opened later.")) return;
+    setBusy(true);
+    const res = await fetch(`/api/ceremonies/${ceremonyId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ active: false }),
+    });
+    setBusy(false);
+    if (res.ok) router.refresh();
+    else setError("Could not end party");
+  }
+
+  async function reopenParty() {
+    setBusy(true);
+    const res = await fetch(`/api/ceremonies/${ceremonyId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ active: true }),
+    });
+    setBusy(false);
+    if (res.ok) router.refresh();
+    else setError("Could not re-open party");
   }
 
   async function removeParty() {
@@ -181,7 +210,12 @@ export function PartyHeader({
 
           {!editing && (
             <div className="flex shrink-0 flex-wrap gap-1">
-              {shareToken && (
+              {!active && (
+                <span className="self-center rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-500">
+                  Ended
+                </span>
+              )}
+              {active && shareToken && (
                 <Button
                   type="button"
                   size="sm"
@@ -196,17 +230,46 @@ export function PartyHeader({
               )}
               {canManage && (
                 <>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    className="min-h-9 gap-1.5"
-                    onClick={() => setEditing(true)}
-                    aria-label="Edit party"
-                  >
-                    <Icon name="pencil" size={15} className="text-foreground" />
-                    Edit
-                  </Button>
+                  {active && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="min-h-9 gap-1.5"
+                      onClick={() => setEditing(true)}
+                      aria-label="Edit party"
+                    >
+                      <Icon name="pencil" size={15} className="text-foreground" />
+                      Edit
+                    </Button>
+                  )}
+                  {active ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="min-h-9 gap-1.5 text-zinc-500 hover:text-zinc-700"
+                      loading={busy}
+                      onClick={endParty}
+                      aria-label="End party"
+                    >
+                      <Icon name="archive" size={15} className="text-current" />
+                      End
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="min-h-9 gap-1.5 text-accent hover:text-accent/80"
+                      loading={busy}
+                      onClick={reopenParty}
+                      aria-label="Re-open party"
+                    >
+                      <Icon name="rotate-ccw" size={15} className="text-current" />
+                      Re-open
+                    </Button>
+                  )}
                   <Button
                     type="button"
                     size="sm"
