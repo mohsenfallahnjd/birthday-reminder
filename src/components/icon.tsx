@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Archive,
   Bell,
   Cake,
   Calendar,
@@ -12,6 +13,7 @@ import {
   Lock,
   Pencil,
   PartyPopper,
+  RotateCcw,
   Search,
   Share2,
   Sparkles,
@@ -42,6 +44,8 @@ export const icons = {
   "chevron-left": ChevronLeft,
   clock: Clock,
   lock: Lock,
+  archive: Archive,
+  "rotate-ccw": RotateCcw,
 } as const;
 
 export type IconName = keyof typeof icons;

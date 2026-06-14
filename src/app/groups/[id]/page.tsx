@@ -62,6 +62,7 @@ export default async function GroupDetailPage({
           id: true,
           title: true,
           color: true,
+          active: true,
           birthdayUserId: true,
           birthdayUser: { select: { name: true, avatarUrl: true } },
           members: {
@@ -147,23 +148,49 @@ export default async function GroupDetailPage({
         />
       </AppSection>
 
-      {groupDetails.ceremonies.length > 0 && (
+      {groupDetails.ceremonies.some((c) => c.active) && (
         <AppSection title="Parties" description="Open a party for gifts and payments" unboxed>
           <ul className="flex flex-col gap-3">
-            {groupDetails.ceremonies.map((c) => (
-              <li key={c.id}>
-                <PartyCard
-                  id={c.id}
-                  title={c.title}
-                  color={c.color}
-                  holderName={c.birthdayUser.name}
-                  holderAvatarUrl={c.birthdayUser.avatarUrl}
-                  groupName={group.name}
-                  memberRole={c.members[0]?.role ?? null}
-                  isYourBirthday={c.birthdayUserId === user.id}
-                />
-              </li>
-            ))}
+            {groupDetails.ceremonies
+              .filter((c) => c.active)
+              .map((c) => (
+                <li key={c.id}>
+                  <PartyCard
+                    id={c.id}
+                    title={c.title}
+                    color={c.color}
+                    holderName={c.birthdayUser.name}
+                    holderAvatarUrl={c.birthdayUser.avatarUrl}
+                    groupName={group.name}
+                    memberRole={c.members[0]?.role ?? null}
+                    isYourBirthday={c.birthdayUserId === user.id}
+                  />
+                </li>
+              ))}
+          </ul>
+        </AppSection>
+      )}
+
+      {groupDetails.ceremonies.some((c) => !c.active) && (
+        <AppSection title="Past parties" description="Ended parties in this group" unboxed>
+          <ul className="flex flex-col gap-3">
+            {groupDetails.ceremonies
+              .filter((c) => !c.active)
+              .map((c) => (
+                <li key={c.id}>
+                  <PartyCard
+                    id={c.id}
+                    title={c.title}
+                    color={c.color}
+                    holderName={c.birthdayUser.name}
+                    holderAvatarUrl={c.birthdayUser.avatarUrl}
+                    groupName={group.name}
+                    memberRole={c.members[0]?.role ?? null}
+                    isYourBirthday={c.birthdayUserId === user.id}
+                    ended
+                  />
+                </li>
+              ))}
           </ul>
         </AppSection>
       )}

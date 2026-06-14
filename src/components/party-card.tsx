@@ -30,6 +30,7 @@ export function PartyCard({
   groupName,
   memberRole,
   isYourBirthday = false,
+  ended = false,
 }: {
   id: string;
   title: string;
@@ -39,6 +40,7 @@ export function PartyCard({
   groupName?: string | null;
   memberRole?: CeremonyMemberRole | "GROUP" | null;
   isYourBirthday?: boolean;
+  ended?: boolean;
 }) {
   const badge = roleBadge(memberRole ?? null, isYourBirthday);
 
@@ -48,11 +50,15 @@ export function PartyCard({
       className="group block no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl"
     >
       <article
-        className="relative overflow-hidden rounded-2xl border transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-md"
+        className={`relative overflow-hidden rounded-2xl border transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-md ${ended ? "opacity-60" : ""}`}
         style={{
-          background: `linear-gradient(135deg, ${color}14 0%, #ffffff 55%, ${color}0a 100%)`,
-          boxShadow: `0 1px 0 ${color}25, 0 8px 24px -10px ${color}55`,
-          borderColor: `${color}44`,
+          background: ended
+            ? "linear-gradient(135deg, #f4f4f5 0%, #ffffff 55%, #f4f4f5 100%)"
+            : `linear-gradient(135deg, ${color}14 0%, #ffffff 55%, ${color}0a 100%)`,
+          boxShadow: ended
+            ? "0 1px 0 #e4e4e7, 0 8px 24px -10px #d4d4d8"
+            : `0 1px 0 ${color}25, 0 8px 24px -10px ${color}55`,
+          borderColor: ended ? "#e4e4e7" : `${color}44`,
         }}
       >
         <div
@@ -87,7 +93,12 @@ export function PartyCard({
               <h3 className="truncate text-base font-semibold text-foreground sm:text-[1.05rem]">
                 {title}
               </h3>
-              {badge && (
+              {ended && (
+                <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                  Ended
+                </span>
+              )}
+              {badge && !ended && (
                 <span
                   className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${badgeStyles[badge.tone]}`}
                 >
