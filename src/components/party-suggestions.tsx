@@ -56,11 +56,11 @@ export function PartySuggestions({ suggestions }: { suggestions: Suggestion[] })
               </div>
 
               <Link
-                href="/people"
+                href="/groups"
                 className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold no-underline transition-opacity hover:opacity-80"
                 style={{ backgroundColor: c.accent, color: "#fff" }}
               >
-                Plan party
+                Start party
               </Link>
             </li>
           );

@@ -5,7 +5,7 @@ import { MoneyProgress } from "@/components/ui/money-progress";
 import { PublicPartyPaymentForm } from "@/components/public-party-payment-form";
 import { Icon } from "@/components/icon";
 import { formatJalaliBirthday } from "@/lib/jalali";
-import { formatMoney } from "@/lib/utils";
+import { formatMoney, getCurrency } from "@/lib/currency";
 
 export default async function PublicPartyPage({
   params,
@@ -13,6 +13,7 @@ export default async function PublicPartyPage({
   params: Promise<{ shareToken: string }>;
 }) {
   const { shareToken } = await params;
+  const currency = await getCurrency();
 
   const ceremony = await db.ceremony.findUnique({
     where: { shareToken },
@@ -175,7 +176,7 @@ export default async function PublicPartyPage({
                             View link →
                           </a>
                         )}
-                        <p className="mt-1.5 text-sm tabular-nums text-muted">{formatMoney(item.cost)} goal</p>
+                        <p className="mt-1.5 text-sm tabular-nums text-muted">{formatMoney(item.cost, currency)} goal</p>
                         {item.allowCheapIn && (
                           <span className="mt-1 inline-block rounded-full bg-muted-subtle px-2 py-0.5 text-xs">
                             Pay what you can

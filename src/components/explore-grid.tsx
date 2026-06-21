@@ -6,7 +6,8 @@ import { Button } from "./ui/button";
 import { Icon } from "./icon";
 import { Input } from "./ui/input";
 import Link from "next/link";
-import { formatJalaliBirthday } from "@/lib/jalali";
+import { formatBirthdayBySystem } from "@/lib/jalali";
+import { useDateSystem } from "@/lib/date-system-context";
 
 type ExploreUser = {
 	id: string;
@@ -31,6 +32,7 @@ export function ExploreGrid({ users: initialUsers, currentUserId }: Props) {
 	const [users, setUsers] = useState(initialUsers);
 	const [search, setSearch] = useState("");
 	const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
+	const dateSystem = useDateSystem();
 
 	const filteredUsers = users.filter(
 		(user) =>
@@ -127,10 +129,11 @@ export function ExploreGrid({ users: initialUsers, currentUserId }: Props) {
 											name="cake"
 											className="w-4 h-4 inline mr-1 -mt-0.5"
 										/>
-										{formatJalaliBirthday(
+										{formatBirthdayBySystem(
 											user.birthMonth,
 											user.birthDay,
 											user.birthYear,
+											dateSystem,
 										)}
 									</p>
 								)}

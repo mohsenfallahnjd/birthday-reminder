@@ -1,148 +1,183 @@
-import { AppSection, PageHeader } from "@/components/app-section";
 import { ProfileForm } from "@/components/profile-form";
+import { ChangePasswordForm } from "@/components/change-password-form";
+import { CurrencyToggle } from "@/components/currency-toggle";
 import { PushNotifications } from "@/components/push-notifications";
 import { ShareProfileButton } from "@/components/share-profile-button";
 import { DateSystemToggle } from "@/components/date-system-toggle";
+import { UserAvatar } from "@/components/user-avatar";
+import { Icon } from "@/components/icon";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { formatMoney } from "@/lib/utils";
+import { formatMoney, getCurrency } from "@/lib/currency";
 import { getDateSystem } from "@/lib/date-system";
 import { redirect } from "next/navigation";
+
+function SectionHeading({ title, description }: { title: string; description?: string }) {
+  return (
+    <div className="mb-4">
+      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+      {description && <p className="mt-0.5 text-xs text-muted">{description}</p>}
+    </div>
+  );
+}
 
 export default async function ProfilePage() {
   const user = await requireUser();
   if (!user) redirect("/login");
 
   const dateSystem = await getDateSystem();
+  const currency = await getCurrency();
+  const slug = user.username ?? user.profileToken;
 
   const [profilePayments, wishlistItems] = await Promise.all([
-    db.profilePayment
-      .findMany({
-        where: { userId: user.id },
-        orderBy: { createdAt: "desc" },
-      })
-      .catch(() => []),
-    db.wishlistItem
-      .findMany({
-        where: { userId: user.id, ceremonyId: null },
-        select: { cost: true },
-      })
-      .catch(() => []),
+    db.profilePayment.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" } }).catch(() => []),
+    db.wishlistItem.findMany({ where: { userId: user.id, ceremonyId: null }, select: { cost: true } }).catch(() => []),
   ]);
 
   const totalReceived = profilePayments.reduce((s, p) => s + p.amount, 0);
   const totalGoal = wishlistItems.reduce((s, w) => s + w.cost, 0);
-  const progressPct =
-    totalGoal > 0
-      ? Math.min(100, Math.round((totalReceived / totalGoal) * 100))
-      : null;
+  const progressPct = totalGoal > 0 ? Math.min(100, Math.round((totalReceived / totalGoal) * 100)) : null;
 
   return (
-    <div className="page space-y-8">
-      <PageHeader
-        title="Profile"
-        description="Avatar, name, and Jalali birthday."
-      />
-      <AppSection
-        title="Your profile"
-        description="Avatar, name, and birthday — visible to friends"
-        unboxed
-      >
-        <ProfileForm
-          initial={{
-            name: user.name,
-            avatarUrl: user.avatarUrl,
-            birthMonth: user.birthMonth,
-            birthDay: user.birthDay,
-            birthYear: user.birthYear,
-            username: user.username ?? null,
-            cardNumber: user.cardNumber ?? null,
-            cardHolder: user.cardHolder ?? null,
-          }}
-        />
-      </AppSection>
-      <AppSection
-        title="Wishlist link"
-        description="Share your wishlist without opening a party"
-      >
-        <ShareProfileButton profileToken={user.profileToken} username={user.username ?? null} name={user.name} />
-      </AppSection>
+    <div className="page-wide space-y-4">
+
+      {/* Hero */}
+      <div className="relative overflow-hidden rounded-2xl bg-white ring-1 ring-border/60 shadow-sm">
+        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-br from-accent/12 via-accent/5 to-transparent" aria-hidden />
+        <div className="relative flex items-center gap-4 px-5 py-5">
+          <UserAvatar name={user.name} avatarUrl={user.avatarUrl} size="xl" />
+          <div className="min-w-0 flex-1">
+            <p className="text-lg font-bold text-foreground leading-snug truncate">{user.name}</p>
+            {user.username && <p className="text-sm text-muted">@{user.username}</p>}
+            <a
+              href={`/u/${slug}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-2.5 py-1 text-[11px] font-medium text-muted no-underline hover:text-foreground transition-colors"
+            >
+              <Icon name="share" size={11} />
+              /u/{slug}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Received gifts */}
       {profilePayments.length > 0 && (
-        <AppSection
-          title="Received gifts"
-          description="Contributions sent to your public profile"
-        >
-          <div className="space-y-3">
-            <div className="rounded-xl border border-border bg-gradient-to-br from-accent/5 to-accent/10 px-4 py-3 space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-accent">
-                Total received
-              </p>
-              <p className="text-2xl font-bold text-foreground">
-                {formatMoney(totalReceived)}
-              </p>
-              <p className="text-xs text-muted">
-                {profilePayments.length} contribution
-                {profilePayments.length !== 1 ? "s" : ""}
-              </p>
-              {progressPct !== null && (
-                <div className="pt-1 space-y-1">
-                  <div className="flex justify-between text-xs text-muted">
-                    <span>{progressPct}% of wishlist goal</span>
-                    <span>{formatMoney(totalGoal)}</span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-accent/15 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-accent transition-all"
-                      style={{ width: `${progressPct}%` }}
-                    />
-                  </div>
-                </div>
-              )}
+        <div className="rounded-2xl ring-1 ring-accent/25 bg-gradient-to-br from-accent/8 to-accent/4 px-5 py-4 space-y-2">
+          <div className="flex items-baseline justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wide text-accent">Received gifts</p>
+            <p className="text-xs text-muted">{profilePayments.length} contribution{profilePayments.length !== 1 ? "s" : ""}</p>
+          </div>
+          <p className="text-2xl font-bold text-foreground">{formatMoney(totalReceived, currency)}</p>
+          {progressPct !== null && (
+            <div className="space-y-1">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-white/60">
+                <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${progressPct}%` }} />
+              </div>
+              <p className="text-[11px] text-muted">{progressPct}% of {formatMoney(totalGoal, currency)} wishlist goal</p>
             </div>
-            <ul className="divide-y divide-border rounded-xl border border-border bg-white overflow-hidden shadow-sm">
+          )}
+          <details className="pt-1">
+            <summary className="cursor-pointer list-none text-xs font-medium text-accent hover:underline">View all →</summary>
+            <ul className="mt-2 divide-y divide-border/50 rounded-xl border border-border/60 bg-white overflow-hidden">
               {profilePayments.map((p) => (
-                <li
-                  key={p.id}
-                  className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
-                >
+                <li key={p.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
                   <div>
-                    <p className="font-medium text-foreground">{p.guestName}</p>
-                    {p.note && <p className="text-xs text-muted">{p.note}</p>}
+                    <p className="text-xs font-medium text-foreground">{p.guestName}</p>
+                    {p.note && <p className="text-[11px] text-muted">{p.note}</p>}
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className="font-semibold text-accent">
-                      {formatMoney(p.amount)}
-                    </p>
+                    <p className="text-xs font-semibold text-accent">{formatMoney(p.amount, currency)}</p>
                     {p.proofUrl && (
-                      <a
-                        href={p.proofUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs text-muted underline"
-                      >
-                        View proof
-                      </a>
+                      <a href={p.proofUrl} target="_blank" rel="noreferrer" className="text-[10px] text-muted underline">Proof</a>
                     )}
                   </div>
                 </li>
               ))}
             </ul>
-          </div>
-        </AppSection>
+          </details>
+        </div>
       )}
 
-      <AppSection title="Date display" description="Choose how dates appear across the app">
-        <DateSystemToggle current={dateSystem} />
-      </AppSection>
+      {/* Edit profile */}
+      <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+        <div className="border-b border-border bg-muted-subtle/50 px-5 py-3.5">
+          <SectionHeading title="Profile info" description="Name, avatar, birthday — visible to friends" />
+        </div>
+        <div className="px-5 py-5">
+          <ProfileForm
+            initial={{
+              name: user.name,
+              avatarUrl: user.avatarUrl,
+              birthMonth: user.birthMonth,
+              birthDay: user.birthDay,
+              birthYear: user.birthYear,
+              username: user.username ?? null,
+              cardNumber: user.cardNumber ?? null,
+              cardHolder: user.cardHolder ?? null,
+            }}
+          />
+        </div>
+      </div>
 
-      <AppSection
-        title="Notifications"
-        description="Push alerts on this device"
-        unboxed
-        className="mt-0"
-      >
+      {/* Share link */}
+      <div className="rounded-2xl border border-border bg-white shadow-sm px-5 py-5">
+        <SectionHeading title="Public wishlist link" description="Share so friends can contribute without joining a party" />
+        <ShareProfileButton profileToken={user.profileToken} username={user.username ?? null} name={user.name} />
+      </div>
+
+      {/* Date format */}
+      <div className="rounded-2xl border border-border bg-white shadow-sm px-5 py-5">
+        <SectionHeading title="Date format" description="How dates appear everywhere in the app" />
+        <DateSystemToggle current={dateSystem} />
+      </div>
+
+      {/* Currency */}
+      <div className="rounded-2xl border border-border bg-white shadow-sm px-5 py-5">
+        <SectionHeading title="Currency" description="How amounts display across the app" />
+        <CurrencyToggle />
+      </div>
+
+      {/* Change password */}
+      <div className="rounded-2xl border border-border bg-white shadow-sm px-5 py-5">
+        <SectionHeading title="Change password" description="Requires your current password" />
+        <ChangePasswordForm />
+      </div>
+
+      {/* Notifications */}
+      <div className="rounded-2xl border border-border bg-white shadow-sm px-5 py-5 pb-6">
+        <SectionHeading title="Push notifications" description="Birthday reminders and party updates on this device" />
         <PushNotifications />
-      </AppSection>
+      </div>
+
+      {/* Donation */}
+      <div className="rounded-2xl border border-border bg-white shadow-sm px-5 py-5">
+        <SectionHeading title="Support the developer" description="Free app — a small crypto tip helps keep it running" />
+        <div className="space-y-2">
+          {[
+            { coin: "BTC", address: "bc1q8st6p7h6rrdg3qzsvxnwjl4mggwd4rcr4cq0qn" },
+            { coin: "ETH / USDC / BNB", address: "0x041241A967A7f35f575451fB15652357Fa15171c" },
+            { coin: "SOL", address: "Bv8Wcon6xjkfrtg4LhCKpuNPyjKqukb29tnQxRVj4RAn" },
+            { coin: "LTC", address: "ltc1qhld85x6w0n3dkjl6e5333uzxs43memfhych77j" },
+            { coin: "DOGE", address: "DMUy7Hu7u5c1F8tUVCJMdQYWHGhCgXyW8m" },
+            { coin: "XRP", address: "rLFJv2NTiKXsz7quyR55PJpNd32Qhr6cB3" },
+            { coin: "TRON", address: "TMENErUuaajAmJoenppG4qohhqzXuu7fgp" },
+          ].map(({ coin, address }) => (
+            <div key={coin} className="rounded-lg bg-muted-subtle px-3 py-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted mb-0.5">{coin}</p>
+              <p className="font-mono text-xs text-foreground break-all select-all">{address}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-muted">
+          Built by{" "}
+          <a href="https://themohsen.me" target="_blank" rel="noreferrer" className="font-medium text-foreground hover:underline">
+            Mohsen · themohsen.me
+          </a>
+        </p>
+      </div>
+
     </div>
   );
 }

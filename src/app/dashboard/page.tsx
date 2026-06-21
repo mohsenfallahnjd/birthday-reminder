@@ -1,10 +1,5 @@
 import { Link } from "@/components/link";
-import {
-  AppSection,
-  EmptyState,
-  InfoBanner,
-  PageHeader,
-} from "@/components/app-section";
+import { AppSection, EmptyState, InfoBanner } from "@/components/app-section";
 import { PartyCard } from "@/components/party-card";
 import { UpcomingBirthdayList } from "@/components/upcoming-birthday-list";
 import { PartySuggestions } from "@/components/party-suggestions";
@@ -12,7 +7,11 @@ import { UserAvatar } from "@/components/user-avatar";
 import { Icon } from "@/components/icon";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { daysUntilJalaliBirthday, formatBirthdayBySystem, formatTodayDate } from "@/lib/jalali";
+import {
+  daysUntilJalaliBirthday,
+  formatBirthdayBySystem,
+  formatTodayDate,
+} from "@/lib/jalali";
 import { getDateSystem } from "@/lib/date-system";
 import { redirect } from "next/navigation";
 
@@ -30,10 +29,22 @@ export default async function DashboardPage() {
     },
     include: {
       user: {
-        select: { id: true, name: true, avatarUrl: true, birthMonth: true, birthDay: true },
+        select: {
+          id: true,
+          name: true,
+          avatarUrl: true,
+          birthMonth: true,
+          birthDay: true,
+        },
       },
       friend: {
-        select: { id: true, name: true, avatarUrl: true, birthMonth: true, birthDay: true },
+        select: {
+          id: true,
+          name: true,
+          avatarUrl: true,
+          birthMonth: true,
+          birthDay: true,
+        },
       },
     },
   });
@@ -65,7 +76,13 @@ export default async function DashboardPage() {
     },
   });
 
-  const upcoming: { name: string; id: string; days: number; date: string; avatarUrl: string | null }[] = [];
+  const upcoming: {
+    name: string;
+    id: string;
+    days: number;
+    date: string;
+    avatarUrl: string | null;
+  }[] = [];
 
   for (const friend of friends) {
     if (!friend.birthMonth || !friend.birthDay) continue;
@@ -74,7 +91,12 @@ export default async function DashboardPage() {
       name: friend.name,
       avatarUrl: friend.avatarUrl ?? null,
       days: daysUntilJalaliBirthday(friend.birthMonth, friend.birthDay),
-      date: formatBirthdayBySystem(friend.birthMonth, friend.birthDay, null, dateSystem),
+      date: formatBirthdayBySystem(
+        friend.birthMonth,
+        friend.birthDay,
+        null,
+        dateSystem,
+      ),
     });
   }
 
@@ -88,7 +110,12 @@ export default async function DashboardPage() {
         name: u.name,
         avatarUrl: u.avatarUrl ?? null,
         days: daysUntilJalaliBirthday(u.birthMonth, u.birthDay),
-        date: formatBirthdayBySystem(u.birthMonth, u.birthDay, null, dateSystem),
+        date: formatBirthdayBySystem(
+          u.birthMonth,
+          u.birthDay,
+          null,
+          dateSystem,
+        ),
       });
     }
   }
@@ -96,9 +123,11 @@ export default async function DashboardPage() {
   upcoming.sort((a, b) => a.days - b.days);
 
   // Add unregistered contact reminders to the upcoming list
-  const contactBirthdays = await db.contactReminder.findMany({
-    where: { ownerId: user.id },
-  }).catch(() => []);
+  const contactBirthdays = await db.contactReminder
+    .findMany({
+      where: { ownerId: user.id },
+    })
+    .catch(() => []);
 
   for (const cr of contactBirthdays) {
     upcoming.push({
@@ -106,7 +135,12 @@ export default async function DashboardPage() {
       name: cr.name,
       avatarUrl: null,
       days: daysUntilJalaliBirthday(cr.birthMonth, cr.birthDay),
-      date: formatBirthdayBySystem(cr.birthMonth, cr.birthDay, null, dateSystem),
+      date: formatBirthdayBySystem(
+        cr.birthMonth,
+        cr.birthDay,
+        null,
+        dateSystem,
+      ),
     });
   }
 
@@ -139,7 +173,9 @@ export default async function DashboardPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  const activeBirthdayUserIds = new Set(ceremonies.map((c) => c.birthdayUserId));
+  const activeBirthdayUserIds = new Set(
+    ceremonies.map((c) => c.birthdayUserId),
+  );
 
   const suggestions = upcoming
     .filter((u) => u.days <= 14 && !activeBirthdayUserIds.has(u.id))
@@ -149,27 +185,126 @@ export default async function DashboardPage() {
     where: { userId: user.id },
   });
 
-  return (
-    <div className="page-wide space-y-8">
-      <PageHeader
-        title={`Hi, ${user.name}`}
-        description="Upcoming birthdays and active parties"
-        badge={
-          <UserAvatar name={user.name} avatarUrl={user.avatarUrl} size="lg" />
-        }
-      >
-        <p className="text-xs text-muted tabular-nums">{todayFormatted}</p>
-      </PageHeader>
+  const isNewUser = friends.length === 0 && ceremonies.length === 0;
 
+  const myBirthdayDays =
+    user.birthMonth && user.birthDay
+      ? daysUntilJalaliBirthday(user.birthMonth, user.birthDay)
+      : null;
+
+  return (
+    <div className="page-wide space-y-6">
+      {/* ── Greeting hero ───────────────────────────────────── */}
+      <div className="relative overflow-hidden rounded-2xl bg-white ring-1 ring-border/60 shadow-sm px-5 py-5">
+        {/* subtle blob */}
+        <div
+          className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-accent/8 blur-3xl"
+          aria-hidden
+        />
+        <div className="flex items-center gap-4">
+          <Link href="/profile">
+            <UserAvatar name={user.name} avatarUrl={user.avatarUrl} size="lg" />
+          </Link>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-muted">Today is {todayFormatted}</p>
+            <h1 className="text-lg font-bold text-foreground leading-snug">
+              Hi, {user.name.split(" ")[0]} 👋
+            </h1>
+          </div>
+        </div>
+
+        {/* Quick stats */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link
+            href="/people"
+            className="inline-flex items-center gap-1.5 rounded-full bg-muted-subtle px-3 py-1.5 text-xs font-medium text-foreground no-underline hover:bg-accent/10 transition-colors"
+          >
+            <Icon name="users" size={12} className="text-muted" />
+            {friends.length} friend{friends.length !== 1 ? "s" : ""}
+          </Link>
+          <Link
+            href="/groups"
+            className="inline-flex items-center gap-1.5 rounded-full bg-muted-subtle px-3 py-1.5 text-xs font-medium text-foreground no-underline hover:bg-accent/10 transition-colors"
+          >
+            <Icon name="party" size={12} className="text-muted" />
+            {ceremonies.length} active part
+            {ceremonies.length !== 1 ? "ies" : "y"}
+          </Link>
+          <Link
+            href="/wishlist"
+            className="inline-flex items-center gap-1.5 rounded-full bg-muted-subtle px-3 py-1.5 text-xs font-medium text-foreground no-underline hover:bg-accent/10 transition-colors"
+          >
+            <Icon name="gift" size={12} className="text-muted" />
+            {wishlistCount === 0
+              ? "Add wishlist"
+              : `${wishlistCount} wishlist item${wishlistCount !== 1 ? "s" : ""}`}
+          </Link>
+          {myBirthdayDays !== null && myBirthdayDays <= 30 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-pink-50 px-3 py-1.5 text-xs font-medium text-pink-700">
+              <Icon name="cake" size={12} className="text-current" />
+              {myBirthdayDays === 0
+                ? "Your birthday today! 🎉"
+                : `Your birthday in ${myBirthdayDays} day${myBirthdayDays !== 1 ? "s" : ""}`}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ── Banners ─────────────────────────────────────────── */}
       {!user.birthMonth && (
         <InfoBanner>
           <Link href="/profile" className="font-medium text-foreground">
-            Add your Jalali birthday
+            Add your birthday
           </Link>{" "}
-          <span className="text-muted">so friends get reminders.</span>
+          <span className="text-muted">so friends get reminded.</span>
         </InfoBanner>
       )}
 
+      {isNewUser && (
+        <InfoBanner>
+          <p className="font-medium text-foreground mb-2">
+            Get started in 3 steps
+          </p>
+          <ol className="space-y-1.5 text-sm list-none">
+            <li className="flex items-start gap-2">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/15 text-[10px] font-bold text-accent">
+                1
+              </span>
+              <span className="text-muted">
+                <Link href="/people" className="font-medium text-foreground">
+                  Add friends
+                </Link>{" "}
+                or{" "}
+                <Link href="/groups" className="font-medium text-foreground">
+                  create a group
+                </Link>
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/15 text-[10px] font-bold text-accent">
+                2
+              </span>
+              <span className="text-muted">
+                Start a{" "}
+                <Link href="/groups" className="font-medium text-foreground">
+                  party
+                </Link>{" "}
+                — pick who's birthday it is, set a goal
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/15 text-[10px] font-bold text-accent">
+                3
+              </span>
+              <span className="text-muted">
+                Friends contribute; treasurer approves payments
+              </span>
+            </li>
+          </ol>
+        </InfoBanner>
+      )}
+
+      {/* ── Active parties ──────────────────────────────────── */}
       <AppSection
         title="Active parties"
         description="Tap a party to open gifts and payments"
@@ -178,15 +313,11 @@ export default async function DashboardPage() {
       >
         {ceremonies.length === 0 ? (
           <EmptyState>
-            No parties yet. Create one from a{" "}
+            No active parties.{" "}
             <Link href="/groups" className="font-medium text-foreground">
-              group
+              Start one
             </Link>{" "}
-            or invite friends on{" "}
-            <Link href="/people" className="font-medium text-foreground">
-              People
-            </Link>
-            .
+            from the Groups page.
           </EmptyState>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -196,7 +327,6 @@ export default async function DashboardPage() {
               const memberRole =
                 myMember?.role ??
                 (c.group && !myMember ? ("GROUP" as const) : null);
-
               return (
                 <li key={c.id}>
                   <PartyCard
@@ -216,42 +346,23 @@ export default async function DashboardPage() {
         )}
       </AppSection>
 
-      <AppSection
-        title="Wishlist"
-        description="Gift ideas friends can contribute toward"
-        action={{ href: "/wishlist", label: "Manage →" }}
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#db2777]/15 text-[#db2777]">
-            <Icon name="gift" size={22} className="text-current" />
-          </div>
-          <p className="text-sm text-foreground">
-            {wishlistCount === 0 ? (
-              <span className="text-muted">
-                No items yet — add your first gift idea.
-              </span>
-            ) : (
-              <>
-                <span className="font-semibold tabular-nums">
-                  {wishlistCount}
-                </span>
-                <span className="text-muted">
-                  {" "}
-                  item{wishlistCount === 1 ? "" : "s"} on your list
-                </span>
-              </>
-            )}
-          </p>
-        </div>
-      </AppSection>
+      {/* ── Party suggestions ────────────────────────────────── */}
+      {suggestions.length > 0 && <PartySuggestions suggestions={suggestions} />}
 
-      {suggestions.length > 0 && (
-        <PartySuggestions suggestions={suggestions} />
-      )}
-
-      <AppSection title="Upcoming birthdays" description="From friends and groups" unboxed>
+      {/* ── Upcoming birthdays ──────────────────────────────── */}
+      <AppSection title="Upcoming birthdays" unboxed>
         {upcoming.length === 0 ? (
-          <EmptyState>No upcoming birthdays in the next year.</EmptyState>
+          <EmptyState>
+            No birthdays yet.{" "}
+            <Link href="/people" className="font-medium text-foreground">
+              Add friends
+            </Link>{" "}
+            or{" "}
+            <Link href="/profile" className="font-medium text-foreground">
+              save contacts
+            </Link>
+            .
+          </EmptyState>
         ) : (
           <UpcomingBirthdayList
             entries={upcoming.slice(0, 8)}

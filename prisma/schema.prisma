@@ -36,8 +36,22 @@ model User {
   adminCeremonies Ceremony[]   @relation("CeremonyAdmin")
   birthdayCeremonies Ceremony[] @relation("BirthdayPerson")
   ceremonyMembers CeremonyMember[]
-  pushSubscriptions PushSubscription[]
-  profilePayments   ProfilePayment[]
+  pushSubscriptions  PushSubscription[]
+  profilePayments    ProfilePayment[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
 }
 
 model PushSubscription {

@@ -26,6 +26,54 @@ export const JALALI_MONTHS = [
   "Esfand",
 ];
 
+export const GREGORIAN_MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+export function gregorianDaysInMonth(month: number): number {
+  return [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1] ?? 30;
+}
+
+export function jalaliDaysInMonth(month: number): number {
+  return month <= 6 ? 31 : month <= 11 ? 30 : 29;
+}
+
+/** Convert a Gregorian month+day to Jalali month+day (uses year 2000 as representative). */
+export function gregorianToJalali(
+  gMonth: number,
+  gDay: number,
+): { month: number; day: number } {
+  const mm = String(gMonth).padStart(2, "0");
+  const dd = String(gDay).padStart(2, "0");
+  const d = dayjs(`2000-${mm}-${dd}`).calendar("jalali");
+  return { month: d.month() + 1, day: d.date() };
+}
+
+/** Convert a Jalali month+day (+ optional year) to Gregorian month+day. */
+export function jalaliToGregorian(
+  jMonth: number,
+  jDay: number,
+  jYear = 1379,
+): { month: number; day: number } {
+  const yy = String(jYear).padStart(4, "0");
+  const mm = String(jMonth).padStart(2, "0");
+  const dd = String(jDay).padStart(2, "0");
+  const d = dayjs(`${yy}/${mm}/${dd}`, { jalali: true } as Record<string, unknown>);
+  const native = d.toDate();
+  return { month: native.getMonth() + 1, day: native.getDate() };
+}
+
 export function getTodayJalali(): JalaliDateParts {
   const j = dayjs().calendar("jalali");
   return { year: j.year(), month: j.month() + 1, day: j.date() };
@@ -90,10 +138,10 @@ export function isBirthdayWithinDays(
 
 export function formatTodayDate(system: DateSystem): string {
   if (system === "gregorian") {
-    return dayjs().format("MMMM D, YYYY");
+    return dayjs().format("D, MMMM YYYY");
   }
   const { year, month, day } = getTodayJalali();
-  return `${JALALI_MONTHS[month - 1]} ${day}, ${year}`;
+  return `${day}, ${JALALI_MONTHS[month - 1]} ${year}`;
 }
 
 export function formatBirthdayBySystem(
@@ -103,11 +151,8 @@ export function formatBirthdayBySystem(
   system: DateSystem,
 ): string {
   if (system === "gregorian") {
-    // Convert Jalali month/day to Gregorian using a representative year
-    const d = dayjs().calendar("jalali").year(1400).month(month - 1).date(day);
-    const monthName = d.format("MMMM");
-    const dayNum = d.date();
-    return `${monthName} ${dayNum}`;
+    const { month: gMonth, day: gDay } = jalaliToGregorian(month, day);
+    return `${GREGORIAN_MONTHS[gMonth - 1]} ${gDay}`;
   }
   return formatJalaliBirthday(month, day, year);
 }

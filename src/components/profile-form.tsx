@@ -2,11 +2,11 @@
 
 import { useRouter } from "@/lib/navigation";
 import { useState } from "react";
-import { PersianDatePicker } from "@/components/persian-date-picker";
+import { BirthdayDatePicker } from "@/components/birthday-date-picker";
+import { useDateSystem } from "@/lib/date-system-context";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { AvatarPicker } from "@/components/avatar-picker";
-import { Link } from "@/components/link";
 
 type Props = {
   initial: {
@@ -21,29 +21,44 @@ type Props = {
   };
 };
 
+function Divider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 py-1">
+      <div className="h-px flex-1 bg-border" />
+      <span className="text-[10px] font-semibold uppercase tracking-widest text-muted">{label}</span>
+      <div className="h-px flex-1 bg-border" />
+    </div>
+  );
+}
+
 export function ProfileForm({ initial }: Props) {
   const router = useRouter();
+  const dateSystem = useDateSystem();
   const [name, setName] = useState(initial.name);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initial.avatarUrl);
   const [username, setUsername] = useState(initial.username ?? "");
-  const [cardNumber, setCardNumber] = useState(initial.cardNumber ?? "");
+  const [cardNumber, setCardNumber] = useState(
+    initial.cardNumber
+      ? initial.cardNumber.replace(/(.{4})/g, "$1-").replace(/-$/, "")
+      : ""
+  );
   const [cardHolder, setCardHolder] = useState(initial.cardHolder ?? "");
   const [birth, setBirth] = useState({
     year: initial.birthYear ?? 1370,
     month: initial.birthMonth ?? 1,
     day: initial.birthDay ?? 1,
   });
-  const [msg, setMsg] = useState("");
+  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
 
-  function formatCardNumber(value: string) {
+  function formatCard(value: string) {
     const digits = value.replace(/\D/g, "").slice(0, 16);
     return digits.replace(/(.{4})/g, "$1-").replace(/-$/, "");
   }
 
   async function save() {
     setLoading(true);
-    setMsg("");
+    setMsg(null);
     const res = await fetch("/api/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -60,30 +75,34 @@ export function ProfileForm({ initial }: Props) {
     });
     setLoading(false);
     if (res.ok) {
-      setMsg("Saved!");
+      setMsg({ text: "Profile saved", ok: true });
       router.refresh();
     } else {
       const d = await res.json();
-      setMsg(d.error ?? "Error");
+      setMsg({ text: d.error ?? "Could not save", ok: false });
     }
   }
 
   return (
-    <div className="space-y-6">
-      <AvatarPicker
-        name={name.trim() || "You"}
-        initialAvatarUrl={initial.avatarUrl}
-        onChange={setAvatarUrl}
-      />
+    <div className="space-y-5">
+      {/* Avatar */}
+      <div className="flex justify-center">
+        <AvatarPicker name={name.trim() || "You"} initialAvatarUrl={initial.avatarUrl} onChange={setAvatarUrl} />
+      </div>
 
+      <Divider label="Identity" />
+
+      {/* Name */}
       <div>
         <Label>Display name</Label>
-        <Input value={name} onChange={(e) => setName(e.target.value)} />
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
       </div>
+
+      {/* Username */}
       <div>
         <Label>Username</Label>
         <div className="relative">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted">@</span>
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted select-none">@</span>
           <Input
             value={username}
             onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
@@ -91,46 +110,45 @@ export function ProfileForm({ initial }: Props) {
             className="pl-7"
           />
         </div>
-        <p className="mt-1 text-xs text-muted">Lowercase letters, numbers, underscores. Used in your profile URL.</p>
+        <p className="mt-1 text-[11px] text-muted">Letters, numbers, underscores. Sets your profile URL: <span className="font-mono">/u/{username || "username"}</span></p>
       </div>
+
+      <Divider label="Birthday" />
+
+      {/* Birthday */}
+      <div>
+        <Label>Birthday ({dateSystem === "jalali" ? "Jalali / Shamsi" : "Gregorian"})</Label>
+        <BirthdayDatePicker value={birth} onChange={setBirth} showYear />
+      </div>
+
+      <Divider label="Bank card" />
+
+      {/* Card */}
       <div>
         <Label>Card number</Label>
         <Input
           value={cardNumber}
-          onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+          onChange={(e) => setCardNumber(formatCard(e.target.value))}
           placeholder="1234-5678-9012-3456"
           inputMode="numeric"
           dir="ltr"
+          className="font-mono tracking-wider"
         />
-        <p className="mt-1 text-xs text-muted">Shown on your public profile so friends can transfer money directly.</p>
+        <p className="mt-1 text-[11px] text-muted">Shown on public profile so friends can transfer directly.</p>
       </div>
+
       <div>
         <Label>Card holder name</Label>
-        <Input
-          value={cardHolder}
-          onChange={(e) => setCardHolder(e.target.value)}
-          placeholder="Name on card"
-        />
+        <Input value={cardHolder} onChange={(e) => setCardHolder(e.target.value)} placeholder="Name on card" />
       </div>
-      <div>
-        <Label>Birthday (Jalali / Shamsi)</Label>
-        <PersianDatePicker value={birth} onChange={setBirth} showYear />
-      </div>
-      <p className="text-sm text-muted">
-        Manage gifts you want on{" "}
-        <Link href="/wishlist" className="text-foreground font-medium">
-          your wishlist
-        </Link>
-        .
-      </p>
-      {msg && <p className="text-sm text-emerald-600">{msg}</p>}
-      <Button
-        type="button"
-        onClick={save}
-        loading={loading}
-        loadingText="Saving…"
-        className="w-full"
-      >
+
+      {/* Save */}
+      {msg && (
+        <p className={`rounded-lg px-3 py-2 text-sm ${msg.ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"}`}>
+          {msg.ok ? "✓ " : ""}{msg.text}
+        </p>
+      )}
+      <Button type="button" onClick={save} loading={loading} loadingText="Saving…" className="w-full" variant="primary">
         Save profile
       </Button>
     </div>

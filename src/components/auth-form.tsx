@@ -56,7 +56,14 @@ export function AuthForm({ mode }: { mode: Mode }) {
         <Input id="email" name="email" type="email" required />
       </div>
       <div>
-        <Label htmlFor="password">Password</Label>
+        <div className="flex items-center justify-between mb-1.5">
+          <Label htmlFor="password" className="mb-0">Password</Label>
+          {mode === "login" && (
+            <Link href="/forgot-password" className="text-xs text-muted hover:text-foreground">
+              Forgot password?
+            </Link>
+          )}
+        </div>
         <Input id="password" name="password" type="password" required minLength={6} />
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}

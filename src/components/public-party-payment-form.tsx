@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { MoneyInput, getAmountFromInput } from "@/components/money-input";
 import { Icon } from "@/components/icon";
-import { formatMoney } from "@/lib/utils";
+import { useFormatMoney } from "@/lib/currency-context";
 
 type Item = { id: string; title: string; cost: number };
 
@@ -20,6 +20,7 @@ export function PublicPartyPaymentForm({
   cardHolder: string | null;
   items: Item[];
 }) {
+  const formatMoney = useFormatMoney();
   const [guestName, setGuestName] = useState("");
   const [amount, setAmount] = useState("");
   const [wishlistItemId, setWishlistItemId] = useState("");

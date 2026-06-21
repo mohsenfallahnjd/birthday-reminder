@@ -12,7 +12,6 @@ export async function Nav() {
       where: { userId: session.id, read: false },
     });
   }
-
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-border bg-white/80 backdrop-blur-sm">
@@ -31,24 +30,21 @@ export async function Nav() {
             {session ? (
               <>
                 <Link href="/dashboard" variant="nav">
-                  Dashboard
-                </Link>
-                <Link href="/wishlist" variant="nav">
-                  Wishlist
+                  Home
                 </Link>
                 <Link href="/groups" variant="nav">
                   Groups
                 </Link>
-                <Link href="/explore" variant="nav">
-                  Explore
-                </Link>
                 <Link href="/people" variant="nav">
-                  Friends
+                  People
+                </Link>
+                <Link href="/wishlist" variant="nav">
+                  Wishlist
                 </Link>
                 <Link href="/notifications" variant="nav" className="relative">
-                  Alerts
+                  <Icon name="bell" size={18} className="text-muted" strokeWidth={1.75} />
                   {unread > 0 && (
-                    <span className="absolute -top-1.5 -right-3 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-medium text-white">
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-medium text-white">
                       {unread > 9 ? "9+" : unread}
                     </span>
                   )}
@@ -61,7 +57,7 @@ export async function Nav() {
                     type="submit"
                     className="text-sm text-muted hover:text-foreground transition-colors"
                   >
-                    Log out
+                    Out
                   </button>
                 </form>
               </>
@@ -81,9 +77,7 @@ export async function Nav() {
             <Link
               href="/notifications"
               className="relative flex h-10 w-10 items-center justify-center rounded-full text-foreground no-underline transition-colors hover:bg-muted-subtle md:hidden"
-              aria-label={
-                unread > 0 ? `Notifications, ${unread} unread` : "Notifications"
-              }
+              aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
             >
               <Icon name="bell" size={22} className="text-foreground" strokeWidth={1.75} />
               {unread > 0 && (

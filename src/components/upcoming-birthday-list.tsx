@@ -1,5 +1,6 @@
 import { UserAvatar } from "./user-avatar";
 import { Icon } from "./icon";
+import Link from "next/link";
 
 type BirthdayEntry = {
   id: string;
@@ -66,6 +67,7 @@ function tierConfig(days: number): TierConfig {
 }
 
 function BirthdayCard({
+  id,
   name,
   days,
   date,
@@ -74,6 +76,8 @@ function BirthdayCard({
 }: BirthdayEntry & { hasParty?: boolean }) {
   const t = tierConfig(days);
   const isToday = days === 0;
+  const isContact = id.startsWith("contact:");
+  const profileHref = isContact ? null : `/person/${id}`;
 
   return (
     <li
@@ -87,29 +91,44 @@ function BirthdayCard({
         aria-hidden
       />
 
-      {/* Blurred glow in background */}
+      {/* Blurred glow */}
       <span
         className="pointer-events-none absolute -right-4 -top-4 h-16 w-16 rounded-full opacity-20 blur-2xl"
         style={{ backgroundColor: t.accentColor }}
         aria-hidden
       />
 
-      {/* Avatar */}
-      <UserAvatar
-        name={name}
-        avatarUrl={avatarUrl}
-        size="md"
-        accentColor={t.accentColor}
-      />
+      {/* Avatar — links to profile for real users */}
+      {profileHref ? (
+        <Link href={profileHref} className="shrink-0">
+          <UserAvatar name={name} avatarUrl={avatarUrl} size="md" accentColor={t.accentColor} />
+        </Link>
+      ) : (
+        <UserAvatar name={name} avatarUrl={avatarUrl} size="md" accentColor={t.accentColor} />
+      )}
 
       {/* Name + date */}
       <div className="relative min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="truncate text-sm font-semibold text-foreground">{name}</p>
-          {hasParty && (
+          {profileHref ? (
+            <Link href={profileHref} className="truncate text-sm font-semibold text-foreground no-underline hover:underline">
+              {name}
+            </Link>
+          ) : (
+            <p className="truncate text-sm font-semibold text-foreground">{name}</p>
+          )}
+          {hasParty ? (
             <span className="shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
               Party ✓
             </span>
+          ) : !isContact && (
+            <Link
+              href="/groups"
+              className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold no-underline transition-colors"
+              style={{ backgroundColor: t.tagBg, color: t.tagText }}
+            >
+              + Party
+            </Link>
           )}
         </div>
         <p className="mt-0.5 flex items-center gap-1 text-xs text-muted">

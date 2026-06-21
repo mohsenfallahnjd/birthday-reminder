@@ -9,6 +9,8 @@ export function getFundingPercent(collected: number, target: number) {
 type MoneyProgressProps = {
   collected: number;
   target: number;
+  /** Amount within `collected` that came from the general pool — shown in a lighter shade */
+  fromGeneral?: number;
   label?: string;
   className?: string;
   size?: "sm" | "md";
@@ -17,11 +19,15 @@ type MoneyProgressProps = {
 export function MoneyProgress({
   collected,
   target,
+  fromGeneral = 0,
   label = "Funded",
   className,
   size = "md",
 }: MoneyProgressProps) {
   const percent = getFundingPercent(collected, target);
+  const ownCollected = Math.max(0, collected - fromGeneral);
+  const ownPct = getFundingPercent(ownCollected, target);
+  const poolPct = Math.max(0, percent - ownPct);
   const complete = target > 0 && collected >= target;
 
   return (
@@ -45,7 +51,7 @@ export function MoneyProgress({
       </div>
       <div
         className={cn(
-          "w-full overflow-hidden rounded-full bg-muted-subtle",
+          "relative w-full overflow-hidden rounded-full bg-muted-subtle",
           size === "sm" ? "h-1.5" : "h-2.5",
         )}
         role="progressbar"
@@ -54,16 +60,33 @@ export function MoneyProgress({
         aria-valuemax={100}
         aria-label={`${label}: ${percent}%`}
       >
+        {/* own contributions */}
         <div
           className={cn(
-            "h-full rounded-full transition-all duration-500 ease-out",
+            "absolute left-0 top-0 h-full rounded-full transition-all duration-500 ease-out",
             complete ? "bg-emerald-600" : "bg-accent",
           )}
-          style={{ width: `${percent}%` }}
+          style={{ width: `${ownPct}%` }}
         />
+        {/* general pool portion (lighter) */}
+        {poolPct > 0 && (
+          <div
+            className={cn(
+              "absolute top-0 h-full rounded-r-full transition-all duration-500 ease-out",
+              complete ? "bg-emerald-300" : "bg-accent/35",
+            )}
+            style={{ left: `${ownPct}%`, width: `${poolPct}%` }}
+          />
+        )}
       </div>
       {complete && (
         <p className="text-xs font-medium text-emerald-600">Fully funded</p>
+      )}
+      {fromGeneral > 0 && !complete && (
+        <p className="text-[11px] text-muted">
+          <span className="inline-block h-2 w-2 rounded-full bg-accent/35 mr-1 align-middle" />
+          {formatAmount(fromGeneral)} from shared pool
+        </p>
       )}
     </div>
   );

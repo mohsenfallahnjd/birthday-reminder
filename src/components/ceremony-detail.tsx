@@ -1,14 +1,17 @@
 "use client";
 
 import { useRouter } from "@/lib/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { WishlistManager } from "@/components/wishlist-manager";
+import { PartyTeam } from "@/components/party-team";
+import { ShareInviteCode } from "@/components/share-invite-code";
 import { Button } from "@/components/ui/button";
 import { MoneyInput, getAmountFromInput } from "@/components/money-input";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { getFundingPercent, MoneyProgress } from "@/components/ui/money-progress";
 import { formatAmount } from "@/lib/money";
-import { formatMoney } from "@/lib/utils";
+import { useFormatMoney } from "@/lib/currency-context";
 import { Icon } from "@/components/icon";
 import { Link } from "@/components/link";
 
@@ -155,24 +158,47 @@ type Ceremony = {
 
 // ─── main component ───────────────────────────────────────────────────────────
 
+type TeamMember = { id: string; name: string; role: "BIRTHDAY" | "ADMIN" | "GUEST" };
+type Friend = { id: string; name: string; avatarUrl?: string | null };
+
 export function CeremonyDetail({
   ceremony,
   currentUserId,
   isAdmin,
   isBirthdayPerson,
-  canEditWishlist,
   members,
+  friends,
+  canManageTeam,
+  groupId,
+  groupInviteCode,
+  groupName,
+  appOrigin,
 }: {
   ceremony: Ceremony;
   currentUserId: string;
   isAdmin: boolean;
   isBirthdayPerson: boolean;
-  canEditWishlist: boolean;
-  members?: { id: string; name: string }[];
+  members?: TeamMember[];
+  friends?: Friend[];
+  canManageTeam?: boolean;
+  groupId?: string | null;
+  groupInviteCode?: string | null;
+  groupName?: string | null;
+  appOrigin?: string;
 }) {
   const router = useRouter();
-  const defaultTab = isBirthdayPerson ? "gifts" : canEditWishlist ? "wishlist" : "pay";
-  const [tab, setTab] = useState<"wishlist" | "pay" | "admin" | "gifts">(defaultTab);
+  const searchParams = useSearchParams();
+  const formatMoney = useFormatMoney();
+
+  const defaultTab = isBirthdayPerson ? "gifts" : isAdmin ? "treasurer" : "contribute";
+  type TabId = "gifts" | "wishlist" | "contribute" | "treasurer" | "team";
+  const tab = (searchParams.get("tab") as TabId | null) ?? defaultTab;
+
+  function setTab(id: TabId) {
+    const p = new URLSearchParams(searchParams.toString());
+    p.set("tab", id);
+    router.push(`?${p.toString()}`, { scroll: false });
+  }
 
   const partyItems = ceremony.wishlistItems.filter(
     (i) => i.ceremonyId === ceremony.id || i.ceremonyId === null,
@@ -181,22 +207,23 @@ export function CeremonyDetail({
   const itemEffective = distributeGeneralPool(partyItems, generalPool);
   const funding = partyFunding(partyItems, generalPool);
 
-  const tabs = [
-    ...(isBirthdayPerson ? [{ id: "gifts" as const, label: "🎁 My gifts" }] : []),
+  const tabs: { id: TabId; label: string }[] = [
+    ...(isBirthdayPerson ? [{ id: "gifts" as const, label: "🎁 My Gifts" }] : []),
     { id: "wishlist" as const, label: "Wishlist" },
-    ...(!isBirthdayPerson ? [{ id: "pay" as const, label: "Contribute" }] : []),
-    ...(isAdmin ? [{ id: "admin" as const, label: "Treasurer" }] : []),
+    ...(!isBirthdayPerson ? [{ id: "contribute" as const, label: "Contribute" }] : []),
+    ...(isAdmin ? [{ id: "treasurer" as const, label: "Treasurer" }] : []),
+    { id: "team" as const, label: "Team" },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Funding progress */}
       {partyItems.length > 0 && funding.target > 0 && (
         <div className="rounded-xl border border-border bg-white/80 p-4 shadow-sm sm:p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-medium text-foreground">Party gift progress</p>
-              <p className="mt-0.5 text-xs text-muted">Approved contributions toward wishlist totals</p>
+              <p className="text-sm font-medium text-foreground">Gift progress</p>
+              <p className="mt-0.5 text-xs text-muted">Approved contributions toward wishlist</p>
             </div>
             <ShareProgressButton
               ceremonyTitle={ceremony.title}
@@ -209,56 +236,42 @@ export function CeremonyDetail({
             className="mt-3"
             collected={funding.collected}
             target={funding.target}
+            fromGeneral={generalPool}
             label="Total raised"
           />
-        </div>
-      )}
-
-      {/* Role banners */}
-      {canEditWishlist && (
-        <div className="rounded-xl border border-border shadow-sm bg-muted-subtle p-4 text-sm">
-          <p className="font-medium text-foreground">
-            {isBirthdayPerson ? "You are the birthday holder 🎂" : "You are a party admin"}
-          </p>
-          <p className="mt-1 text-muted">
-            Add gift or party-cost items under <strong>Wishlist</strong>.
-            {isBirthdayPerson && (
-              <> Or pre-fill on <Link href="/wishlist">My wishlist</Link> and attach them here.</>
-            )}
-          </p>
-        </div>
-      )}
-      {isAdmin && !isBirthdayPerson && (
-        <div className="rounded-xl border border-border shadow-sm bg-muted-subtle p-4 text-sm">
-          <p className="font-medium text-foreground">Treasurer (admin)</p>
-          <p className="mt-1 text-muted">
-            Approve payments and manage settings under the Treasurer tab.
-          </p>
+          {/* Contribute CTA for non-birthday guests */}
+          {!isBirthdayPerson && tab !== "contribute" && (
+            <button
+              type="button"
+              onClick={() => setTab("contribute")}
+              className="mt-3 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              Contribute to this party →
+            </button>
+          )}
         </div>
       )}
 
       {/* Tab bar */}
-      <div className="-mx-1 flex max-w-full overflow-x-auto pb-1">
-        <div className="inline-flex shrink-0 gap-1 rounded-md border border-border bg-muted-subtle p-1">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTab(t.id)}
-              className={`rounded px-3 py-1.5 text-sm transition-colors ${
-                tab === t.id
-                  ? "bg-white text-foreground shadow-sm font-medium"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+      <div className="flex overflow-x-auto rounded-xl border border-border bg-muted-subtle p-1 gap-1 no-scrollbar">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className={`flex-1 min-w-fit whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              tab === t.id
+                ? "bg-white text-foreground shadow-sm"
+                : "text-muted hover:text-foreground"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {/* Card info banner (Contribute tab) */}
-      {ceremony.cardNumber && tab === "pay" && (
+      {ceremony.cardNumber && tab === "contribute" && (
         <div className="rounded-xl border border-border shadow-sm px-4 py-3 text-sm text-muted bg-white">
           <p className="text-xs font-medium uppercase tracking-wide mb-1 text-muted">Transfer to</p>
           <p className="font-mono text-foreground text-base tracking-widest">
@@ -328,23 +341,35 @@ export function CeremonyDetail({
               })}
             </ul>
           )}
-          {canEditWishlist ? (
+          {/* Only birthday person can edit wishlist */}
+          {isBirthdayPerson ? (
             <WishlistManager
               items={partyItems}
               ceremonyId={ceremony.id}
               ceremonies={[{ id: ceremony.id, title: ceremony.title }]}
               canEdit
               birthdayUserId={ceremony.birthdayUser.id}
-              actAsAdmin={isAdmin && !isBirthdayPerson}
+              actAsAdmin={false}
             />
           ) : partyItems.length === 0 ? (
-            <p className="text-sm text-muted">No wishlist items for this party yet.</p>
+            <p className="text-sm text-muted">No wishlist items yet.</p>
           ) : null}
+
+          {/* Contribute CTA inside wishlist tab for guests */}
+          {!isBirthdayPerson && partyItems.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setTab("contribute")}
+              className="mt-2 w-full rounded-lg border border-accent bg-accent/5 px-4 py-2.5 text-sm font-semibold text-accent transition-colors hover:bg-accent hover:text-white"
+            >
+              Contribute to this party →
+            </button>
+          )}
         </div>
       )}
 
       {/* ── Contribute tab ── */}
-      {tab === "pay" && (
+      {tab === "contribute" && !isBirthdayPerson && (
         <PaymentSection
           ceremonyId={ceremony.id}
           items={partyItems}
@@ -354,7 +379,7 @@ export function CeremonyDetail({
       )}
 
       {/* ── Treasurer tab ── */}
-      {tab === "admin" && isAdmin && (
+      {tab === "treasurer" && isAdmin && (
         <AdminSection
           ceremonyId={ceremony.id}
           cardNumber={ceremony.cardNumber}
@@ -365,6 +390,28 @@ export function CeremonyDetail({
           guests={members ?? []}
           onUpdate={() => router.refresh()}
         />
+      )}
+
+      {/* ── Team tab ── */}
+      {tab === "team" && (
+        <div className="space-y-6">
+          <PartyTeam
+            ceremonyId={ceremony.id}
+            members={members ?? []}
+            friends={friends ?? []}
+            birthdayUserId={ceremony.birthdayUser.id}
+            birthdayName={ceremony.birthdayUser.name}
+            currentUserId={currentUserId}
+            canManage={canManageTeam ?? false}
+          />
+          {groupId && groupInviteCode && groupName && (
+            <ShareInviteCode
+              inviteCode={groupInviteCode}
+              groupName={groupName}
+              appOrigin={appOrigin}
+            />
+          )}
+        </div>
       )}
     </div>
   );
@@ -383,6 +430,7 @@ function GiftsSection({
   isBirthdayPerson: boolean;
   currentUserId: string;
 }) {
+  const formatMoney = useFormatMoney();
   const approved = payments.filter((p) => p.status === "APPROVED");
   const total = approved.reduce((s, p) => s + p.amount, 0);
 
@@ -447,6 +495,7 @@ function PaymentSection({
   payments: Payment[];
   onRefresh: () => void;
 }) {
+  const formatMoney = useFormatMoney();
   const [mode, setMode] = useState<"pay" | "debt">("pay");
   const [amount, setAmount] = useState("");
   const [wishlistItemId, setWishlistItemId] = useState("");
@@ -692,6 +741,7 @@ function AdminSection({
   guests: { id: string; name: string }[];
   onUpdate: () => void;
 }) {
+  const formatMoney = useFormatMoney();
   const [cardNumber, setCardNumber] = useState(initialCard ?? "");
   const [cardHolder, setCardHolder] = useState(initialHolder ?? "");
   const [hideContributors, setHideContributors] = useState(initialHide);
@@ -817,7 +867,7 @@ function AdminSection({
   const pending = payments.filter((p) => p.status === "PENDING");
   const reviewed = payments.filter((p) => p.status === "APPROVED" || p.status === "REJECTED");
   const approvedCount = new Set(
-    payments.filter((p) => p.status === "APPROVED" && p.payer).map((p) => p.payer!.id),
+    payments.filter((p) => p.status === "APPROVED" && p.payer).map((p) => p.payer?.id ?? ""),
   ).size;
 
   return (

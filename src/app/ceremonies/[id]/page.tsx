@@ -1,12 +1,9 @@
-import { AppSection } from "@/components/app-section";
+import { Suspense } from "react";
 import { CeremonyDetail } from "@/components/ceremony-detail";
 import { PartyHeader } from "@/components/party-header";
-import { PartyTeam } from "@/components/party-team";
-import { ShareInviteCode } from "@/components/share-invite-code";
 import { requireUser } from "@/lib/auth";
 import {
   canApprovePayments,
-  canEditPartyWishlist,
   canManagePartyTeam,
   getAcceptedFriends,
   getCeremonyMembers,
@@ -43,7 +40,6 @@ export default async function CeremonyPage({
   const canManageTeam = await canManagePartyTeam(ceremony, user.id);
   const isTreasurer = await canApprovePayments(id, user.id);
   const isBirthdayPerson = ceremony.birthdayUser.id === user.id;
-  const canEditWishlist = await canEditPartyWishlist(ceremony, user.id);
 
   const teamMembers = members.map((m) => ({
     id: m.user.id,
@@ -85,7 +81,7 @@ export default async function CeremonyPage({
   });
 
   return (
-    <div className="page space-y-8">
+    <div className="page space-y-5">
       <PartyHeader
         ceremonyId={ceremony.id}
         title={ceremony.title}
@@ -103,38 +99,21 @@ export default async function CeremonyPage({
         active={ceremony.active}
       />
 
-      {ceremony.group && (
-        <AppSection title="Group invite" description="Share so others can join" unboxed>
-          <ShareInviteCode
-            inviteCode={ceremony.group.inviteCode}
-            groupName={ceremony.group.name}
-            appOrigin={process.env.NEXT_PUBLIC_APP_URL}
-          />
-        </AppSection>
-      )}
-
-      <AppSection title="Party team" description="Holder, admins, and guests" unboxed>
-        <PartyTeam
-          ceremonyId={ceremony.id}
+      <Suspense fallback={<div className="h-10 rounded-xl bg-muted-subtle animate-pulse" />}>
+        <CeremonyDetail
+          ceremony={{ ...ceremony, wishlistItems }}
+          currentUserId={user.id}
+          isAdmin={isTreasurer}
+          isBirthdayPerson={isBirthdayPerson}
           members={teamMembers}
           friends={friends}
-          birthdayUserId={ceremony.birthdayUser.id}
-          birthdayName={ceremony.birthdayUser.name}
-          currentUserId={user.id}
-          canManage={canManageTeam}
+          canManageTeam={canManageTeam}
+          groupId={ceremony.group?.id ?? null}
+          groupInviteCode={ceremony.group?.inviteCode ?? null}
+          groupName={ceremony.group?.name ?? null}
+          appOrigin={process.env.NEXT_PUBLIC_APP_URL}
         />
-      </AppSection>
-
-      <AppSection title="Gifts & payments" unboxed>
-      <CeremonyDetail
-        ceremony={{ ...ceremony, wishlistItems }}
-        currentUserId={user.id}
-        isAdmin={isTreasurer}
-        isBirthdayPerson={isBirthdayPerson}
-        canEditWishlist={canEditWishlist}
-        members={teamMembers}
-      />
-      </AppSection>
+      </Suspense>
     </div>
   );
 }

@@ -31,6 +31,7 @@
     "react-date-object": "^2.1.9",
     "react-dom": "19.2.4",
     "react-multi-date-picker": "^4.5.2",
+    "resend": "^6.14.0",
     "tailwind-merge": "^3.6.0",
     "web-push": "^3.6.7",
     "zod": "^4.4.3"

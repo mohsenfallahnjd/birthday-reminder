@@ -4,7 +4,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Icon } from "@/components/icon";
-import { JALALI_MONTHS, formatJalaliBirthday } from "@/lib/jalali";
+import { useDateSystem } from "@/lib/date-system-context";
+import {
+  JALALI_MONTHS,
+  GREGORIAN_MONTHS,
+  jalaliDaysInMonth,
+  gregorianDaysInMonth,
+  gregorianToJalali,
+  jalaliToGregorian,
+  formatBirthdayBySystem,
+} from "@/lib/jalali";
 
 type ContactReminder = {
   id: string;
@@ -27,10 +36,18 @@ export function ContactReminderManager({
 }: {
   initial: ContactReminder[];
 }) {
+  const system = useDateSystem();
+  const isGregorian = system === "gregorian";
+
+  const months = isGregorian ? GREGORIAN_MONTHS : JALALI_MONTHS;
+  const daysInMonth = (m: number) =>
+    isGregorian ? gregorianDaysInMonth(m) : jalaliDaysInMonth(m);
+
   const [contacts, setContacts] = useState<ContactReminder[]>(initial);
   const [name, setName] = useState("");
-  const [birthMonth, setBirthMonth] = useState(1);
-  const [birthDay, setBirthDay] = useState(1);
+  // inputMonth/Day track what the user sees (could be Gregorian or Jalali)
+  const [inputMonth, setInputMonth] = useState(1);
+  const [inputDay, setInputDay] = useState(1);
   const [daysBefore, setDaysBefore] = useState(1);
   const [adding, setAdding] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -40,18 +57,24 @@ export function ContactReminderManager({
     if (!name.trim()) { setError("Enter a name."); return; }
     setError("");
     setAdding(true);
+
+    // Always store as Jalali
+    const { month: jMonth, day: jDay } = isGregorian
+      ? gregorianToJalali(inputMonth, inputDay)
+      : { month: inputMonth, day: inputDay };
+
     const res = await fetch("/api/contact-reminders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim(), birthMonth, birthDay, daysBefore }),
+      body: JSON.stringify({ name: name.trim(), birthMonth: jMonth, birthDay: jDay, daysBefore }),
     });
     const data = await res.json();
     setAdding(false);
     if (!res.ok) { setError(data.error ?? "Could not add contact"); return; }
     setContacts((prev) => [...prev, data]);
     setName("");
-    setBirthMonth(1);
-    setBirthDay(1);
+    setInputMonth(1);
+    setInputDay(1);
     setDaysBefore(1);
   }
 
@@ -62,11 +85,8 @@ export function ContactReminderManager({
     setDeletingId(null);
   }
 
-  const daysInMonth = (m: number) => (m <= 6 ? 31 : m <= 11 ? 30 : 29);
-
   return (
     <div className="space-y-4">
-      {/* Add form */}
       <div className="rounded-xl border border-border bg-white p-4 shadow-sm space-y-3">
         <p className="text-sm font-semibold text-foreground">Add a contact</p>
 
@@ -85,15 +105,15 @@ export function ContactReminderManager({
             <Label>Birth month</Label>
             <select
               className="mt-1.5 h-9 w-full rounded-md border border-border bg-white px-3 text-sm"
-              value={birthMonth}
+              value={inputMonth}
               onChange={(e) => {
                 const m = Number(e.target.value);
-                setBirthMonth(m);
-                if (birthDay > daysInMonth(m)) setBirthDay(daysInMonth(m));
+                setInputMonth(m);
+                if (inputDay > daysInMonth(m)) setInputDay(daysInMonth(m));
               }}
             >
-              {JALALI_MONTHS.map((label, i) => (
-                <option key={i + 1} value={i + 1}>{label}</option>
+              {months.map((label, i) => (
+                <option key={label} value={i + 1}>{label}</option>
               ))}
             </select>
           </div>
@@ -102,10 +122,10 @@ export function ContactReminderManager({
             <Label>Birth day</Label>
             <select
               className="mt-1.5 h-9 w-full rounded-md border border-border bg-white px-3 text-sm"
-              value={birthDay}
-              onChange={(e) => setBirthDay(Number(e.target.value))}
+              value={inputDay}
+              onChange={(e) => setInputDay(Number(e.target.value))}
             >
-              {Array.from({ length: daysInMonth(birthMonth) }, (_, i) => i + 1).map((d) => (
+              {Array.from({ length: daysInMonth(inputMonth) }, (_, i) => i + 1).map((d) => (
                 <option key={d} value={d}>{d}</option>
               ))}
             </select>
@@ -140,7 +160,6 @@ export function ContactReminderManager({
         </Button>
       </div>
 
-      {/* List */}
       {contacts.length > 0 && (
         <ul className="divide-y divide-border rounded-xl border border-border bg-white overflow-hidden shadow-sm">
           {contacts.map((c) => (
@@ -149,11 +168,9 @@ export function ContactReminderManager({
                 <p className="truncate text-sm font-medium text-foreground">{c.name}</p>
                 <p className="flex items-center gap-1 text-xs text-muted mt-0.5">
                   <Icon name="cake" size={11} className="shrink-0 opacity-70" />
-                  {formatJalaliBirthday(c.birthMonth, c.birthDay)}
+                  {formatBirthdayBySystem(c.birthMonth, c.birthDay, null, system)}
                   <span className="text-muted/50">·</span>
-                  {c.daysBefore === 0
-                    ? "on the day"
-                    : `${c.daysBefore}d before`}
+                  {c.daysBefore === 0 ? "on the day" : `${c.daysBefore}d before`}
                 </p>
               </div>
               <button

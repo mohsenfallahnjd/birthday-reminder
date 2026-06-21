@@ -5,7 +5,6 @@ import {
   CancelRequestButton,
   RemoveFriendButton,
 } from "@/components/people-actions";
-import { CeremonySetup } from "@/components/ceremony-setup";
 import { ReminderButton } from "@/components/reminder-button";
 import { ContactReminderManager } from "@/components/contact-reminder-manager";
 import {
@@ -13,18 +12,22 @@ import {
   AppListItem,
   AppSection,
   EmptyState,
+  InfoBanner,
   PageHeader,
   PersonRow,
 } from "@/components/app-section";
+import { Link } from "@/components/link";
 import { requireUser } from "@/lib/auth";
-import { getAcceptedFriends } from "@/lib/ceremony-roles";
 import { db } from "@/lib/db";
-import { formatJalaliBirthday } from "@/lib/jalali";
+import { formatBirthdayBySystem } from "@/lib/jalali";
+import { getDateSystem } from "@/lib/date-system";
 import { redirect } from "next/navigation";
 
 export default async function PeoplePage() {
   const user = await requireUser();
   if (!user) redirect("/login");
+
+  const dateSystem = await getDateSystem();
 
   const friendships = await db.friendship.findMany({
     where: { OR: [{ userId: user.id }, { friendId: user.id }] },
@@ -66,8 +69,6 @@ export default async function PeoplePage() {
     (x) => x.friendship.status === "PENDING" && x.friendship.userId === user.id,
   );
 
-  const allFriends = await getAcceptedFriends(user.id);
-
   const existingReminders = await db.reminder.findMany({
     where: { ownerId: user.id, groupId: null },
     select: { targetUserId: true },
@@ -82,25 +83,40 @@ export default async function PeoplePage() {
   return (
     <div className="page-wide space-y-8">
       <PageHeader
-        title="Friends"
-        description="Search for people, send a request, and wait for them to accept."
+        title="People"
+        description="Your friends on the app and off-app contacts"
       />
 
-      <AppSection title="Add friends" description="By email or search">
+      {/* How it connects to parties */}
+      {accepted.length === 0 && (
+        <InfoBanner>
+          Add friends here → then go to{" "}
+          <Link href="/groups" className="font-medium text-foreground">Groups</Link>{" "}
+          or{" "}
+          <Link href="/groups" className="font-medium text-foreground">Parties</Link>{" "}
+          to start a birthday party together.
+        </InfoBanner>
+      )}
+
+      {/* ── FIND PEOPLE ── */}
+      <AppSection
+        title="Find & add friends"
+        description="Search by name or send an invite by email"
+        action={{ href: "/explore", label: "Browse all →" }}
+      >
         <div className="space-y-5">
           <AddFriendByEmail />
           <div className="border-t border-border pt-5">
-            <p className="text-sm font-semibold text-foreground">Find people</p>
-            <p className="mt-0.5 mb-3 text-xs text-muted">Search by name or email</p>
             <FriendSearch />
           </div>
         </div>
       </AppSection>
 
+      {/* ── PENDING ── */}
       {pendingIncoming.length > 0 && (
         <AppSection
-          title={`Requests for you (${pendingIncoming.length})`}
-          description="Accept to connect"
+          title={`Friend requests (${pendingIncoming.length})`}
+          description="People who want to connect with you"
         >
           <AppList>
             {pendingIncoming.map(({ friendship, other }) => (
@@ -121,7 +137,7 @@ export default async function PeoplePage() {
       {pendingOutgoing.length > 0 && (
         <AppSection
           title={`Sent requests (${pendingOutgoing.length})`}
-          description="Waiting for acceptance"
+          description="Waiting for them to accept"
         >
           <AppList>
             {pendingOutgoing.map(({ friendship, other }) => (
@@ -144,9 +160,16 @@ export default async function PeoplePage() {
         </AppSection>
       )}
 
-      <AppSection title={`Friends (${accepted.length})`} description="Your connected people">
+      {/* ── FRIENDS ── */}
+      <AppSection
+        title={`Friends${accepted.length > 0 ? ` (${accepted.length})` : ""}`}
+        description="You see each other's birthdays and wishlists"
+      >
         {accepted.length === 0 ? (
-          <EmptyState>No friends yet. Search above to add someone.</EmptyState>
+          <EmptyState>
+            No friends yet — use the search above or{" "}
+            <Link href="/explore" className="font-medium text-foreground">browse all users</Link>.
+          </EmptyState>
         ) : (
           <AppList>
             {accepted.map(({ friendship, other }) => (
@@ -156,7 +179,7 @@ export default async function PeoplePage() {
                   avatarUrl={other.avatarUrl}
                   subtitle={
                     other.birthMonth && other.birthDay
-                      ? formatJalaliBirthday(other.birthMonth, other.birthDay)
+                      ? formatBirthdayBySystem(other.birthMonth, other.birthDay, null, dateSystem)
                       : undefined
                   }
                   accentColor="#db2777"
@@ -173,26 +196,14 @@ export default async function PeoplePage() {
         )}
       </AppSection>
 
+      {/* ── OFF-APP CONTACTS ── */}
       <AppSection
-        title="Birthday contacts"
-        description="Track birthdays for people not on the app"
+        title="Off-app contacts"
+        description="Track birthdays for people who aren't on the app yet"
       >
         <ContactReminderManager initial={contactReminders} />
       </AppSection>
 
-      {accepted.length > 0 && (
-        <AppSection
-          title="Party without a group"
-          description="Create a standalone party for a friend"
-          unboxed
-        >
-          <CeremonySetup
-            members={accepted.map((x) => x.other)}
-            friends={allFriends}
-            currentUserId={user.id}
-          />
-        </AppSection>
-      )}
     </div>
   );
 }

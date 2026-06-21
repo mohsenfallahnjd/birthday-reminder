@@ -10,9 +10,11 @@ import {
   CreditCard,
   Gift,
   Heart,
+  Link2,
   Lock,
   Pencil,
   PartyPopper,
+  Plus,
   RotateCcw,
   Search,
   Share2,
@@ -46,6 +48,8 @@ export const icons = {
   lock: Lock,
   archive: Archive,
   "rotate-ccw": RotateCcw,
+  link: Link2,
+  plus: Plus,
 } as const;
 
 export type IconName = keyof typeof icons;
