@@ -115,6 +115,7 @@ export default async function GroupDetailPage({
           {members.map((m) => (
             <AppListItem key={m.id}>
               <PersonRow
+                id={m.id}
                 name={m.name}
                 avatarUrl={m.avatarUrl}
                 subtitle={

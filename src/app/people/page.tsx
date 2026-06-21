@@ -63,7 +63,8 @@ export default async function PeoplePage() {
 
   const accepted = list.filter((x) => x.friendship.status === "ACCEPTED");
   const pendingIncoming = list.filter(
-    (x) => x.friendship.status === "PENDING" && x.friendship.friendId === user.id,
+    (x) =>
+      x.friendship.status === "PENDING" && x.friendship.friendId === user.id,
   );
   const pendingOutgoing = list.filter(
     (x) => x.friendship.status === "PENDING" && x.friendship.userId === user.id,
@@ -75,10 +76,12 @@ export default async function PeoplePage() {
   });
   const reminderSet = new Set(existingReminders.map((r) => r.targetUserId));
 
-  const contactReminders = await db.contactReminder.findMany({
-    where: { ownerId: user.id },
-    orderBy: [{ birthMonth: "asc" }, { birthDay: "asc" }],
-  }).catch(() => []);
+  const contactReminders = await db.contactReminder
+    .findMany({
+      where: { ownerId: user.id },
+      orderBy: [{ birthMonth: "asc" }, { birthDay: "asc" }],
+    })
+    .catch(() => []);
 
   return (
     <div className="page-wide space-y-8">
@@ -91,9 +94,13 @@ export default async function PeoplePage() {
       {accepted.length === 0 && (
         <InfoBanner>
           Add friends here → then go to{" "}
-          <Link href="/groups" className="font-medium text-foreground">Groups</Link>{" "}
+          <Link href="/groups" className="font-medium text-foreground">
+            Groups
+          </Link>{" "}
           or{" "}
-          <Link href="/groups" className="font-medium text-foreground">Parties</Link>{" "}
+          <Link href="/groups" className="font-medium text-foreground">
+            Parties
+          </Link>{" "}
           to start a birthday party together.
         </InfoBanner>
       )}
@@ -102,7 +109,6 @@ export default async function PeoplePage() {
       <AppSection
         title="Find & add friends"
         description="Search by name or send an invite by email"
-        action={{ href: "/explore", label: "Browse all →" }}
       >
         <div className="space-y-5">
           <AddFriendByEmail />
@@ -122,6 +128,7 @@ export default async function PeoplePage() {
             {pendingIncoming.map(({ friendship, other }) => (
               <AppListItem key={friendship.id}>
                 <PersonRow
+                  id={other.id}
                   name={other.name}
                   avatarUrl={other.avatarUrl}
                   subtitle={other.email}
@@ -143,6 +150,7 @@ export default async function PeoplePage() {
             {pendingOutgoing.map(({ friendship, other }) => (
               <AppListItem key={friendship.id}>
                 <PersonRow
+                  id={other.id}
                   name={other.name}
                   avatarUrl={other.avatarUrl}
                   subtitle={other.email}
@@ -166,26 +174,32 @@ export default async function PeoplePage() {
         description="You see each other's birthdays and wishlists"
       >
         {accepted.length === 0 ? (
-          <EmptyState>
-            No friends yet — use the search above or{" "}
-            <Link href="/explore" className="font-medium text-foreground">browse all users</Link>.
-          </EmptyState>
+          <EmptyState>No friends yet — use the search above or .</EmptyState>
         ) : (
           <AppList>
             {accepted.map(({ friendship, other }) => (
               <AppListItem key={other.id}>
                 <PersonRow
                   name={other.name}
+                  id={other.id}
                   avatarUrl={other.avatarUrl}
                   subtitle={
                     other.birthMonth && other.birthDay
-                      ? formatBirthdayBySystem(other.birthMonth, other.birthDay, null, dateSystem)
+                      ? formatBirthdayBySystem(
+                          other.birthMonth,
+                          other.birthDay,
+                          null,
+                          dateSystem,
+                        )
                       : undefined
                   }
                   accentColor="#db2777"
                   trailing={
                     <>
-                      <ReminderButton targetUserId={other.id} initialSet={reminderSet.has(other.id)} />
+                      <ReminderButton
+                        targetUserId={other.id}
+                        initialSet={reminderSet.has(other.id)}
+                      />
                       <RemoveFriendButton friendshipId={friendship.id} />
                     </>
                   }
@@ -203,7 +217,6 @@ export default async function PeoplePage() {
       >
         <ContactReminderManager initial={contactReminders} />
       </AppSection>
-
     </div>
   );
 }

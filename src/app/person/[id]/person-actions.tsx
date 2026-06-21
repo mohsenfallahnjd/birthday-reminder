@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/icon";
 import { useRouter } from "@/lib/navigation";
 
@@ -20,7 +19,7 @@ export function PersonActions({
 	isFriend: initialIsFriend,
 	isPending: initialIsPending,
 	pendingDirection: initialDirection,
-	friendshipId,
+	friendshipId: _friendshipId,
 }: Props) {
 	const router = useRouter();
 	const [isFriend, setIsFriend] = useState(initialIsFriend);
@@ -76,8 +75,8 @@ export function PersonActions({
 
 	if (isFriend) {
 		return (
-			<div className="inline-flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 px-4 py-2 rounded-full font-medium">
-				<Icon name="heart" className="w-4 h-4" />
+			<div className="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 shadow-sm">
+				<span className="text-base">🤝</span>
 				Friends
 			</div>
 		);
@@ -85,26 +84,36 @@ export function PersonActions({
 
 	if (isPending && direction === "sent") {
 		return (
-			<div className="inline-flex items-center gap-2 text-sm text-muted bg-muted-subtle px-4 py-2 rounded-full">
+			<div className="inline-flex items-center gap-2 rounded-2xl border border-border bg-muted-subtle px-4 py-2.5 text-sm font-medium text-muted shadow-sm">
 				<Icon name="clock" className="w-4 h-4" />
-				Friend request sent
+				Request sent · waiting
 			</div>
 		);
 	}
 
 	if (isPending && direction === "received") {
 		return (
-			<Button onClick={handleAccept} loading={loading} loadingText="Accepting…">
-				<Icon name="user-plus" className="w-4 h-4 mr-2" />
-				Accept Friend Request
-			</Button>
+			<button
+				type="button"
+				onClick={handleAccept}
+				disabled={loading}
+				className="inline-flex items-center gap-2 rounded-2xl border border-accent bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+			>
+				<Icon name="user-plus" className="w-4 h-4" />
+				{loading ? "Accepting…" : "Accept friend request"}
+			</button>
 		);
 	}
 
 	return (
-		<Button onClick={handleAddFriend} loading={loading} loadingText="Sending…">
-			<Icon name="user-plus" className="w-4 h-4 mr-2" />
-			Add Friend
-		</Button>
+		<button
+			type="button"
+			onClick={handleAddFriend}
+			disabled={loading}
+			className="inline-flex items-center gap-2 rounded-2xl border border-accent/30 bg-accent/8 px-5 py-2.5 text-sm font-semibold text-accent shadow-sm transition-colors hover:bg-accent/15 disabled:opacity-50"
+		>
+			<Icon name="user-plus" className="w-4 h-4" />
+			{loading ? "Sending…" : "Add friend"}
+		</button>
 	);
 }

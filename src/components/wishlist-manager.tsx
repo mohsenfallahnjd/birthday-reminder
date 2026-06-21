@@ -87,9 +87,11 @@ function WishlistItemForm({
     lastFetchedUrl.current = url;
     setFetchingPreview(true);
     try {
-      const res = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
+      const res = await fetch(
+        `/api/link-preview?url=${encodeURIComponent(url)}`,
+      );
       if (!res.ok) return;
-      const data: LinkPreview = (await res.json()).data ?? await res.json();
+      const data: LinkPreview = (await res.json()).data ?? (await res.json());
       setPreview(data);
       if (!title.trim() && data.title) setTitle(data.title);
     } catch {
@@ -128,7 +130,11 @@ function WishlistItemForm({
           Product link (optional — autofills title)
         </Label>
         <div className="relative mt-1.5">
-          <Icon name="link" size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+          <Icon
+            name="link"
+            size={14}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+          />
           <Input
             value={link}
             onChange={(e) => setLink(e.target.value)}
@@ -140,7 +146,8 @@ function WishlistItemForm({
             }}
             onPaste={(e) => {
               const pasted = e.clipboardData.getData("text").trim();
-              if (pasted.startsWith("http")) setTimeout(() => fetchPreview(pasted), 50);
+              if (pasted.startsWith("http"))
+                setTimeout(() => fetchPreview(pasted), 50);
             }}
           />
         </div>
@@ -161,16 +168,24 @@ function WishlistItemForm({
               src={preview.image}
               alt=""
               className="h-14 w-14 flex-shrink-0 rounded-lg object-cover border border-border"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
             />
           )}
           <div className="min-w-0 flex-1">
             {preview.siteName && (
-              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 mb-0.5">{preview.siteName}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 mb-0.5">
+                {preview.siteName}
+              </p>
             )}
-            <p className="text-sm font-medium text-foreground line-clamp-1">{preview.title ?? "Untitled"}</p>
+            <p className="text-sm font-medium text-foreground line-clamp-1">
+              {preview.title ?? "Untitled"}
+            </p>
             {preview.description && (
-              <p className="text-xs text-muted line-clamp-1 mt-0.5">{preview.description}</p>
+              <p className="text-xs text-muted line-clamp-1 mt-0.5">
+                {preview.description}
+              </p>
             )}
           </div>
           <button
@@ -178,7 +193,14 @@ function WishlistItemForm({
             onClick={() => setPreview(null)}
             className="shrink-0 rounded-full p-1.5 text-muted hover:bg-white hover:text-foreground transition-colors"
           >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M2 2l8 8M10 2L2 10" strokeLinecap="round" />
             </svg>
           </button>
@@ -196,10 +218,16 @@ function WishlistItemForm({
           />
         </div>
 
-        <div className={`grid gap-3 ${!fixedCeremonyId && ceremonies.length > 0 ? "grid-cols-2" : "grid-cols-1"}`}>
+        <div
+          className={`grid gap-3 ${!fixedCeremonyId && ceremonies.length > 0 ? "grid-cols-2" : "grid-cols-1"}`}
+        >
           <div>
             <Label>Price (Toman)</Label>
-            <MoneyInput value={cost} onValueChange={setCost} placeholder="1,500,000" />
+            <MoneyInput
+              value={cost}
+              onValueChange={setCost}
+              placeholder="1,500,000"
+            />
           </div>
           {!fixedCeremonyId && ceremonies.length > 0 && (
             <div>
@@ -211,7 +239,9 @@ function WishlistItemForm({
               >
                 <option value="">General wishlist</option>
                 {ceremonies.map((c) => (
-                  <option key={c.id} value={c.id}>{c.title}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.title}
+                  </option>
                 ))}
               </select>
             </div>
@@ -230,14 +260,22 @@ function WishlistItemForm({
         </label>
 
         {error && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+            {error}
+          </p>
         )}
       </div>
 
       {/* Footer actions */}
       <div className="flex items-center gap-2 border-t border-border bg-muted-subtle/30 px-4 py-3">
         {onCancel && (
-          <Button type="button" size="sm" variant="ghost" onClick={onCancel} disabled={busy}>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={onCancel}
+            disabled={busy}
+          >
             Cancel
           </Button>
         )}
@@ -281,7 +319,11 @@ function WishlistCard({
           src={item.ogImage}
           alt={item.title}
           className="h-auto w-28 flex-shrink-0 object-cover sm:w-32"
-          onError={(e) => { (e.target as HTMLImageElement).parentElement?.classList.add("hidden"); }}
+          onError={(e) => {
+            (e.target as HTMLImageElement).parentElement?.classList.add(
+              "hidden",
+            );
+          }}
         />
       )}
 
@@ -298,22 +340,35 @@ function WishlistCard({
                 {item.title}
               </a>
             ) : (
-              <p className="text-sm font-semibold text-foreground leading-snug line-clamp-2">{item.title}</p>
+              <p className="text-sm font-semibold text-foreground leading-snug line-clamp-2">
+                {item.title}
+              </p>
             )}
             {item.ogDescription && (
-              <p className="mt-0.5 line-clamp-2 text-xs text-muted">{item.ogDescription}</p>
+              <p className="mt-0.5 line-clamp-2 text-xs text-muted">
+                {item.ogDescription}
+              </p>
             )}
           </div>
 
           {canEdit && (
-            <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="flex shrink-0 gap-0.5 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
               <button
                 type="button"
                 onClick={onEdit}
                 className="rounded-lg p-1.5 text-muted hover:bg-muted-subtle hover:text-foreground transition-colors"
                 title="Edit"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
                   <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
@@ -326,14 +381,33 @@ function WishlistCard({
                 title="Delete"
               >
                 {deleting ? (
-                  <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    className="animate-spin"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
                     <path d="M12 2a10 10 0 0110 10" strokeLinecap="round" />
                   </svg>
                 ) : (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <polyline points="3 6 5 6 21 6" />
-                    <path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
+                    <path d="M19 6l-1 14H6L5 6" />
+                    <path d="M10 11v6M14 11v6" />
+                    <path d="M9 6V4h6v2" />
                   </svg>
                 )}
               </button>
@@ -342,13 +416,20 @@ function WishlistCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 mt-auto">
-          <Money amount={item.cost} className="text-base font-bold tabular-nums text-accent" />
+          <Money
+            amount={item.cost}
+            className="text-base font-bold tabular-nums text-accent"
+          />
           {item.allowCheapIn && (
-            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">Pay what you can</span>
+            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+              Pay what you can
+            </span>
           )}
           {item.ceremonyId && ceremonies.length > 0 && (
             <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-medium text-violet-700">
-              🎉 {ceremonies.find((c) => c.id === item.ceremonyId)?.title ?? "Party"}
+              🎉{" "}
+              {ceremonies.find((c) => c.id === item.ceremonyId)?.title ??
+                "Party"}
             </span>
           )}
           {item.link && (
@@ -412,7 +493,9 @@ export function WishlistManager({
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const displayItems = fixedCeremonyId
-    ? initialItems.filter((i) => i.ceremonyId === fixedCeremonyId || i.ceremonyId === null)
+    ? initialItems.filter(
+        (i) => i.ceremonyId === fixedCeremonyId || i.ceremonyId === null,
+      )
     : initialItems;
 
   async function saveNew(data: WishlistFormData) {
@@ -429,7 +512,11 @@ export function WishlistManager({
         ceremonyId: data.ceremonyId,
       }),
     });
-    if (res.ok) { setShowAdd(false); router.refresh(); return true; }
+    if (res.ok) {
+      setShowAdd(false);
+      router.refresh();
+      return true;
+    }
     return false;
   }
 
@@ -447,7 +534,11 @@ export function WishlistManager({
         ceremonyId: data.ceremonyId ?? null,
       }),
     });
-    if (res.ok) { setEditingId(null); router.refresh(); return true; }
+    if (res.ok) {
+      setEditingId(null);
+      router.refresh();
+      return true;
+    }
     return false;
   }
 
@@ -456,8 +547,13 @@ export function WishlistManager({
     setDeletingId(id);
     const res = await fetch(`/api/wishlist/${id}`, { method: "DELETE" });
     setDeletingId(null);
-    if (res.ok) { setEditingId(null); router.refresh(); }
-    else { const d = await res.json(); alert(d.error ?? "Could not delete"); }
+    if (res.ok) {
+      setEditingId(null);
+      router.refresh();
+    } else {
+      const d = await res.json();
+      alert(d.error ?? "Could not delete");
+    }
   }
 
   if (!canEdit && displayItems.length === 0) {
@@ -466,8 +562,8 @@ export function WishlistManager({
 
   return (
     <div className="space-y-3">
-      {canEdit && (
-        showAdd ? (
+      {canEdit &&
+        (showAdd ? (
           <WishlistItemForm
             initial={EMPTY_FORM}
             ceremonies={ceremonies}
@@ -479,7 +575,10 @@ export function WishlistManager({
         ) : (
           <button
             type="button"
-            onClick={() => { setEditingId(null); setShowAdd(true); }}
+            onClick={() => {
+              setEditingId(null);
+              setShowAdd(true);
+            }}
             className="flex w-full items-center gap-3 rounded-2xl border-2 border-dashed border-border bg-white px-4 py-4 text-sm font-medium text-muted transition-colors hover:border-accent/50 hover:bg-accent/5 hover:text-accent"
           >
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-muted-subtle">
@@ -487,8 +586,7 @@ export function WishlistManager({
             </span>
             Add a gift idea
           </button>
-        )
-      )}
+        ))}
 
       {displayItems.length === 0 ? (
         <EmptyState>
@@ -514,7 +612,10 @@ export function WishlistManager({
                   item={item}
                   ceremonies={ceremonies}
                   canEdit={canEdit}
-                  onEdit={() => { setShowAdd(false); setEditingId(item.id); }}
+                  onEdit={() => {
+                    setShowAdd(false);
+                    setEditingId(item.id);
+                  }}
                   onDelete={() => deleteItem(item.id)}
                   deleting={deletingId === item.id}
                 />

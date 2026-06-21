@@ -5,7 +5,10 @@ import { Icon } from "@/components/icon";
 import { ProfilePaymentForm } from "@/components/profile-payment-form";
 import { CopyCardButton } from "@/components/copy-card-button";
 import { formatJalaliBirthday } from "@/lib/jalali";
-import { formatMoney, getCurrency } from "@/lib/currency";
+import { getCurrency } from "@/lib/currency";
+import { MoneyDisplay } from "@/components/money-display";
+import { parseCryptoAddresses, CRYPTO_COINS } from "@/lib/crypto-wallets";
+import { CopyCryptoAddress } from "@/components/copy-crypto-address";
 
 export default async function PublicProfilePage({
   params,
@@ -19,11 +22,14 @@ export default async function PublicProfilePage({
     where: { OR: [{ username: token }, { profileToken: token }] },
     select: {
       name: true,
+      email: true,
       avatarUrl: true,
       birthMonth: true,
       birthDay: true,
       cardNumber: true,
       cardHolder: true,
+      cryptoAddresses: true,
+      isSuperAdmin: true,
       wishlistItems: {
         where: { ceremonyId: null },
         select: {
@@ -57,16 +63,74 @@ export default async function PublicProfilePage({
   return (
     <div className="min-h-screen bg-[#f5f5f7]">
       {/* Hero */}
-      <div className="relative overflow-hidden bg-white pb-6 pt-10">
-        <div className="pointer-events-none absolute -right-12 -top-12 h-52 w-52 rounded-full bg-accent/10 blur-3xl" aria-hidden />
-        <div className="pointer-events-none absolute -bottom-8 -left-8 h-40 w-40 rounded-full bg-pink-300/15 blur-2xl" aria-hidden />
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-accent via-pink-400 to-accent/60" aria-hidden />
+      <div className={`relative overflow-hidden pb-6 pt-10 ${user.isSuperAdmin ? "bg-gradient-to-br from-amber-50 via-white to-violet-50" : "bg-white"}`}>
+        {user.isSuperAdmin ? (
+          <>
+            <style>{`
+              @keyframes rainbowSlide { 0%{background-position:0% 0%} 100%{background-position:200% 0%} }
+              @keyframes crownBob { 0%,100%{transform:translateX(-50%) translateY(0) rotate(-4deg)} 50%{transform:translateX(-50%) translateY(-5px) rotate(4deg)} }
+              @keyframes shimmer { 0%,100%{opacity:.7} 50%{opacity:1} }
+            `}</style>
+            {/* animated rainbow top border */}
+            <div
+              className="absolute inset-x-0 top-0 h-1"
+              style={{ background:"linear-gradient(90deg,#f43f5e,#f97316,#eab308,#22c55e,#3b82f6,#a855f7,#f43f5e)", backgroundSize:"200% 100%", animation:"rainbowSlide 3s linear infinite" }}
+              aria-hidden
+            />
+            {/* glow blobs */}
+            <div className="pointer-events-none absolute -right-10 -top-10 h-56 w-56 rounded-full bg-amber-300/20 blur-3xl" aria-hidden />
+            <div className="pointer-events-none absolute -bottom-6 -left-6 h-44 w-44 rounded-full bg-violet-300/20 blur-3xl" aria-hidden />
+            <div className="pointer-events-none absolute left-1/2 top-0 h-32 w-64 -translate-x-1/2 rounded-full bg-yellow-200/30 blur-2xl" aria-hidden />
+          </>
+        ) : (
+          <>
+            <div className="pointer-events-none absolute -right-12 -top-12 h-52 w-52 rounded-full bg-accent/10 blur-3xl" aria-hidden />
+            <div className="pointer-events-none absolute -bottom-8 -left-8 h-40 w-40 rounded-full bg-pink-300/15 blur-2xl" aria-hidden />
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-accent via-pink-400 to-accent/60" aria-hidden />
+          </>
+        )}
 
         <div className="relative mx-auto max-w-lg px-5">
-          <div className="flex items-center gap-5">
-            <UserAvatar name={user.name} avatarUrl={user.avatarUrl} size="xl" accentColor="#4f46e5" />
-            <div className="min-w-0">
-              <h1 className="text-xl font-bold text-foreground leading-tight">{user.name}</h1>
+          <div className={`flex items-center gap-5 ${user.isSuperAdmin ? "flex-col text-center sm:flex-row sm:text-left" : ""}`}>
+            <div className="relative shrink-0">
+              {user.isSuperAdmin ? (
+                <>
+                  {/* golden ring */}
+                  <div
+                    className="absolute inset-0 rounded-full"
+                    style={{ background:"conic-gradient(from 0deg,#f43f5e,#f97316,#eab308,#22c55e,#3b82f6,#a855f7,#f43f5e)", padding:3, borderRadius:"50%", animation:"rainbowSlide 4s linear infinite", backgroundSize:"200% 100%" }}
+                    aria-hidden
+                  >
+                    <div className="h-full w-full rounded-full bg-amber-50" />
+                  </div>
+                  <div className="relative">
+                    <UserAvatar name={user.name} avatarUrl={user.avatarUrl} size="xl" accentColor="#f59e0b" />
+                  </div>
+                  <span
+                    className="absolute -top-5 left-1/2 select-none text-3xl drop-shadow-md"
+                    style={{ animation:"crownBob 2s ease-in-out infinite" }}
+                    title="Creator"
+                  >
+                    👑
+                  </span>
+                </>
+              ) : (
+                <UserAvatar name={user.name} avatarUrl={user.avatarUrl} size="xl" accentColor="#4f46e5" />
+              )}
+            </div>
+
+            <div className={`min-w-0 ${user.isSuperAdmin ? "flex flex-col items-center sm:items-start" : ""}`}>
+              {user.isSuperAdmin && (
+                <span
+                  className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-gradient-to-r from-amber-100 to-yellow-100 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-amber-700 shadow-sm"
+                  style={{ animation:"shimmer 2.5s ease-in-out infinite" }}
+                >
+                  ✦ Creator & Developer ✦
+                </span>
+              )}
+              <div className="flex items-center gap-2 flex-wrap">
+              <h1 className={`font-bold leading-tight ${user.isSuperAdmin ? "text-2xl bg-gradient-to-r from-amber-600 via-orange-500 to-pink-500 bg-clip-text text-transparent" : "text-xl text-foreground"}`}>{user.name}</h1>
+              </div>
               {user.birthMonth && user.birthDay && (
                 <p className="mt-1 flex items-center gap-1.5 text-sm text-muted">
                   <Icon name="cake" size={13} className="shrink-0 opacity-60" />
@@ -82,7 +146,7 @@ export default async function PublicProfilePage({
                 )}
                 {totalReceived > 0 && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                    {formatMoney(totalReceived, currency)} chipped in
+                    <MoneyDisplay amount={totalReceived} currency={currency} /> chipped in
                   </span>
                 )}
               </div>
@@ -93,7 +157,7 @@ export default async function PublicProfilePage({
             <div className="mt-5 space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="font-medium text-foreground">Wishlist progress</span>
-                <span className="tabular-nums text-muted">{progressPct}% of {formatMoney(totalGoal, currency)}</span>
+                <span className="tabular-nums text-muted">{progressPct}% of <MoneyDisplay amount={totalGoal} currency={currency} /></span>
               </div>
               <div className="h-2.5 w-full overflow-hidden rounded-full bg-accent/10">
                 <div
@@ -125,6 +189,32 @@ export default async function PublicProfilePage({
             </div>
           </section>
         )}
+
+        {/* Crypto wallets */}
+        {(() => {
+          const cryptos = parseCryptoAddresses(user.cryptoAddresses);
+          const entries = CRYPTO_COINS.filter((c) => cryptos[c.id]);
+          if (!entries.length) return null;
+          return (
+            <section className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+              <div className="border-b border-border bg-muted-subtle/50 px-5 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted">Crypto wallets</p>
+              </div>
+              <ul className="divide-y divide-border">
+                {entries.map((coin) => (
+                  <li key={coin.id} className="flex items-center gap-3 px-5 py-3">
+                    <span className="w-8 shrink-0 text-center text-lg" title={coin.label}>{coin.emoji}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-semibold text-muted uppercase tracking-wide">{coin.label}</p>
+                      <p className="truncate font-mono text-xs text-foreground">{cryptos[coin.id]}</p>
+                    </div>
+                    <CopyCryptoAddress address={cryptos[coin.id] ?? ""} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          );
+        })()}
 
         {/* Wishlist */}
         {user.wishlistItems.length === 0 ? (
@@ -158,7 +248,7 @@ export default async function PublicProfilePage({
                       )}
                       <div className="mt-2.5 flex items-center justify-between gap-2 flex-wrap">
                         <p className="text-base font-bold tabular-nums text-accent">
-                          {formatMoney(item.cost, currency)}
+                          <MoneyDisplay amount={item.cost} currency={currency} />
                         </p>
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {item.allowCheapIn && (

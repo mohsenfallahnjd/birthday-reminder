@@ -157,28 +157,39 @@ export function PersonRow({
   avatarUrl,
   accentColor,
   trailing,
+  id,
+  nameSuffix,
 }: {
   name: string;
   subtitle?: ReactNode;
   avatarUrl?: string | null;
   accentColor?: string;
   trailing?: ReactNode;
+  id: string;
+  nameSuffix?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex min-w-0 items-center gap-3">
-        <UserAvatar name={name} avatarUrl={avatarUrl} size="md" accentColor={accentColor} />
-        <div className="min-w-0">
-          <p className="font-medium text-foreground">{name}</p>
-          {subtitle && (
-            <div className="mt-0.5 text-xs text-muted">{subtitle}</div>
-          )}
+    <Link href={`/person/${id}`}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <UserAvatar
+            name={name}
+            avatarUrl={avatarUrl}
+            size="md"
+            accentColor={accentColor}
+          />
+          <div className="min-w-0">
+            <p className="flex flex-wrap items-center gap-1 font-medium text-foreground">{name}{nameSuffix}</p>
+            {subtitle && (
+              <div className="mt-0.5 text-xs text-muted">{subtitle}</div>
+            )}
+          </div>
         </div>
+        {trailing && (
+          <div className="flex flex-wrap items-center gap-2">{trailing}</div>
+        )}
       </div>
-      {trailing && (
-        <div className="flex flex-wrap items-center gap-2">{trailing}</div>
-      )}
-    </div>
+    </Link>
   );
 }
 

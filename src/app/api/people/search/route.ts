@@ -27,6 +27,7 @@ export async function GET(request: Request) {
       avatarUrl: true,
       birthMonth: true,
       birthDay: true,
+      isSuperAdmin: true,
     },
     take: 20,
     orderBy: { name: "asc" },
@@ -38,7 +39,10 @@ export async function GET(request: Request) {
   );
 
   const results = users.map((u) => {
-    const rel = relations.get(u.id) ?? { relation: "none" as const, friendshipId: null };
+    const rel = relations.get(u.id) ?? {
+      relation: "none" as const,
+      friendshipId: null,
+    };
     return {
       ...u,
       relation: rel.relation,

@@ -5,7 +5,10 @@ import { MoneyProgress } from "@/components/ui/money-progress";
 import { PublicPartyPaymentForm } from "@/components/public-party-payment-form";
 import { Icon } from "@/components/icon";
 import { formatJalaliBirthday } from "@/lib/jalali";
-import { formatMoney, getCurrency } from "@/lib/currency";
+import { getCurrency } from "@/lib/currency";
+import { MoneyDisplay } from "@/components/money-display";
+import { parseCryptoAddresses, CRYPTO_COINS } from "@/lib/crypto-wallets";
+import { CopyCryptoAddress } from "@/components/copy-crypto-address";
 
 export default async function PublicPartyPage({
   params,
@@ -26,7 +29,7 @@ export default async function PublicPartyPage({
       cardHolder: true,
       birthdayUserId: true,
       birthdayUser: {
-        select: { name: true, avatarUrl: true, birthMonth: true, birthDay: true },
+        select: { name: true, avatarUrl: true, birthMonth: true, birthDay: true, cryptoAddresses: true },
       },
     },
   });
@@ -176,7 +179,7 @@ export default async function PublicPartyPage({
                             View link →
                           </a>
                         )}
-                        <p className="mt-1.5 text-sm tabular-nums text-muted">{formatMoney(item.cost, currency)} goal</p>
+                        <p className="mt-1.5 text-sm tabular-nums text-muted"><MoneyDisplay amount={item.cost} currency={currency} /> goal</p>
                         {item.allowCheapIn && (
                           <span className="mt-1 inline-block rounded-full bg-muted-subtle px-2 py-0.5 text-xs">
                             Pay what you can
@@ -199,6 +202,32 @@ export default async function PublicPartyPage({
           cardHolder={ceremony.cardHolder}
           items={wishlistItems.map((i) => ({ id: i.id, title: i.title, cost: i.cost }))}
         />
+
+        {/* Crypto wallets */}
+        {(() => {
+          const cryptos = parseCryptoAddresses(ceremony.birthdayUser.cryptoAddresses);
+          const entries = CRYPTO_COINS.filter((c) => cryptos[c.id]);
+          if (!entries.length) return null;
+          return (
+            <section className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+              <div className="border-b border-border bg-muted-subtle/50 px-5 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted">Also accept crypto</p>
+              </div>
+              <ul className="divide-y divide-border">
+                {entries.map((coin) => (
+                  <li key={coin.id} className="flex items-center gap-3 px-5 py-3">
+                    <span className="w-8 shrink-0 text-center text-lg" title={coin.label}>{coin.emoji}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-semibold text-muted uppercase tracking-wide">{coin.label}</p>
+                      <p className="truncate font-mono text-xs text-foreground">{cryptos[coin.id]}</p>
+                    </div>
+                    <CopyCryptoAddress address={cryptos[coin.id] ?? ""} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          );
+        })()}
 
         <p className="text-center text-xs text-muted pb-2">
           Powered by Birthday Reminder · Your payment will be reviewed by the party admin.

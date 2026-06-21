@@ -17,6 +17,7 @@ type SearchUser = {
   birthMonth: number | null;
   birthDay: number | null;
   avatarUrl: string | null;
+  isSuperAdmin: boolean;
   relation: "none" | "friends" | "pending_sent" | "pending_received";
   friendshipId: string | null;
 };
@@ -240,25 +241,36 @@ export function FriendSearch() {
 
       {results.length > 0 && (
         <AppList>
-          {results.map((user) => (
-            <AppListItem key={user.id}>
-              <PersonRow
-                name={user.name}
-                avatarUrl={user.avatarUrl}
-                subtitle={
-                  <>
-                    <span className="block truncate">{user.email}</span>
-                    {user.birthMonth && user.birthDay && (
-                      <span className="block">
-                        Birthday: {formatJalaliBirthday(user.birthMonth, user.birthDay)}
-                      </span>
-                    )}
-                  </>
-                }
-                trailing={actionButton(user)}
-              />
-            </AppListItem>
-          ))}
+          {results.map((user) => {
+            const isCreator = user.isSuperAdmin;
+            return (
+              <AppListItem key={user.id}>
+                <PersonRow
+                  id={user.id}
+                  name={user.name}
+                  nameSuffix={isCreator ? (
+                    <>
+                      <style>{"@keyframes crownBob{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-3px) rotate(5deg)}}"}</style>
+                      <span className="text-sm" style={{ animation: "crownBob 2s ease-in-out infinite", display: "inline-block" }}>👑</span>
+                      <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700 border border-amber-200">Creator</span>
+                    </>
+                  ) : undefined}
+                  avatarUrl={user.avatarUrl}
+                  subtitle={
+                    <>
+                      <span className="block truncate">{user.email}</span>
+                      {user.birthMonth && user.birthDay && (
+                        <span className="block">
+                          Birthday: {formatJalaliBirthday(user.birthMonth, user.birthDay)}
+                        </span>
+                      )}
+                    </>
+                  }
+                  trailing={actionButton(user)}
+                />
+              </AppListItem>
+            );
+          })}
         </AppList>
       )}
     </div>

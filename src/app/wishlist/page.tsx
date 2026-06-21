@@ -2,7 +2,8 @@ import { WishlistManager } from "@/components/wishlist-manager";
 import { Icon } from "@/components/icon";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { formatMoney, getCurrency } from "@/lib/currency";
+import { getCurrency } from "@/lib/currency";
+import { MoneyDisplay } from "@/components/money-display";
 import { redirect } from "next/navigation";
 
 export default async function WishlistPage() {
@@ -49,7 +50,7 @@ export default async function WishlistPage() {
             )}
             {totalValue > 0 && (
               <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent">
-                {formatMoney(totalValue, currency)} total
+                <MoneyDisplay amount={totalValue} currency={currency} /> total
               </span>
             )}
           </div>
