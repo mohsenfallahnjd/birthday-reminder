@@ -7,7 +7,10 @@ import Link from "next/link";
 
 export default async function AdminUsersPage() {
   const me = await requireUserOrThrow();
-  const meDb = await db.user.findUnique({ where: { id: me.id }, select: { isSuperAdmin: true } });
+  const meDb = await db.user.findUnique({
+    where: { id: me.id },
+    select: { isSuperAdmin: true },
+  });
   if (!meDb?.isSuperAdmin) redirect("/dashboard");
 
   const [users, friendships] = await Promise.all([
@@ -48,7 +51,7 @@ export default async function AdminUsersPage() {
   );
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <div className="mx-auto max-w-4xl px-4 py-8 pb-20">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">All Users</h1>
@@ -99,7 +102,11 @@ export default async function AdminUsersPage() {
                   }`}
                 >
                   <div className="relative shrink-0">
-                    <UserAvatar name={u.name} avatarUrl={u.avatarUrl} size="md" />
+                    <UserAvatar
+                      name={u.name}
+                      avatarUrl={u.avatarUrl}
+                      size="md"
+                    />
                     {isMe && (
                       <span
                         className="absolute -top-3 left-1/2 -translate-x-1/2 text-lg select-none"
@@ -136,11 +143,18 @@ export default async function AdminUsersPage() {
                       )}
                       {u.birthMonth && u.birthDay && (
                         <span className="text-[11px] text-muted bg-muted-subtle rounded-full px-2 py-0.5">
-                          🎂 {formatJalaliBirthday(u.birthMonth, u.birthDay, u.birthYear ?? undefined)}
+                          🎂{" "}
+                          {formatJalaliBirthday(
+                            u.birthMonth,
+                            u.birthDay,
+                            u.birthYear ?? undefined,
+                          )}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-muted mt-0.5 truncate">{u.email}</p>
+                    <p className="text-xs text-muted mt-0.5 truncate">
+                      {u.email}
+                    </p>
                     <p className="text-[11px] text-muted/60 mt-0.5">
                       Joined {new Date(u.createdAt).toLocaleDateString()}
                     </p>
@@ -148,25 +162,54 @@ export default async function AdminUsersPage() {
 
                   <div className="hidden sm:flex shrink-0 gap-4 text-center">
                     <div>
-                      <p className="text-sm font-semibold text-foreground">{u._count.birthdayCeremonies}</p>
-                      <p className="text-[10px] text-muted uppercase tracking-wide">Parties</p>
+                      <p className="text-sm font-semibold text-foreground">
+                        {u._count.birthdayCeremonies}
+                      </p>
+                      <p className="text-[10px] text-muted uppercase tracking-wide">
+                        Parties
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-foreground">{u._count.memberships}</p>
-                      <p className="text-[10px] text-muted uppercase tracking-wide">Groups</p>
+                      <p className="text-sm font-semibold text-foreground">
+                        {u._count.memberships}
+                      </p>
+                      <p className="text-[10px] text-muted uppercase tracking-wide">
+                        Groups
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-foreground">{u._count.wishlistItems}</p>
-                      <p className="text-[10px] text-muted uppercase tracking-wide">Gifts</p>
+                      <p className="text-sm font-semibold text-foreground">
+                        {u._count.wishlistItems}
+                      </p>
+                      <p className="text-[10px] text-muted uppercase tracking-wide">
+                        Gifts
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-foreground">{u._count.friendshipsA + u._count.friendshipsB}</p>
-                      <p className="text-[10px] text-muted uppercase tracking-wide">Friends</p>
+                      <p className="text-sm font-semibold text-foreground">
+                        {u._count.friendshipsA + u._count.friendshipsB}
+                      </p>
+                      <p className="text-[10px] text-muted uppercase tracking-wide">
+                        Friends
+                      </p>
                     </div>
                   </div>
 
-                  <svg className="shrink-0 text-zinc-300" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                    <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    className="shrink-0 text-zinc-300"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M9 18l6-6-6-6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </Link>
               </li>

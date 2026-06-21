@@ -8,15 +8,12 @@ import {
 import { ReminderButton } from "@/components/reminder-button";
 import { ContactReminderManager } from "@/components/contact-reminder-manager";
 import {
-  AppList,
-  AppListItem,
   AppSection,
-  EmptyState,
-  InfoBanner,
   PageHeader,
-  PersonRow,
 } from "@/components/app-section";
+import { UserAvatar } from "@/components/user-avatar";
 import { Link } from "@/components/link";
+import { Icon } from "@/components/icon";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatBirthdayBySystem } from "@/lib/jalali";
@@ -84,26 +81,112 @@ export default async function PeoplePage() {
     .catch(() => []);
 
   return (
-    <div className="page-wide space-y-8">
+    <div className="page-wide space-y-6">
       <PageHeader
         title="People"
         description="Your friends on the app and off-app contacts"
       />
 
-      {/* How it connects to parties */}
-      {accepted.length === 0 && (
-        <InfoBanner>
-          Add friends here → then go to{" "}
-          <Link href="/groups" className="font-medium text-foreground">
-            Groups
-          </Link>{" "}
-          or{" "}
-          <Link href="/groups" className="font-medium text-foreground">
-            Parties
-          </Link>{" "}
-          to start a birthday party together.
-        </InfoBanner>
+      {/* ── INCOMING REQUESTS ── */}
+      {pendingIncoming.length > 0 && (
+        <section className="rounded-2xl border border-emerald-200 bg-emerald-50/60 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-emerald-200/70 bg-emerald-50 px-5 py-3">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white">
+              {pendingIncoming.length}
+            </span>
+            <h2 className="text-sm font-semibold text-emerald-800">Friend requests</h2>
+          </div>
+          <ul className="divide-y divide-emerald-100">
+            {pendingIncoming.map(({ friendship, other }) => (
+              <li key={friendship.id} className="flex items-center gap-3 px-5 py-3.5">
+                <Link href={`/person/${other.id}`} className="flex min-w-0 flex-1 items-center gap-3 no-underline">
+                  <UserAvatar name={other.name} avatarUrl={other.avatarUrl} size="md" accentColor="#059669" />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-foreground text-sm">{other.name}</p>
+                    <p className="truncate text-xs text-muted">{other.email}</p>
+                  </div>
+                </Link>
+                <AcceptFriendButton friendshipId={friendship.id} />
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
+
+      {/* ── SENT REQUESTS ── */}
+      {pendingOutgoing.length > 0 && (
+        <section className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-border px-5 py-3">
+            <h2 className="text-sm font-semibold text-foreground">Sent requests</h2>
+            <span className="rounded-full bg-muted-subtle px-2 py-0.5 text-[10px] font-medium text-muted">
+              {pendingOutgoing.length}
+            </span>
+          </div>
+          <ul className="divide-y divide-border">
+            {pendingOutgoing.map(({ friendship, other }) => (
+              <li key={friendship.id} className="flex items-center gap-3 px-5 py-3.5">
+                <Link href={`/person/${other.id}`} className="flex min-w-0 flex-1 items-center gap-3 no-underline">
+                  <UserAvatar name={other.name} avatarUrl={other.avatarUrl} size="md" accentColor="#a1a1aa" />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-foreground text-sm">{other.name}</p>
+                    <p className="truncate text-xs text-muted">Waiting for response…</p>
+                  </div>
+                </Link>
+                <CancelRequestButton friendshipId={friendship.id} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* ── FRIENDS ── */}
+      <section className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border px-5 py-3">
+          <h2 className="text-sm font-semibold text-foreground">
+            Friends
+            {accepted.length > 0 && (
+              <span className="ml-2 rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                {accepted.length}
+              </span>
+            )}
+          </h2>
+        </div>
+
+        {accepted.length === 0 ? (
+          <div className="px-5 py-12 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted-subtle">
+              <Icon name="users" size={20} className="text-muted" />
+            </div>
+            <p className="text-sm font-medium text-foreground">No friends yet</p>
+            <p className="mt-1 text-xs text-muted">Search below to find and add friends.</p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-border">
+            {accepted.map(({ friendship, other }) => (
+              <li key={other.id} className="group flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-muted-subtle/40">
+                <Link href={`/person/${other.id}`} className="flex min-w-0 flex-1 items-center gap-3 no-underline">
+                  <UserAvatar name={other.name} avatarUrl={other.avatarUrl} size="md" accentColor="#db2777" />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-foreground text-sm">{other.name}</p>
+                    {other.birthMonth && other.birthDay ? (
+                      <p className="flex items-center gap-1 text-xs text-muted">
+                        <Icon name="cake" size={11} className="shrink-0 opacity-60" />
+                        {formatBirthdayBySystem(other.birthMonth, other.birthDay, null, dateSystem)}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted/50">No birthday set</p>
+                    )}
+                  </div>
+                </Link>
+                <div className="flex shrink-0 items-center gap-1.5 opacity-100 md:opacity-0 md:transition-opacity md:group-hover:opacity-100">
+                  <ReminderButton targetUserId={other.id} initialSet={reminderSet.has(other.id)} />
+                  <RemoveFriendButton friendshipId={friendship.id} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {/* ── FIND PEOPLE ── */}
       <AppSection
@@ -116,98 +199,6 @@ export default async function PeoplePage() {
             <FriendSearch />
           </div>
         </div>
-      </AppSection>
-
-      {/* ── PENDING ── */}
-      {pendingIncoming.length > 0 && (
-        <AppSection
-          title={`Friend requests (${pendingIncoming.length})`}
-          description="People who want to connect with you"
-        >
-          <AppList>
-            {pendingIncoming.map(({ friendship, other }) => (
-              <AppListItem key={friendship.id}>
-                <PersonRow
-                  id={other.id}
-                  name={other.name}
-                  avatarUrl={other.avatarUrl}
-                  subtitle={other.email}
-                  accentColor="#059669"
-                  trailing={<AcceptFriendButton friendshipId={friendship.id} />}
-                />
-              </AppListItem>
-            ))}
-          </AppList>
-        </AppSection>
-      )}
-
-      {pendingOutgoing.length > 0 && (
-        <AppSection
-          title={`Sent requests (${pendingOutgoing.length})`}
-          description="Waiting for them to accept"
-        >
-          <AppList>
-            {pendingOutgoing.map(({ friendship, other }) => (
-              <AppListItem key={friendship.id}>
-                <PersonRow
-                  id={other.id}
-                  name={other.name}
-                  avatarUrl={other.avatarUrl}
-                  subtitle={other.email}
-                  accentColor="#a1a1aa"
-                  trailing={
-                    <>
-                      <span className="text-xs text-muted">Pending</span>
-                      <CancelRequestButton friendshipId={friendship.id} />
-                    </>
-                  }
-                />
-              </AppListItem>
-            ))}
-          </AppList>
-        </AppSection>
-      )}
-
-      {/* ── FRIENDS ── */}
-      <AppSection
-        title={`Friends${accepted.length > 0 ? ` (${accepted.length})` : ""}`}
-        description="You see each other's birthdays and wishlists"
-      >
-        {accepted.length === 0 ? (
-          <EmptyState>No friends yet — use the search above or .</EmptyState>
-        ) : (
-          <AppList>
-            {accepted.map(({ friendship, other }) => (
-              <AppListItem key={other.id}>
-                <PersonRow
-                  name={other.name}
-                  id={other.id}
-                  avatarUrl={other.avatarUrl}
-                  subtitle={
-                    other.birthMonth && other.birthDay
-                      ? formatBirthdayBySystem(
-                          other.birthMonth,
-                          other.birthDay,
-                          null,
-                          dateSystem,
-                        )
-                      : undefined
-                  }
-                  accentColor="#db2777"
-                  trailing={
-                    <>
-                      <ReminderButton
-                        targetUserId={other.id}
-                        initialSet={reminderSet.has(other.id)}
-                      />
-                      <RemoveFriendButton friendshipId={friendship.id} />
-                    </>
-                  }
-                />
-              </AppListItem>
-            ))}
-          </AppList>
-        )}
       </AppSection>
 
       {/* ── OFF-APP CONTACTS ── */}
