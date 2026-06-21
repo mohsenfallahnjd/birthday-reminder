@@ -11,9 +11,9 @@ import { MoneyInput, getAmountFromInput } from "@/components/money-input";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { getFundingPercent, MoneyProgress } from "@/components/ui/money-progress";
 import { formatAmount } from "@/lib/money";
-import { useFormatMoney } from "@/lib/currency-context";
+
+import { Money } from "@/components/money";
 import { Icon } from "@/components/icon";
-import { Link } from "@/components/link";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -188,7 +188,6 @@ export function CeremonyDetail({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const formatMoney = useFormatMoney();
 
   const defaultTab = isBirthdayPerson ? "gifts" : isAdmin ? "treasurer" : "contribute";
   type TabId = "gifts" | "wishlist" | "contribute" | "treasurer" | "team";
@@ -322,7 +321,7 @@ export function CeremonyDetail({
                             View link →
                           </a>
                         )}
-                        <p className="mt-2 text-sm tabular-nums text-muted">{formatMoney(item.cost)} goal</p>
+                        <p className="mt-2 text-sm tabular-nums text-muted"><Money amount={item.cost} /> goal</p>
                         {item.allowCheapIn && (
                           <span className="mt-1 inline-block rounded-full bg-muted-subtle px-2 py-0.5 text-xs">
                             Pay what you can
@@ -331,7 +330,7 @@ export function CeremonyDetail({
                         <MoneyProgress className="mt-3" collected={effective} target={item.cost} label="Collected" size="sm" />
                         {fromGeneral > 0 && (
                           <p className="mt-1 text-[11px] text-muted">
-                            includes {formatMoney(fromGeneral)} from general contributions
+                            includes <Money amount={fromGeneral} /> from general contributions
                           </p>
                         )}
                       </div>
@@ -430,7 +429,6 @@ function GiftsSection({
   isBirthdayPerson: boolean;
   currentUserId: string;
 }) {
-  const formatMoney = useFormatMoney();
   const approved = payments.filter((p) => p.status === "APPROVED");
   const total = approved.reduce((s, p) => s + p.amount, 0);
 
@@ -441,7 +439,7 @@ function GiftsSection({
       {/* Summary card */}
       <div className="rounded-xl border border-border bg-gradient-to-br from-accent/5 to-accent/10 p-5 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-wide text-accent mb-1">Total collected for you</p>
-        <p className="text-3xl font-bold text-foreground">{formatMoney(total)}</p>
+        <Money amount={total} className="text-3xl font-bold text-foreground" />
         <p className="text-xs text-muted mt-1">{approved.length} approved contribution{approved.length !== 1 ? "s" : ""}</p>
       </div>
 
@@ -466,7 +464,7 @@ function GiftsSection({
                 </div>
               </div>
               <span className="flex-shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
-                {formatMoney(p.amount)}
+                <Money amount={p.amount} />
               </span>
             </li>
           ))}
@@ -495,7 +493,6 @@ function PaymentSection({
   payments: Payment[];
   onRefresh: () => void;
 }) {
-  const formatMoney = useFormatMoney();
   const [mode, setMode] = useState<"pay" | "debt">("pay");
   const [amount, setAmount] = useState("");
   const [wishlistItemId, setWishlistItemId] = useState("");
@@ -660,7 +657,7 @@ function PaymentSection({
             <div key={p.id} className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-amber-800">{formatMoney(p.amount)}</p>
+                  <Money amount={p.amount} className="text-sm font-semibold text-amber-800" />
                   {p.note && <p className="text-xs text-amber-700">{p.note}</p>}
                 </div>
                 <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">Debt</span>
@@ -708,7 +705,7 @@ function PaymentSection({
               const s = statusLabel(p.status);
               return (
                 <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                  <span className="font-medium">{formatMoney(p.amount)}</span>
+                  <Money amount={p.amount} className="font-medium" />
                   <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${s.cls}`}>{s.text}</span>
                 </li>
               );
@@ -741,7 +738,6 @@ function AdminSection({
   guests: { id: string; name: string }[];
   onUpdate: () => void;
 }) {
-  const formatMoney = useFormatMoney();
   const [cardNumber, setCardNumber] = useState(initialCard ?? "");
   const [cardHolder, setCardHolder] = useState(initialHolder ?? "");
   const [hideContributors, setHideContributors] = useState(initialHide);
@@ -928,7 +924,7 @@ function AdminSection({
                     {p.note && <p className="text-xs text-muted">{p.note}</p>}
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-amber-700">{formatMoney(p.amount)}</p>
+                    <Money amount={p.amount} className="font-semibold text-amber-700" />
                     <p className="text-xs text-amber-600">Owes this amount</p>
                   </div>
                 </div>
@@ -953,7 +949,7 @@ function AdminSection({
                     <p className="font-semibold text-foreground">{payerDisplayName(p)}</p>
                     {p.note && <p className="text-xs text-muted">{p.note}</p>}
                   </div>
-                  <p className="font-semibold text-accent">{formatMoney(p.amount)}</p>
+                  <Money amount={p.amount} className="font-semibold text-accent" />
                 </div>
                 {p.proofUrl && (
                   <a href={p.proofUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-foreground underline">
@@ -991,7 +987,7 @@ function AdminSection({
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       <div className="text-right">
-                        <p className="font-medium">{formatMoney(p.amount)}</p>
+                        <Money amount={p.amount} className="font-medium" />
                         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.cls}`}>{s.text}</span>
                       </div>
                       <button

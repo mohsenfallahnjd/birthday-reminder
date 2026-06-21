@@ -70,7 +70,7 @@ export default async function RootLayout({
             <Nav />
             <main className="flex-1 min-w-0">{children}</main>
             <PwaInstallHint />
-            <footer className="pb-20 pt-4 text-center md:pb-6">
+            <footer className="hidden pt-4 pb-6 text-center md:block">
               <p className="text-[11px] text-muted/50">
                 <span className="inline-block animate-bounce">🧑‍💻</span>{" "}
                 Built with{" "}

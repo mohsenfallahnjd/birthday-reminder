@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/app-section";
 import { Icon } from "@/components/icon";
 import { formatAmountInputString } from "@/lib/money";
 import { useFormatMoney } from "@/lib/currency-context";
+import { Money } from "@/components/money";
 import type { LinkPreview } from "@/app/api/link-preview/route";
 
 type Item = {
@@ -272,7 +273,6 @@ function WishlistCard({
   onDelete: () => void;
   deleting: boolean;
 }) {
-  const formatMoney = useFormatMoney();
   return (
     <div className="group relative flex overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-shadow hover:shadow-md">
       {item.ogImage && (
@@ -342,7 +342,7 @@ function WishlistCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 mt-auto">
-          <span className="text-base font-bold tabular-nums text-accent">{formatMoney(item.cost)}</span>
+          <Money amount={item.cost} className="text-base font-bold tabular-nums text-accent" />
           {item.allowCheapIn && (
             <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">Pay what you can</span>
           )}

@@ -1,24 +1,19 @@
-import { Icon } from "@/components/icon";
 import { Link } from "@/components/link";
 import { UserAvatar } from "@/components/user-avatar";
 import type { CeremonyMemberRole } from "@prisma/client";
 
-function roleBadge(
-  role: CeremonyMemberRole | "GROUP" | null,
-  isYourBirthday: boolean,
-) {
-  if (isYourBirthday)
-    return { label: "Your birthday", tone: "birthday" as const };
+function roleBadge(role: CeremonyMemberRole | "GROUP" | null, isYourBirthday: boolean) {
+  if (isYourBirthday) return { label: "Your birthday 🎂", tone: "birthday" as const };
   if (role === "ADMIN") return { label: "Admin", tone: "admin" as const };
   if (role === "GUEST") return { label: "Guest", tone: "guest" as const };
-  if (role === "GROUP") return { label: "Group", tone: "guest" as const };
+  if (role === "GROUP") return { label: "Group member", tone: "guest" as const };
   return null;
 }
 
 const badgeStyles = {
-  birthday: "bg-foreground/10 text-foreground",
-  admin: "bg-violet-100 text-violet-800",
-  guest: "bg-zinc-100 text-zinc-600",
+  birthday: "bg-amber-50 text-amber-700 border border-amber-200",
+  admin: "bg-violet-50 text-violet-700 border border-violet-200",
+  guest: "bg-zinc-100 text-zinc-500 border border-zinc-200",
 } as const;
 
 export function PartyCard({
@@ -43,6 +38,7 @@ export function PartyCard({
   ended?: boolean;
 }) {
   const badge = roleBadge(memberRole ?? null, isYourBirthday);
+  const c = ended ? "#a1a1aa" : color;
 
   return (
     <Link
@@ -50,109 +46,103 @@ export function PartyCard({
       className="group block no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl"
     >
       <article
-        className={`relative overflow-hidden rounded-2xl border transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-md ${ended ? "opacity-60" : ""}`}
+        className="relative overflow-hidden rounded-2xl border transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-lg"
         style={{
           background: ended
-            ? "linear-gradient(135deg, #f4f4f5 0%, #ffffff 55%, #f4f4f5 100%)"
-            : `linear-gradient(135deg, ${color}14 0%, #ffffff 55%, ${color}0a 100%)`,
+            ? "#fafafa"
+            : `linear-gradient(140deg, ${color}12 0%, #ffffff 50%, ${color}08 100%)`,
+          borderColor: ended ? "#e4e4e7" : `${color}40`,
           boxShadow: ended
-            ? "0 1px 0 #e4e4e7, 0 8px 24px -10px #d4d4d8"
-            : `0 1px 0 ${color}25, 0 8px 24px -10px ${color}55`,
-          borderColor: ended ? "#e4e4e7" : `${color}44`,
+            ? "0 1px 3px rgba(0,0,0,0.06)"
+            : `0 1px 3px ${color}20, 0 4px 16px -4px ${color}30`,
         }}
       >
+        {/* accent stripe */}
         <div
-          className="absolute -right-6 -top-8 h-24 w-24 rounded-full opacity-25 blur-2xl transition-opacity group-hover:opacity-35"
-          style={{ backgroundColor: color }}
-          aria-hidden
-        />
-
-        <div
-          className="h-1 w-full"
+          className="h-[3px] w-full"
           style={{
-            background: `linear-gradient(90deg, ${color}, ${color}55, ${color})`,
+            background: ended
+              ? "#e4e4e7"
+              : `linear-gradient(90deg, ${color}cc, ${color}44, ${color}cc)`,
           }}
           aria-hidden
         />
 
-        <div className="relative flex items-center gap-3 p-4 sm:gap-4 sm:p-4">
+        {/* glow blob */}
+        {!ended && (
           <div
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-sm transition-transform group-hover:scale-105"
-            style={{ backgroundColor: `${color}22`, color }}
+            className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full opacity-20 blur-2xl transition-opacity group-hover:opacity-30"
+            style={{ backgroundColor: color }}
+            aria-hidden
+          />
+        )}
+
+        <div className="relative flex items-center gap-4 px-4 py-3.5">
+          {/* color dot / icon */}
+          <div
+            className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-transform group-hover:scale-105"
+            style={{
+              backgroundColor: ended ? "#f0f0f0" : `${color}18`,
+            }}
           >
-            <Icon
-              name="party"
-              size={22}
-              className="text-current"
-              strokeWidth={1.75}
-            />
+            <span className="text-2xl select-none" role="img" aria-label="Party">🎉</span>
+            {!ended && (
+              <span
+                className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white"
+                style={{ backgroundColor: color }}
+              />
+            )}
           </div>
 
+          {/* content */}
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="truncate text-base font-semibold text-foreground sm:text-[1.05rem]">
+            {/* title row */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <h3 className={`truncate text-[15px] font-semibold leading-snug ${ended ? "text-zinc-400" : "text-foreground"}`}>
                 {title}
               </h3>
-              {ended && (
-                <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+              {ended ? (
+                <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-400">
                   Ended
                 </span>
-              )}
-              {badge && !ended && (
-                <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${badgeStyles[badge.tone]}`}
-                >
+              ) : badge ? (
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${badgeStyles[badge.tone]}`}>
                   {badge.label}
                 </span>
-              )}
+              ) : null}
             </div>
 
-            <div className="mt-2 flex items-center gap-2">
+            {/* holder row */}
+            <div className="mt-1.5 flex items-center gap-2">
               <UserAvatar
                 name={holderName}
                 avatarUrl={holderAvatarUrl}
                 size="sm"
-                accentColor={color}
+                accentColor={c}
               />
-              <div className="min-w-0 text-sm">
-                <span className="text-muted">Birthday · </span>
-                <span className="font-medium text-foreground">
-                  {holderName}
-                </span>
-              </div>
+              <span className={`truncate text-xs ${ended ? "text-zinc-400" : "text-muted"}`}>
+                {holderName}
+              </span>
+              {groupName && (
+                <>
+                  <span className="text-zinc-300">·</span>
+                  <span className={`truncate text-xs ${ended ? "text-zinc-400" : "text-muted"}`}>
+                    {groupName}
+                  </span>
+                </>
+              )}
             </div>
-
-            {groupName && (
-              <p className="mt-1.5 truncate text-xs text-muted">
-                <Icon
-                  name="users"
-                  size={12}
-                  className="mr-1 inline-block -mt-px text-muted"
-                />
-                {groupName}
-              </p>
-            )}
           </div>
 
-          <span
-            className="shrink-0 text-muted transition-transform group-hover:translate-x-0.5"
+          {/* chevron */}
+          <svg
+            className={`shrink-0 transition-transform group-hover:translate-x-0.5 ${ended ? "text-zinc-300" : "text-zinc-400"}`}
+            width="16" height="16" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" strokeWidth="2.5"
             aria-hidden
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path
-                d="M9 18l6-6-6-6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
+            <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </div>
       </article>
     </Link>
